@@ -50,7 +50,6 @@
         <div class="help">Need your packet or documents?</div>
         <div class="cta-row">
           <a class="button ghost" id="backToDashboard" href="/dashboard.html">Back to Dashboard</a>
-          <a class="button" id="downloadAllBtn" href="#">Download all documents (ZIP)</a>
         </div>
       </div>
     </div>
@@ -60,8 +59,7 @@
     <div class="container footer-inner">
       <div>
         <strong>Need help?</strong>
-        <div>Phone: XXX-XXX-XXXX</div>
-        <div>Email: <a href="mailto:info@yourcompany.com">info@yourcompany.com</a></div>
+        <div>Phone: (860) 351‑8270</div>
       </div>
     </div>
   </footer>
@@ -72,14 +70,6 @@
       const aId = QS.get('agentId') || localStorage.getItem('agentPortalId') || '';
       const back = document.getElementById('backToDashboard');
       if (back && aId) back.href = `/dashboard.html?agentId=${encodeURIComponent(aId)}`;
-      const dl = document.getElementById('downloadAllBtn');
-      if (dl) {
-        if (aId) {
-          dl.href = `/api/agents/${encodeURIComponent(aId)}/documents/zip`;
-        } else {
-          dl.addEventListener('click', (e) => { e.preventDefault(); alert('Open your Dashboard to download your documents.'); });
-        }
-      }
     })();
   </script>
 </body>

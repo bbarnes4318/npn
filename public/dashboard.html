@@ -29,7 +29,6 @@
       </div>
       <div id="statusBanner" class="notice" style="display:none; margin-bottom:16px;">
         <span id="statusText"></span>
-        <a id="statusDownloadAll" class="button secondary" href="#" style="margin-left:12px;">Download all documents (ZIP)</a>
       </div>
       <div class="card" style="margin-bottom:16px;">
         <h1 style="margin:0;">Digital Signature Packet</h1>
@@ -366,6 +365,7 @@
           <div class="field" style="margin-top:10px;">
             <label class="label">Upload proof of CMS/FFM certification (PDF or image)</label>
             <input class="input" type="file" id="certFile2" accept="application/pdf,image/*" />
+            <div class="help">You can come back to this later from your Dashboard. It isn't required to submit your packet today.</div>
             <div class="cta-row" style="margin-top:8px;">
               <button class="button secondary" id="uploadCertBtn2" type="button">Upload Certification Proof</button>
               <button class="button ghost" id="deferCertBtn2" type="button">Save for later</button>
@@ -415,22 +415,13 @@
           </div>
         </section>
 
-        <!-- SECTION 6: Additional Forms -->
-        <section class="card agreement" id="section-forms">
-          <h2 class="section-title">Additional Forms</h2>
-          <p class="help">Your W‑9 becomes available after you submit the packet below. You can also download your submitted documents here.</p>
-          <div class="cta-row">
-            <a class="button secondary" href="/w9.html">Open W‑9</a>
-            <a class="button ghost" id="certProofLink" href="#">Download CMS/FFM Certification Proof</a>
-          </div>
-        </section>
+        
 
         <!-- Actions -->
         <div class="card" style="display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
           <div class="help">Review your information, then save your signature and submit.</div>
           <div class="cta-row">
             <button class="button secondary" type="button" id="printBtn">Print Packet</button>
-            <button class="button ghost" type="button" id="downloadPacketBtn">Download your packet</button>
             <button class="button primary" type="submit">Submit Packet</button>
             <div id="submitMsg" class="help"></div>
           </div>
@@ -443,8 +434,7 @@
     <div class="container footer-inner">
       <div>
         <strong>Need help?</strong>
-        <div>Phone: XXX-XXX-XXXX</div>
-        <div>Email: <a href="mailto:info@yourcompany.com">info@yourcompany.com</a></div>
+        <div>Phone: (860) 351‑8270</div>
       </div>
     </div>
   </footer>

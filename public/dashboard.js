@@ -191,23 +191,17 @@
     const data = loadPacket();
     if (!data.current_date) { data.current_date = todayLong(); savePacket(data); }
 
-    // Status banner: show helpful direction and a quick download-all
+    // Status banner: show helpful direction
     (function setupStatusBanner() {
       const banner = document.getElementById('statusBanner');
       const text = document.getElementById('statusText');
-      const dlAll = document.getElementById('statusDownloadAll');
-      if (!banner || !text || !dlAll) return;
-      if (agentId) {
-        dlAll.href = `/api/agents/${encodeURIComponent(agentId)}/documents/zip`;
-      } else {
-        dlAll.addEventListener('click', (e) => { e.preventDefault(); alert('Enter through your Dashboard link to download your documents.'); });
-      }
+      if (!banner || !text) return;
       const state = loadPacket();
       const submitted = !!state.packetSubmitted;
       if (submitted) {
-        text.textContent = 'You\'re all set! Your packet has been submitted. You can download all your documents here.';
+        text.textContent = 'You\'re all set! Your packet has been submitted.';
       } else {
-        text.textContent = 'Fill out the packet below and save your signature. You can download all your documents at any time.';
+        text.textContent = 'Fill out the packet below and save your signature.';
       }
       banner.style.display = 'block';
     })();
@@ -323,43 +317,9 @@
     // Print
     document.getElementById('printBtn')?.addEventListener('click', () => window.print());
 
-    // Download packet ZIP
-    document.getElementById('downloadPacketBtn')?.addEventListener('click', async () => {
-      try {
-        const url = `/api/agents/${encodeURIComponent(agentId)}/documents/zip`;
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = '';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      } catch (e) {
-        alert('Could not download packet.');
-      }
-    });
+    // Download packet button removed per requirements
 
-    // Wire Additional Forms links with agentId and gate W-9 until packet submitted
-    const intakeLink = document.querySelector('#section-forms a[href="/intake.html"]');
-    const w9Link = document.querySelector('#section-forms a[href="/w9.html"]');
-    if (intakeLink) intakeLink.href = `/intake.html?agentId=${encodeURIComponent(agentId)}`;
-    if (w9Link) {
-      const localSubmitted = !!(loadPacket().packetSubmitted === true);
-      const allowW9 = (serverProgress && serverProgress.packetSubmitted) || localSubmitted || false;
-      if (allowW9) {
-        w9Link.href = `/w9.html?agentId=${encodeURIComponent(agentId)}`;
-      } else {
-        w9Link.href = '#';
-        w9Link.addEventListener('click', (e) => {
-          e.preventDefault();
-          alert('Please complete and submit the packet first. The W‑9 will unlock right after submission.');
-        });
-        w9Link.classList.add('disabled');
-        w9Link.setAttribute('aria-disabled', 'true');
-      }
-    }
-    // Per-document download links (user W-9 download removed)
-    const certLink = document.getElementById('certProofLink');
-    if (certLink) certLink.href = `/api/agents/${encodeURIComponent(agentId)}/documents/cert`;
+    // Removed Additional Forms and downloads per requirements
 
     // Submit
     const form = document.getElementById('packetForm');

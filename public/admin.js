@@ -2,6 +2,7 @@
   document.addEventListener('DOMContentLoaded', () => {
     const listBtn = document.getElementById('listBtn');
     const zipBtn = document.getElementById('downloadZipBtn');
+    const openW9Btn = document.getElementById('openW9Btn');
     const input = document.getElementById('agentIdInput');
     const emailInput = document.getElementById('emailInput');
     const findBtn = document.getElementById('findByEmailBtn');
@@ -91,6 +92,30 @@
         a.remove();
       } catch (e) {
         setMsg('Could not download ZIP.');
+      }
+    });
+
+    // Open W-9 (PDF) in a new tab for viewing/printing
+    openW9Btn?.addEventListener('click', async () => {
+      const id = input.value.trim();
+      if (!id) { setMsg('Enter an Agent ID.'); return; }
+      setMsg('Opening W-9...');
+      try {
+        const res = await fetch(`/api/admin/agents/${encodeURIComponent(id)}/documents/w9.pdf`, {
+          headers: authHeaders()
+        });
+        if (!res.ok) {
+          if (res.status === 404) { setMsg('No W-9 found for this agent.'); return; }
+          throw new Error('Failed');
+        }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank', 'noopener');
+        // Revoke later to keep the tab working
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+        setMsg('');
+      } catch (e) {
+        setMsg('Could not open W-9.');
       }
     });
   });

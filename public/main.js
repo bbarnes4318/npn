@@ -254,20 +254,6 @@
       // Back to Dashboard link should carry agentId if present
       const backToDashboard = document.getElementById('backToDashboard');
       if (backToDashboard && agentId) backToDashboard.href = `/dashboard.html?agentId=${encodeURIComponent(agentId)}`;
-
-      // Download All Documents (ZIP)
-      const downloadAllBtn = document.getElementById('downloadAllBtn');
-      downloadAllBtn?.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (!agentId) { alert('Open your Dashboard to download your documents.'); return; }
-        const url = `/api/agents/${encodeURIComponent(agentId)}/documents/zip`;
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = '';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      });
     }
   });
 })();
