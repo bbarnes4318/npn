@@ -214,6 +214,22 @@
       if (label) label.textContent = 'Step 1 of 2: Complete your packet';
     })();
 
+    // Show Agent ID in header and allow copying
+    (function showAgentId() {
+      const idEl = document.getElementById('agentIdDisplay');
+      if (idEl) idEl.textContent = agentId || '';
+      const copyBtn = document.getElementById('copyAgentIdBtn');
+      copyBtn?.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(agentId || '');
+          copyBtn.textContent = 'Copied!';
+          setTimeout(() => (copyBtn.textContent = 'Copy ID'), 1200);
+        } catch {
+          alert('Could not copy. Agent ID: ' + (agentId || ''));
+        }
+      });
+    })();
+
     // Populate inputs
     document.querySelectorAll('#packetForm input, #packetForm select, #packetForm textarea').forEach(el => {
       const name = el.name;

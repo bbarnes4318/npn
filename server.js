@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const multer = require('multer');
 const fse = require('fs-extra');
+const fs = require('fs');
 const { nanoid } = require('nanoid');
 const archiver = require('archiver');
 const PDFDocument = require('pdfkit');
@@ -323,6 +324,10 @@ async function gatherAgentDocuments(agent, { includeW9 = true } = {}) {
     if (sig?.path && await fse.pathExists(sig.path)) {
       files.push({ path: sig.path, name: `ProducerAgreement_Signature_${agent.id}.png` });
     }
+    // Producer Agreement signed PDF
+    if (agent.submissions?.producerAgreementPdfPath && await fse.pathExists(agent.submissions.producerAgreementPdfPath)) {
+      files.push({ path: agent.submissions.producerAgreementPdfPath, name: path.basename(agent.submissions.producerAgreementPdfPath) });
+    }
     // CMS/FFM certification proof
     if (agent.uploads?.certProof && await fse.pathExists(agent.uploads.certProof)) {
       const ext = path.extname(agent.uploads.certProof) || '';
@@ -340,6 +345,10 @@ async function gatherAgentDocuments(agent, { includeW9 = true } = {}) {
       if (w9Id) {
         const w9Json = path.join(SUBMISSIONS_DIR, w9Id, 'w9.json');
         if (await fse.pathExists(w9Json)) files.push({ path: w9Json, name: `W9_${w9Id}.json` });
+      }
+      // W-9 generated PDF
+      if (agent.submissions?.w9PdfPath && await fse.pathExists(agent.submissions.w9PdfPath)) {
+        files.push({ path: agent.submissions.w9PdfPath, name: path.basename(agent.submissions.w9PdfPath) });
       }
       // W-9 uploaded file (agent-bound)
       if (agent.submissions?.w9FilePath && await fse.pathExists(agent.submissions.w9FilePath)) {
@@ -702,6 +711,57 @@ app.post('/api/agents/:id/signatures', async (req, res) => {
       agent.signatures[doc] = { type, text: String(value), signedAt: new Date().toISOString() };
     }
     if (doc === 'producerAgreement') agent.progress.producerAgreementSigned = true;
+    // When Producer Agreement is signed, also generate and persist a signed PDF copy for records
+    if (doc === 'producerAgreement') {
+      try {
+        const pdfPath = path.join(dir, `ProducerAgreement_Signed_${Date.now()}.pdf`);
+        await new Promise((resolve, reject) => {
+          const out = fs.createWriteStream(pdfPath);
+          out.on('finish', resolve);
+          out.on('error', reject);
+          const docPdf = new PDFDocument({ margin: 50 });
+          docPdf.pipe(out);
+          docPdf.fontSize(16).text('Producer Agreement (REMOTE)', { align: 'center' });
+          docPdf.moveDown();
+          docPdf.fontSize(11).text('This Producer Agreement (the "Agreement") is made and entered into as of the date written below by and between JJNProtection (the "Company") and the insurance producer (the "Producer").');
+          docPdf.moveDown();
+          const items = [
+            'Authorization to Sign Documents for Carrier Appointments. The Producer authorizes JJNProtection to sign and submit all necessary documents on their behalf related to ACA insurance carrier appointments, including appointment forms, contracting packets, and certification confirmations. JJNProtection is authorized to represent the Producer with GAs, FMOs, and ACA carriers to facilitate onboarding and production access.',
+            'Book of Business. All leads, clients, and applications submitted under this Agreement are considered part of the Company\'s Book of Business. The Company retains full ownership. The Producer agrees not to solicit these clients for 2 years following termination of this Agreement. Violation may result in legal action and liability for all related costs.',
+            'Confidentiality and Non-Solicitation. The Producer must protect Company data during and after the relationship. No confidential information may be disclosed or reused. For 2 years after termination, the Producer shall not solicit JJNProtection clients or use Company materials for competing work.',
+            'Daily and Performance Bonuses. Bonuses, if any, are issued solely at the discretion of JJNProtection management.',
+            'Term and Termination. This Agreement becomes effective upon execution and remains in effect until terminated by either party in writing.',
+            'General Provisions. This is an independent contractor relationship; no employer-employee relationship exists. This Agreement is governed by the laws of the State of Florida. No modifications will be valid unless in writing and signed by both parties.'
+          ];
+          items.forEach((t, i) => {
+            docPdf.moveDown(0.6);
+            docPdf.font('Times-Bold').text(`${i+1}.`, { continued: true });
+            docPdf.font('Times-Roman').text(` ${t}`);
+          });
+          docPdf.moveDown();
+          const fullName = `${agent.profile?.firstName || ''} ${agent.profile?.lastName || ''}`.trim();
+          if (fullName) docPdf.font('Times-Bold').text('Producer: ', { continued: true }).font('Times-Roman').text(fullName);
+          docPdf.moveDown(0.4);
+          const signedAt = new Date().toLocaleDateString();
+          docPdf.font('Times-Bold').text('Date: ', { continued: true }).font('Times-Roman').text(signedAt);
+          try {
+            const sigPath = agent.signatures?.producerAgreement?.path;
+            if (sigPath && fs.existsSync(sigPath)) {
+              docPdf.moveDown();
+              docPdf.font('Times-Bold').text('Signature:');
+              docPdf.image(sigPath, { fit: [300, 120] });
+            }
+          } catch {}
+          docPdf.end();
+        });
+        agent.submissions = agent.submissions || {};
+        agent.submissions.producerAgreementPdfPath = agent.submissions.producerAgreementPdfPath || null;
+        // Save latest
+        agent.submissions.producerAgreementPdfPath = path.join(AGENTS_DIR, agent.id, path.basename(pdfPath));
+      } catch (e) {
+        console.warn('Failed to persist Producer Agreement PDF copy', e);
+      }
+    }
     await writeAgent(agent);
     res.json({ ok: true, signatures: agent.signatures, progress: agent.progress });
   } catch (e) {
@@ -848,6 +908,78 @@ app.post('/api/w9', async (req, res) => {
       if (agent) {
         agent.progress.w9Submitted = true;
         agent.submissions.w9Id = id;
+        // Attempt to generate and persist the official W-9 PDF to the agent folder
+        try {
+          const tplPath = DOCS.w9;
+          const agentDir = path.join(AGENTS_DIR, agent.id);
+          await fse.ensureDir(agentDir);
+          const outPath = path.join(agentDir, `W9_${id}.pdf`);
+          let pdfBytes = null;
+          try {
+            if (tplPath && await fse.pathExists(tplPath)) {
+              const tplBytes = await fse.readFile(tplPath);
+              const pdfDoc = await PdfLibDocument.load(tplBytes);
+              const form = pdfDoc.getForm();
+              const fields = form.getFields();
+              if (fields && fields.length > 0) {
+                const byName = {};
+                fields.forEach(f => { byName[f.getName().toLowerCase()] = f; });
+                function setIfContains(substrs, value) {
+                  const key = Object.keys(byName).find(k => substrs.some(s => k.includes(s)));
+                  if (key && value != null && value !== '') {
+                    try { byName[key].setText(String(value)); } catch {}
+                  }
+                }
+                setIfContains(['name', 'taxpayer name', 'f1_1'], submission.name);
+                setIfContains(['business', 'disregarded', 'f1_2'], submission.businessName);
+                setIfContains(['address', 'street', 'f1_3'], submission.address?.address1);
+                setIfContains(['apt', 'address 2', 'f1_4'], submission.address?.address2);
+                setIfContains(['city', 'town', 'f1_5'], submission.address?.city);
+                setIfContains(['state', 'f1_6'], submission.address?.state);
+                setIfContains(['zip', 'zip code', 'postal', 'f1_7'], submission.address?.zip);
+                if (submission.tin?.ssn) setIfContains(['ssn', 'social'], submission.tin.ssn);
+                if (submission.tin?.ein) setIfContains(['ein', 'employer'], submission.tin.ein);
+                setIfContains(['signature'], submission.certification?.signature);
+                setIfContains(['date'], submission.certification?.signatureDate);
+                form.flatten();
+                pdfBytes = await pdfDoc.save();
+              }
+            }
+          } catch (e) {
+            console.warn('pdf-lib W9 build at submission failed, will use fallback', e);
+          }
+          if (!pdfBytes) {
+            // Fallback: create a simple summary PDF using pdfkit (not the official layout)
+            pdfBytes = await new Promise((resolve, reject) => {
+              const chunks = [];
+              const doc = new PDFDocument({ margin: 50 });
+              doc.on('data', (b) => chunks.push(b));
+              doc.on('end', () => resolve(Buffer.concat(chunks)));
+              doc.on('error', reject);
+              doc.fontSize(16).text('Form W-9 (Summary)', { align: 'center' });
+              doc.moveDown();
+              function field(label, value) { doc.font('Times-Bold').text(label + ':', { continued: true }); doc.font('Times-Roman').text(' ' + (value || '')); }
+              field('Name', submission.name);
+              field('Business name', submission.businessName);
+              field('Tax classification', submission.taxClassification);
+              if (submission.taxClassification === 'llc') field('LLC classification', submission.llcClassification);
+              field('Address 1', submission.address?.address1);
+              field('Address 2', submission.address?.address2);
+              field('City', submission.address?.city);
+              field('State', submission.address?.state);
+              field('ZIP', submission.address?.zip);
+              field('SSN', submission.tin?.ssn);
+              field('EIN', submission.tin?.ein);
+              field('Certification signature (typed)', submission.certification?.signature);
+              field('Certification date', submission.certification?.signatureDate);
+              doc.end();
+            });
+          }
+          await fse.writeFile(outPath, pdfBytes);
+          agent.submissions.w9PdfPath = outPath;
+        } catch (e) {
+          console.warn('Failed to persist W-9 PDF at submission', e);
+        }
         await writeAgent(agent);
       }
     }
