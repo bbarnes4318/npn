@@ -140,6 +140,12 @@
     window.addEventListener('mouseup', () => drawing = false);
 
     const msg = document.getElementById('sigMsg');
+    const ackProducer = document.getElementById('ackProducer');
+    // If signature isn't saved yet, require Save before allowing agree
+    try {
+      const savedState = loadPacket().signatureSaved;
+      if (!savedState && ackProducer) ackProducer.disabled = true;
+    } catch {}
     document.getElementById('clearSigBtn').addEventListener('click', () => { ctx.clearRect(0, 0, canvas.width, canvas.height); hasInk = false; msg.textContent=''; });
     document.getElementById('saveSigBtn').addEventListener('click', async () => {
       const dataUrl = canvas.toDataURL('image/png');
@@ -155,12 +161,14 @@
         // set signing date at the moment of signature save
         saveField('current_date', todayLong());
         msg.textContent = 'Signature saved.';
+        if (ackProducer) ackProducer.disabled = false;
       } catch (e) {
         // Fallback to local save
         saveField('signatureDataUrl', dataUrl);
         saveField('signatureSaved', true);
         saveField('current_date', todayLong());
         msg.textContent = 'Signature saved locally.';
+        if (ackProducer) ackProducer.disabled = false;
       }
     });
 
@@ -170,9 +178,11 @@
   // ---------- Form Wiring ----------
   document.addEventListener('DOMContentLoaded', async () => {
     // Load agent (optional, to validate and keep LS in sync)
+    let serverProgress = null;
     try {
       const { agent } = await api(`/api/agents/${agentId}`);
       localStorage.setItem(LS_KEY, agent.id);
+      serverProgress = agent.progress || null;
     } catch {
       // if API not available, continue in local-only mode
     }
@@ -200,6 +210,14 @@
         text.textContent = 'Fill out the packet below and save your signature. You can download all your documents at any time.';
       }
       banner.style.display = 'block';
+    })();
+
+    // Progress tracker: Step 1 of 2 (50%) on Dashboard
+    (function setupProgress() {
+      const fill = document.getElementById('progressFill');
+      const label = document.getElementById('progressLabel');
+      if (fill) fill.style.width = '50%';
+      if (label) label.textContent = 'Step 1 of 2: Complete your packet';
     })();
 
     // Populate inputs
@@ -320,14 +338,26 @@
       }
     });
 
-    // Wire Additional Forms links with agentId
+    // Wire Additional Forms links with agentId and gate W-9 until packet submitted
     const intakeLink = document.querySelector('#section-forms a[href="/intake.html"]');
     const w9Link = document.querySelector('#section-forms a[href="/w9.html"]');
     if (intakeLink) intakeLink.href = `/intake.html?agentId=${encodeURIComponent(agentId)}`;
-    if (w9Link) w9Link.href = `/w9.html?agentId=${encodeURIComponent(agentId)}`;
-    // Per-document download links
-    const w9PdfLink = document.getElementById('w9PdfLink');
-    if (w9PdfLink) w9PdfLink.href = `/api/agents/${encodeURIComponent(agentId)}/documents/w9.pdf`;
+    if (w9Link) {
+      const localSubmitted = !!(loadPacket().packetSubmitted === true);
+      const allowW9 = (serverProgress && serverProgress.packetSubmitted) || localSubmitted || false;
+      if (allowW9) {
+        w9Link.href = `/w9.html?agentId=${encodeURIComponent(agentId)}`;
+      } else {
+        w9Link.href = '#';
+        w9Link.addEventListener('click', (e) => {
+          e.preventDefault();
+          alert('Please complete and submit the packet first. The W‑9 will unlock right after submission.');
+        });
+        w9Link.classList.add('disabled');
+        w9Link.setAttribute('aria-disabled', 'true');
+      }
+    }
+    // Per-document download links (user W-9 download removed)
     const certLink = document.getElementById('certProofLink');
     if (certLink) certLink.href = `/api/agents/${encodeURIComponent(agentId)}/documents/cert`;
 
@@ -374,15 +404,18 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        submitMsg.textContent = 'Submitted! Redirecting to next steps…';
+        submitMsg.textContent = 'Submitted! Taking you to your W‑9…';
         saveField('packetSubmitted', true);
         setTimeout(() => {
-          window.location.href = `/completed.html?agentId=${encodeURIComponent(agentId)}`;
+          window.location.href = `/w9.html?agentId=${encodeURIComponent(agentId)}`;
         }, 900);
       } catch (err) {
         // fallback to local save only
         saveField('packetSubmitted', 'pending');
-        submitMsg.textContent = 'Saved locally. We will sync when online.';
+        submitMsg.textContent = 'Saved locally. We will sync when online. You can proceed to W‑9.';
+        setTimeout(() => {
+          window.location.href = `/w9.html?agentId=${encodeURIComponent(agentId)}`;
+        }, 900);
       }
     });
   });

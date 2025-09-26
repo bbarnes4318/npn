@@ -210,12 +210,12 @@
           });
           const data = await res.json();
           if (!res.ok || !data.ok) throw new Error(data.error || 'Failed to submit');
-          showMessage(msg, 'Submitted! Returning you to your dashboard...', 'success');
-          // Give a clear next step by returning to dashboard
+          showMessage(msg, 'Submitted! Taking you to next steps…', 'success');
+          // After W-9 submit, take the user to the completion page
           setTimeout(() => {
             const aId = getAgentId();
-            if (aId) window.location.href = `/dashboard.html?agentId=${encodeURIComponent(aId)}`;
-            else window.location.href = '/dashboard.html';
+            if (aId) window.location.href = `/completed.html?agentId=${encodeURIComponent(aId)}`;
+            else window.location.href = '/completed.html';
           }, 900);
         } catch (err) {
           console.error(err);

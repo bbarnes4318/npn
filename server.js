@@ -60,6 +60,30 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Multer for file uploads
 const upload = multer({ dest: UPLOADS_TMP, limits: { fileSize: 10 * 1024 * 1024 } });
 
+// Save full packet submission
+app.post('/api/agents/:id/packet', async (req, res) => {
+  try {
+    const agent = await readAgent(req.params.id);
+    if (!agent) return res.status(404).json({ ok: false, error: 'Not found' });
+    const id = nanoid(10);
+    const destDir = path.join(SUBMISSIONS_DIR, id);
+    await fse.ensureDir(destDir);
+    const body = req.body || {};
+    // Persist raw packet payload for record
+    await fse.writeJson(path.join(destDir, 'packet.json'), { id, receivedAt: new Date().toISOString(), payload: body }, { spaces: 2 });
+    // Update agent progress and link submission
+    agent.submissions = agent.submissions || {};
+    agent.submissions.packetId = id;
+    agent.progress = agent.progress || {};
+    agent.progress.packetSubmitted = true;
+    await writeAgent(agent);
+    res.json({ ok: true, id });
+  } catch (e) {
+    console.error('packet submit error', e);
+    res.status(500).json({ ok: false, error: 'Failed to save packet' });
+  }
+});
+
 // --- Admin-protected variants ---
 // Find agent by email (admin)
 app.get('/api/admin/agents/find', requireAdmin, async (req, res) => {
@@ -89,7 +113,7 @@ app.get('/api/admin/agents/:id/documents/list', requireAdmin, async (req, res) =
   try {
     const agent = await readAgent(req.params.id);
     if (!agent) return res.status(404).json({ ok: false, error: 'Not found' });
-    const files = await gatherAgentDocuments(agent);
+    const files = await gatherAgentDocuments(agent, { includeW9: true });
     res.json({ ok: true, files: files.map(f => ({ name: f.name })) });
   } catch (e) {
     console.error('admin list docs error', e);
@@ -102,7 +126,7 @@ app.get('/api/admin/agents/:id/documents/zip', requireAdmin, async (req, res) =>
   try {
     const agent = await readAgent(req.params.id);
     if (!agent) return res.status(404).send('Not found');
-    const files = await gatherAgentDocuments(agent);
+    const files = await gatherAgentDocuments(agent, { includeW9: true });
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="agent_${agent.id}_packet.zip"`);
     const archive = archiver('zip', { zlib: { level: 9 } });
@@ -219,7 +243,7 @@ function requireAdmin(req, res, next) {
 }
 
 // ------- Document listing and ZIP download -------
-async function gatherAgentDocuments(agent) {
+async function gatherAgentDocuments(agent, { includeW9 = true } = {}) {
   const files = [];
   try {
     // Producer Agreement drawn signature
@@ -239,15 +263,17 @@ async function gatherAgentDocuments(agent) {
       if (await fse.pathExists(intakeJson)) files.push({ path: intakeJson, name: `Intake_${intakeId}.json` });
     }
     // W-9 e-sign JSON
-    const w9Id = agent.submissions?.w9Id;
-    if (w9Id) {
-      const w9Json = path.join(SUBMISSIONS_DIR, w9Id, 'w9.json');
-      if (await fse.pathExists(w9Json)) files.push({ path: w9Json, name: `W9_${w9Id}.json` });
-    }
-    // W-9 uploaded file (agent-bound)
-    if (agent.submissions?.w9FilePath && await fse.pathExists(agent.submissions.w9FilePath)) {
-      const ext = path.extname(agent.submissions.w9FilePath) || '';
-      files.push({ path: agent.submissions.w9FilePath, name: `W9_Upload_${agent.id}${ext}` });
+    if (includeW9) {
+      const w9Id = agent.submissions?.w9Id;
+      if (w9Id) {
+        const w9Json = path.join(SUBMISSIONS_DIR, w9Id, 'w9.json');
+        if (await fse.pathExists(w9Json)) files.push({ path: w9Json, name: `W9_${w9Id}.json` });
+      }
+      // W-9 uploaded file (agent-bound)
+      if (agent.submissions?.w9FilePath && await fse.pathExists(agent.submissions.w9FilePath)) {
+        const ext = path.extname(agent.submissions.w9FilePath) || '';
+        files.push({ path: agent.submissions.w9FilePath, name: `W9_Upload_${agent.id}${ext}` });
+      }
     }
   } catch {}
   return files;
@@ -258,7 +284,7 @@ app.get('/api/agents/:id/documents/list', async (req, res) => {
   try {
     const agent = await readAgent(req.params.id);
     if (!agent) return res.status(404).json({ ok: false, error: 'Not found' });
-    const files = await gatherAgentDocuments(agent);
+    const files = await gatherAgentDocuments(agent, { includeW9: false });
     res.json({ ok: true, files: files.map(f => ({ name: f.name })) });
   } catch (e) {
     console.error('list docs error', e);
@@ -271,7 +297,7 @@ app.get('/api/agents/:id/documents/zip', async (req, res) => {
   try {
     const agent = await readAgent(req.params.id);
     if (!agent) return res.status(404).send('Not found');
-    const files = await gatherAgentDocuments(agent);
+    const files = await gatherAgentDocuments(agent, { includeW9: false });
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="agent_${agent.id}_packet.zip"`);
     const archive = archiver('zip', { zlib: { level: 9 } });
@@ -410,59 +436,9 @@ app.get('/docs/:doc', async (req, res) => {
 
 // Per-document downloads
 // Generate W-9 PDF from e-sign JSON if available; otherwise return uploaded file if present
+// User W-9 download disabled; admin route is available under /api/admin/agents/:id/documents/w9.pdf
 app.get('/api/agents/:id/documents/w9.pdf', async (req, res) => {
-  try {
-    const agent = await readAgent(req.params.id);
-    if (!agent) return res.status(404).send('Not found');
-    const w9Id = agent.submissions?.w9Id;
-    const uploadedPath = agent.submissions?.w9FilePath;
-    if (w9Id) {
-      const w9JsonPath = path.join(SUBMISSIONS_DIR, w9Id, 'w9.json');
-      if (await fse.pathExists(w9JsonPath)) {
-        const data = await fse.readJson(w9JsonPath);
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="W9_${w9Id}.pdf"`);
-        const doc = new PDFDocument({ margin: 50 });
-        doc.pipe(res);
-        doc.fontSize(16).text('Form W-9 (Substitute)', { align: 'center' });
-        doc.moveDown();
-        doc.fontSize(11).text('Request for Taxpayer Identification Number and Certification');
-        doc.moveDown();
-        function field(label, value) {
-          doc.font('Times-Bold').text(label + ':', { continued: true });
-          doc.font('Times-Roman').text(' ' + (value || ''));
-        }
-        field('Name', data.name);
-        field('Business name', data.businessName);
-        field('Tax classification', data.taxClassification);
-        if (data.taxClassification === 'llc') field('LLC classification', data.llcClassification);
-        field('Exempt payee code', data.exemptPayeeCode);
-        field('FATCA code', data.fatcaCode);
-        field('Address 1', data.address?.address1);
-        field('Address 2', data.address?.address2);
-        field('City', data.address?.city);
-        field('State', data.address?.state);
-        field('ZIP', data.address?.zip);
-        doc.moveDown();
-        field('SSN', data.tin?.ssn);
-        field('EIN', data.tin?.ein);
-        doc.moveDown();
-        field('Certification signature (typed)', data.certification?.signature);
-        field('Certification date', data.certification?.signatureDate);
-        doc.end();
-        return;
-      }
-    }
-    if (uploadedPath && await fse.pathExists(uploadedPath)) {
-      // Stream the uploaded file directly
-      const filename = `W9_Upload_${agent.id}${path.extname(uploadedPath)}`;
-      return res.download(uploadedPath, filename);
-    }
-    return res.status(404).send('No W-9 found');
-  } catch (e) {
-    console.error('w9.pdf error', e);
-    return res.status(500).send('Failed to produce W-9 PDF');
-  }
+  return res.status(404).send('Not available');
 });
 
 // Download CMS/FFM certification proof if present

@@ -11,6 +11,45 @@
   document.addEventListener('DOMContentLoaded', () => {
     const agentId = getAgentId();
 
+    // Gate: ensure packet was submitted before showing W-9
+    (async function gateW9() {
+      const redirect = () => {
+        const url = agentId ? `/dashboard.html?agentId=${encodeURIComponent(agentId)}` : '/portal.html';
+        window.location.replace(url);
+      };
+      // Require agentId context
+      if (!agentId) return redirect();
+      // Try server first
+      try {
+        const res = await fetch(`/api/agents/${encodeURIComponent(agentId)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (!(data && data.agent && data.agent.progress && data.agent.progress.packetSubmitted)) {
+            return redirect();
+          }
+        }
+      } catch {}
+      // Local fallback check
+      try {
+        const key = `packetData:${agentId}`;
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const state = JSON.parse(raw);
+          if (!(state && (state.packetSubmitted === true || state.packetSubmitted === 'pending'))) {
+            return redirect();
+          }
+        }
+      } catch {}
+    })();
+
+    // Progress tracker: Step 2 of 2 (100%) on W-9
+    (function setupProgress() {
+      const fill = document.getElementById('progressFill');
+      const label = document.getElementById('progressLabel');
+      if (fill) fill.style.width = '100%';
+      if (label) label.textContent = 'Step 2 of 2: Sign your W‑9';
+    })();
+
     // Carry agentId on nav links if present
     const intakeAnchor = document.querySelector('a[href="/intake.html"]');
     if (intakeAnchor && agentId) intakeAnchor.href = `/intake.html?agentId=${encodeURIComponent(agentId)}`;

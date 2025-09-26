@@ -23,6 +23,10 @@
 
   <main class="section">
     <div class="container">
+      <div id="progress" style="margin: -8px 0 12px;">
+        <div class="progressbar"><span id="progressFill"></span></div>
+        <div class="help" id="progressLabel">Step 1 of 2: Complete your packet</div>
+      </div>
       <div id="statusBanner" class="notice" style="display:none; margin-bottom:16px;">
         <span id="statusText"></span>
         <a id="statusDownloadAll" class="button secondary" href="#" style="margin-left:12px;">Download all documents (ZIP)</a>
@@ -134,6 +138,9 @@
               <div class="card" style="padding:14px;">
                 <h4 style="margin:0 0 8px;">Producer</h4>
                 <div><strong>Producer:</strong> <span class="token" data-token="full_name"></span></div>
+                <div class="callout tip" style="margin:8px 0;">
+                  Use your mouse or trackpad to draw your signature in the box below. Then click <strong>Save Signature</strong> and check the <strong>I agree</strong> box to continue.
+                </div>
                 <canvas id="sigPad" width="560" height="160" style="border:1px dashed var(--border); border-radius:8px; background:#fff; width:100%; max-width:100%;"></canvas>
                 <div class="cta-row" style="margin-top:8px;">
                   <button class="button ghost" id="clearSigBtn" type="button">Clear</button>
@@ -411,10 +418,9 @@
         <!-- SECTION 6: Additional Forms -->
         <section class="card agreement" id="section-forms">
           <h2 class="section-title">Additional Forms</h2>
-          <p class="help">Open the official IRS W‑9 to complete and upload your tax form, or download your submitted documents below.</p>
+          <p class="help">Your W‑9 becomes available after you submit the packet below. You can also download your submitted documents here.</p>
           <div class="cta-row">
             <a class="button secondary" href="/w9.html">Open W‑9</a>
-            <a class="button ghost" id="w9PdfLink" href="#">Download signed W‑9 (PDF)</a>
             <a class="button ghost" id="certProofLink" href="#">Download CMS/FFM Certification Proof</a>
           </div>
         </section>
