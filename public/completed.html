@@ -49,6 +49,7 @@
       <div class="card" style="margin-top:16px; display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
         <div class="help">Need your packet or documents?</div>
         <div class="cta-row">
+          <a class="button primary" id="openW9UserBtn" href="#" target="_blank" rel="noopener">Open W‑9 (PDF)</a>
           <a class="button ghost" id="backToDashboard" href="/dashboard.html">Back to Dashboard</a>
         </div>
       </div>
@@ -58,7 +59,6 @@
   <footer id="contact" class="footer">
     <div class="container footer-inner">
       <div>
-        <strong>Need help?</strong>
         <div>Phone: (860) 351‑8270</div>
       </div>
     </div>
@@ -70,6 +70,12 @@
       const aId = QS.get('agentId') || localStorage.getItem('agentPortalId') || '';
       const back = document.getElementById('backToDashboard');
       if (back && aId) back.href = `/dashboard.html?agentId=${encodeURIComponent(aId)}`;
+      const w9 = document.getElementById('openW9UserBtn');
+      if (w9 && aId) {
+        w9.href = `/api/agents/${encodeURIComponent(aId)}/documents/w9.pdf`;
+      } else if (w9) {
+        w9.style.display = 'none';
+      }
     })();
   </script>
 </body>

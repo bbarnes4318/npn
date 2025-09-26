@@ -62,6 +62,22 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Multer for file uploads
 const upload = multer({ dest: UPLOADS_TMP, limits: { fileSize: 10 * 1024 * 1024 } });
 
+// Download packet JSON (admin)
+app.get('/api/admin/agents/:id/documents/packet', requireAdmin, async (req, res) => {
+  try {
+    const agent = await readAgent(req.params.id);
+    if (!agent) return res.status(404).send('Not found');
+    const packetId = agent.submissions?.packetId;
+    if (!packetId) return res.status(404).send('No packet');
+    const packetJson = path.join(SUBMISSIONS_DIR, packetId, 'packet.json');
+    if (!(await fse.pathExists(packetJson))) return res.status(404).send('No packet');
+    return res.download(packetJson, `Packet_${packetId}.json`);
+  } catch (e) {
+    console.error('admin packet download error', e);
+    return res.status(500).send('Failed to download packet');
+  }
+});
+
 // Save full packet submission
 app.post('/api/agents/:id/packet', async (req, res) => {
   try {
@@ -366,6 +382,12 @@ async function gatherAgentDocuments(agent, { includeW9 = true } = {}) {
       const intakeJson = path.join(SUBMISSIONS_DIR, intakeId, 'intake.json');
       if (await fse.pathExists(intakeJson)) files.push({ path: intakeJson, name: `Intake_${intakeId}.json` });
     }
+    // Packet submission JSON
+    const packetId = agent.submissions?.packetId;
+    if (packetId) {
+      const packetJson = path.join(SUBMISSIONS_DIR, packetId, 'packet.json');
+      if (await fse.pathExists(packetJson)) files.push({ path: packetJson, name: `Packet_${packetId}.json` });
+    }
     // W-9 e-sign JSON
     if (includeW9) {
       const w9Id = agent.submissions?.w9Id;
@@ -544,9 +566,139 @@ app.get('/docs/:doc', async (req, res) => {
 
 // Per-document downloads
 // Generate W-9 PDF from e-sign JSON if available; otherwise return uploaded file if present
-// User W-9 download disabled; admin route is available under /api/admin/agents/:id/documents/w9.pdf
 app.get('/api/agents/:id/documents/w9.pdf', async (req, res) => {
-  return res.status(404).send('Not available');
+  try {
+    const agent = await readAgent(req.params.id);
+    if (!agent) return res.status(404).send('Not found');
+    const w9Id = agent.submissions?.w9Id;
+    const uploadedPath = agent.submissions?.w9FilePath;
+    if (w9Id) {
+      const w9JsonPath = path.join(SUBMISSIONS_DIR, w9Id, 'w9.json');
+      if (await fse.pathExists(w9JsonPath)) {
+        const data = await fse.readJson(w9JsonPath);
+        // Try to load official template and fill via pdf-lib
+        try {
+          const tplPath = DOCS.w9;
+          if (tplPath && await fse.pathExists(tplPath)) {
+            const tplBytes = await fse.readFile(tplPath);
+            const pdfDoc = await PdfLibDocument.load(tplBytes);
+            const form = pdfDoc.getForm();
+            const fields = form.getFields();
+            if (fields && fields.length > 0) {
+              const byName = {};
+              fields.forEach(f => { byName[f.getName().toLowerCase()] = f; });
+              function setIfContains(substrs, value) {
+                const key = Object.keys(byName).find(k => substrs.some(s => k.includes(s)));
+                if (key && value != null && value !== '') {
+                  const fld = byName[key];
+                  try { fld.setText(String(value)); } catch {}
+                }
+              }
+              setIfContains(['name', 'taxpayer name', 'f1_1'], data.name);
+              setIfContains(['business', 'disregarded', 'f1_2'], data.businessName);
+              setIfContains(['address', 'street', 'f1_3'], data.address?.address1);
+              setIfContains(['apt', 'address 2', 'f1_4'], data.address?.address2);
+              setIfContains(['city', 'town', 'f1_5'], data.address?.city);
+              setIfContains(['state', 'f1_6'], data.address?.state);
+              setIfContains(['zip', 'zip code', 'postal', 'f1_7'], data.address?.zip);
+              // SSN / EIN — set whichever present
+              if (data.tin?.ssn) setIfContains(['ssn', 'social'], data.tin.ssn);
+              if (data.tin?.ein) setIfContains(['ein', 'employer'], data.tin.ein);
+              // Signature and date
+              setIfContains(['signature'], data.certification?.signature);
+              setIfContains(['date'], data.certification?.signatureDate);
+              // Try checking tax classification checkbox text field if present
+              const tax = (data.taxClassification || '').toLowerCase();
+              function checkIf(labelHints) {
+                const key = Object.keys(byName).find(k => labelHints.some(s => k.includes(s)));
+                if (key) {
+                  try { byName[key].setText('X'); } catch {}
+                }
+              }
+              if (tax) {
+                if (tax.includes('individual') || tax.includes('sole')) checkIf(['individual', 'sole']);
+                else if (tax.includes('c_corporation') || tax === 'c corporation' || tax === 'c') checkIf(['c corp', 'c corporation']);
+                else if (tax.includes('s_corporation') || tax === 's corporation' || tax === 's') checkIf(['s corp', 's corporation']);
+                else if (tax.includes('partnership')) checkIf(['partnership']);
+                else if (tax.includes('trust') || tax.includes('estate')) checkIf(['trust', 'estate']);
+                else if (tax.includes('llc')) checkIf(['llc']);
+                else if (tax.includes('other')) checkIf(['other']);
+              }
+              form.flatten();
+              const pdfBytes = await pdfDoc.save();
+              res.setHeader('Content-Type', 'application/pdf');
+              res.setHeader('Content-Disposition', `inline; filename="W9_${w9Id}.pdf"`);
+              return res.end(Buffer.from(pdfBytes));
+            } else {
+              // No AcroForm fields: overlay text at approximate coordinates as fallback
+              const page = pdfDoc.getPages()[0];
+              const { width, height } = page.getSize();
+              const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+              const draw = (t, x, y) => page.drawText(String(t || ''), { x, y, size: 10, font, color: rgb(0,0,0) });
+              // Approximate coordinates (may need tuning)
+              draw(data.name, 72, height - 100);
+              draw(data.businessName, 72, height - 115);
+              draw(data.address?.address1, 72, height - 160);
+              draw(data.address?.address2, 72, height - 175);
+              draw(data.address?.city, 72, height - 190);
+              draw(data.address?.state, 260, height - 190);
+              draw(data.address?.zip, 320, height - 190);
+              if (data.tin?.ssn) draw(data.tin.ssn, 360, height - 260);
+              if (data.tin?.ein) draw(data.tin.ein, 360, height - 275);
+              draw(data.certification?.signature, 72, 120);
+              draw(data.certification?.signatureDate, 360, 120);
+              const pdfBytes = await pdfDoc.save();
+              res.setHeader('Content-Type', 'application/pdf');
+              res.setHeader('Content-Disposition', `inline; filename="W9_${w9Id}.pdf"`);
+              return res.end(Buffer.from(pdfBytes));
+            }
+          }
+        } catch (e) {
+          console.warn('user w9.pdf fill failed, falling back to summary', e);
+        }
+        // Fallback: simple generated summary PDF
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename="W9_${w9Id}.pdf"`);
+        const doc = new PDFDocument({ margin: 50 });
+        doc.pipe(res);
+        doc.fontSize(16).text('Form W-9 (Substitute)', { align: 'center' });
+        doc.moveDown();
+        doc.fontSize(11).text('Request for Taxpayer Identification Number and Certification');
+        doc.moveDown();
+        function field(label, value) {
+          doc.font('Times-Bold').text(label + ':', { continued: true });
+          doc.font('Times-Roman').text(' ' + (value || ''));
+        }
+        field('Name', data.name);
+        field('Business name', data.businessName);
+        field('Tax classification', data.taxClassification);
+        if (data.taxClassification === 'llc') field('LLC classification', data.llcClassification);
+        field('Exempt payee code', data.exemptPayeeCode);
+        field('FATCA code', data.fatcaCode);
+        field('Address 1', data.address?.address1);
+        field('Address 2', data.address?.address2);
+        field('City', data.address?.city);
+        field('State', data.address?.state);
+        field('ZIP', data.address?.zip);
+        doc.moveDown();
+        field('SSN', data.tin?.ssn);
+        field('EIN', data.tin?.ein);
+        doc.moveDown();
+        field('Certification signature (typed)', data.certification?.signature);
+        field('Certification date', data.certification?.signatureDate);
+        doc.end();
+        return;
+      }
+    }
+    if (uploadedPath && await fse.pathExists(uploadedPath)) {
+      const filename = `W9_Upload_${agent.id}${path.extname(uploadedPath)}`;
+      return res.download(uploadedPath, filename);
+    }
+    return res.status(404).send('No W-9 found');
+  } catch (e) {
+    console.error('user w9.pdf error', e);
+    return res.status(500).send('Failed to produce W-9 PDF');
+  }
 });
 
 // Download CMS/FFM certification proof if present
