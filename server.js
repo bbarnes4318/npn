@@ -5,6 +5,7 @@ const fse = require('fs-extra');
 const { nanoid } = require('nanoid');
 const archiver = require('archiver');
 const PDFDocument = require('pdfkit');
+const { PDFDocument: PdfLibDocument, StandardFonts, rgb } = require('pdf-lib');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -88,20 +89,10 @@ app.post('/api/agents/:id/packet', async (req, res) => {
 // Find agent by email (admin)
 app.get('/api/admin/agents/find', requireAdmin, async (req, res) => {
   try {
-    const email = (req.query.email || '').toString().trim().toLowerCase();
+    const email = (req.query.email || '').toString().trim();
     if (!email) return res.status(400).json({ ok: false, error: 'Email required' });
-    const entries = await fse.readdir(AGENTS_DIR, { withFileTypes: true });
-    for (const ent of entries) {
-      if (!ent.isDirectory()) continue;
-      const p = path.join(AGENTS_DIR, ent.name, 'agent.json');
-      if (!(await fse.pathExists(p))) continue;
-      try {
-        const a = await fse.readJson(p);
-        if ((a.profile?.email || '').toLowerCase() === email) {
-          return res.json({ ok: true, agent: a });
-        }
-      } catch {}
-    }
+    const agent = await findOrCreateAgentByEmail(email);
+    if (agent) return res.json({ ok: true, agent });
     return res.status(404).json({ ok: false, error: 'Not found' });
   } catch (e) {
     res.status(500).json({ ok: false, error: 'Failed to search' });
@@ -152,6 +143,87 @@ app.get('/api/admin/agents/:id/documents/w9.pdf', requireAdmin, async (req, res)
       const w9JsonPath = path.join(SUBMISSIONS_DIR, w9Id, 'w9.json');
       if (await fse.pathExists(w9JsonPath)) {
         const data = await fse.readJson(w9JsonPath);
+        // Try to load official template and fill via pdf-lib
+        try {
+          const tplPath = DOCS.w9;
+          if (tplPath && await fse.pathExists(tplPath)) {
+            const tplBytes = await fse.readFile(tplPath);
+            const pdfDoc = await PdfLibDocument.load(tplBytes);
+            const form = pdfDoc.getForm();
+            const fields = form.getFields();
+            if (fields && fields.length > 0) {
+              const byName = {};
+              fields.forEach(f => { byName[f.getName().toLowerCase()] = f; });
+              function setIfContains(substrs, value) {
+                const key = Object.keys(byName).find(k => substrs.some(s => k.includes(s)));
+                if (key && value != null && value !== '') {
+                  const fld = byName[key];
+                  try { fld.setText(String(value)); } catch {}
+                }
+              }
+              setIfContains(['name', 'taxpayer name', 'f1_1'], data.name);
+              setIfContains(['business', 'disregarded', 'f1_2'], data.businessName);
+              setIfContains(['address', 'street', 'f1_3'], data.address?.address1);
+              setIfContains(['apt', 'address 2', 'f1_4'], data.address?.address2);
+              setIfContains(['city', 'town', 'f1_5'], data.address?.city);
+              setIfContains(['state', 'f1_6'], data.address?.state);
+              setIfContains(['zip', 'zip code', 'postal', 'f1_7'], data.address?.zip);
+              // SSN / EIN — set whichever present
+              if (data.tin?.ssn) setIfContains(['ssn', 'social'], data.tin.ssn);
+              if (data.tin?.ein) setIfContains(['ein', 'employer'], data.tin.ein);
+              // Signature and date
+              setIfContains(['signature'], data.certification?.signature);
+              setIfContains(['date'], data.certification?.signatureDate);
+              // Try checking tax classification checkbox text field if present
+              const tax = (data.taxClassification || '').toLowerCase();
+              function checkIf(labelHints) {
+                const key = Object.keys(byName).find(k => labelHints.some(s => k.includes(s)));
+                if (key) {
+                  try { byName[key].setText('X'); } catch {}
+                }
+              }
+              if (tax) {
+                if (tax.includes('individual') || tax.includes('sole')) checkIf(['individual', 'sole']);
+                else if (tax.includes('c_corporation') || tax === 'c corporation' || tax === 'c') checkIf(['c corp', 'c corporation']);
+                else if (tax.includes('s_corporation') || tax === 's corporation' || tax === 's') checkIf(['s corp', 's corporation']);
+                else if (tax.includes('partnership')) checkIf(['partnership']);
+                else if (tax.includes('trust') || tax.includes('estate')) checkIf(['trust', 'estate']);
+                else if (tax.includes('llc')) checkIf(['llc']);
+                else if (tax.includes('other')) checkIf(['other']);
+              }
+              form.flatten();
+              const pdfBytes = await pdfDoc.save();
+              res.setHeader('Content-Type', 'application/pdf');
+              res.setHeader('Content-Disposition', `inline; filename="W9_${w9Id}.pdf"`);
+              return res.end(Buffer.from(pdfBytes));
+            } else {
+              // No AcroForm fields: overlay text at approximate coordinates as fallback
+              const page = pdfDoc.getPages()[0];
+              const { width, height } = page.getSize();
+              const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+              const draw = (t, x, y) => page.drawText(String(t || ''), { x, y, size: 10, font, color: rgb(0,0,0) });
+              // Approximate coordinates (may need tuning)
+              draw(data.name, 72, height - 100);
+              draw(data.businessName, 72, height - 115);
+              draw(data.address?.address1, 72, height - 160);
+              draw(data.address?.address2, 72, height - 175);
+              draw(data.address?.city, 72, height - 190);
+              draw(data.address?.state, 260, height - 190);
+              draw(data.address?.zip, 320, height - 190);
+              if (data.tin?.ssn) draw(data.tin.ssn, 360, height - 260);
+              if (data.tin?.ein) draw(data.tin.ein, 360, height - 275);
+              draw(data.certification?.signature, 72, 120);
+              draw(data.certification?.signatureDate, 360, 120);
+              const pdfBytes = await pdfDoc.save();
+              res.setHeader('Content-Type', 'application/pdf');
+              res.setHeader('Content-Disposition', `inline; filename="W9_${w9Id}.pdf"`);
+              return res.end(Buffer.from(pdfBytes));
+            }
+          }
+        } catch (e) {
+          console.warn('pdf-lib W9 fill failed, falling back to simple PDF', e);
+        }
+        // Fallback: simple generated summary PDF
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="W9_${w9Id}.pdf"`);
         const doc = new PDFDocument({ margin: 50 });
@@ -491,6 +563,52 @@ function newAgent({ firstName = '', lastName = '', email = '', phone = '' }) {
   };
 }
 
+// Find existing agent by email (case-insensitive); if not found, try to build from submissions/intake and create agent.
+async function findOrCreateAgentByEmail(email) {
+  const target = (email || '').toString().trim().toLowerCase();
+  if (!target) return null;
+  // 1) search existing agents
+  try {
+    const entries = await fse.readdir(AGENTS_DIR, { withFileTypes: true });
+    for (const ent of entries) {
+      if (!ent.isDirectory()) continue;
+      const p = path.join(AGENTS_DIR, ent.name, 'agent.json');
+      if (!(await fse.pathExists(p))) continue;
+      try {
+        const a = await fse.readJson(p);
+        if ((a.profile?.email || '').toLowerCase() === target) return a;
+      } catch {}
+    }
+  } catch {}
+  // 2) try to derive from submissions (intake)
+  try {
+    const subs = await fse.readdir(SUBMISSIONS_DIR, { withFileTypes: true });
+    for (const ent of subs) {
+      if (!ent.isDirectory()) continue;
+      const p = path.join(SUBMISSIONS_DIR, ent.name, 'intake.json');
+      if (!(await fse.pathExists(p))) continue;
+      try {
+        const s = await fse.readJson(p);
+        const e = (s?.contact?.email || '').toLowerCase();
+        if (e && e === target) {
+          const agent = newAgent({
+            firstName: s.contact.firstName || '',
+            lastName: s.contact.lastName || '',
+            email: s.contact.email || '',
+            phone: s.contact.phone || ''
+          });
+          // link submission
+          agent.progress.intakeSubmitted = true;
+          agent.submissions.intakeId = s.id || ent.name;
+          await writeAgent(agent);
+          return agent;
+        }
+      } catch {}
+    }
+  } catch {}
+  return null;
+}
+
 // Create agent
 app.post('/api/agents', async (req, res) => {
   try {
@@ -511,20 +629,10 @@ app.post('/api/agents', async (req, res) => {
 // Find agent by email
 app.get('/api/agents/find', async (req, res) => {
   try {
-    const email = (req.query.email || '').toString().trim().toLowerCase();
+    const email = (req.query.email || '').toString().trim();
     if (!email) return res.status(400).json({ ok: false, error: 'Email required' });
-    const entries = await fse.readdir(AGENTS_DIR, { withFileTypes: true });
-    for (const ent of entries) {
-      if (!ent.isDirectory()) continue;
-      const p = path.join(AGENTS_DIR, ent.name, 'agent.json');
-      if (!(await fse.pathExists(p))) continue;
-      try {
-        const a = await fse.readJson(p);
-        if ((a.profile?.email || '').toLowerCase() === email) {
-          return res.json({ ok: true, agent: a });
-        }
-      } catch {}
-    }
+    const agent = await findOrCreateAgentByEmail(email);
+    if (agent) return res.json({ ok: true, agent });
     return res.status(404).json({ ok: false, error: 'Not found' });
   } catch (e) {
     res.status(500).json({ ok: false, error: 'Failed to search' });
@@ -668,17 +776,28 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
     };
 
     await fse.writeJson(path.join(destDir, 'intake.json'), submission, { spaces: 2 });
-    // Link to agent if provided
+    // Link to agent if provided, or find/create by email
+    let agent = null;
     if (body.agentId) {
-      const agent = await readAgent(body.agentId);
-      if (agent) {
-        agent.progress.intakeSubmitted = true;
-        agent.submissions.intakeId = id;
-        if (certProof?.path) {
-          agent.uploads.certProof = certProof.path;
-        }
-        await writeAgent(agent);
+      agent = await readAgent(body.agentId);
+    } else if (body.email) {
+      agent = await findOrCreateAgentByEmail(body.email);
+      if (!agent) {
+        agent = newAgent({
+          firstName: body.firstName || '',
+          lastName: body.lastName || '',
+          email: body.email || '',
+          phone: body.phone || ''
+        });
       }
+    }
+    if (agent) {
+      agent.progress.intakeSubmitted = true;
+      agent.submissions.intakeId = id;
+      if (certProof?.path) {
+        agent.uploads.certProof = certProof.path;
+      }
+      await writeAgent(agent);
     }
     res.json({ ok: true, id });
   } catch (err) {
