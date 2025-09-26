@@ -572,6 +572,10 @@ app.get('/api/agents/:id/documents/w9.pdf', async (req, res) => {
     if (!agent) return res.status(404).send('Not found');
     const w9Id = agent.submissions?.w9Id;
     const uploadedPath = agent.submissions?.w9FilePath;
+    const persistedPdf = agent.submissions?.w9PdfPath;
+    if (persistedPdf && await fse.pathExists(persistedPdf)) {
+      return res.download(persistedPdf, path.basename(persistedPdf));
+    }
     if (w9Id) {
       const w9JsonPath = path.join(SUBMISSIONS_DIR, w9Id, 'w9.json');
       if (await fse.pathExists(w9JsonPath)) {
