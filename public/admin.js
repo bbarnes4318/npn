@@ -9,6 +9,10 @@
     const passwordInput = document.getElementById('adminPasswordInput');
     const list = document.getElementById('docsList');
     const msg = document.getElementById('adminMsg');
+    const refreshBtn = document.getElementById('refreshAgentsBtn');
+    const recentMsg = document.getElementById('recentMsg');
+    const recentInput = document.getElementById('recentSearchInput');
+    const tableBody = document.getElementById('agentsTableBody');
 
     function setMsg(text) { if (msg) msg.textContent = text; }
 
@@ -26,6 +30,51 @@
       const p = passwordInput?.value?.trim();
       if (p) h['X-Admin-Password'] = p;
       return h;
+    }
+
+    async function loadAgents() {
+      if (!tableBody) return;
+      tableBody.innerHTML = '';
+      recentMsg.textContent = 'Loading...';
+      try {
+        const q = (recentInput?.value || '').trim();
+        const url = q ? `/api/admin/agents?q=${encodeURIComponent(q)}&limit=100` : '/api/admin/agents?limit=100';
+        const res = await fetch(url, { headers: authHeaders() });
+        const data = await res.json();
+        if (!res.ok || data.ok === false) throw new Error(data.error || 'Failed');
+        const agents = data.agents || [];
+        if (!agents.length) {
+          tableBody.innerHTML = '<tr><td colspan="6" class="help">No agents found.</td></tr>';
+          recentMsg.textContent = '';
+          return;
+        }
+        const fmt = (s) => {
+          try { return new Date(s).toLocaleString(); } catch { return s || ''; }
+        };
+        agents.forEach(a => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${fmt(a.createdAt)}</td>
+            <td><code>${a.id}</code></td>
+            <td>${(a.profile?.firstName || '')} ${(a.profile?.lastName || '')}</td>
+            <td>${a.profile?.email || ''}</td>
+            <td>
+              ${a.progress?.packetSubmitted ? 'Packet ✓' : 'Packet —'} | 
+              ${a.progress?.w9Submitted ? 'W‑9 ✓' : 'W‑9 —'}
+            </td>
+            <td>
+              <button class="button ghost" data-action="copy" data-id="${a.id}">Copy ID</button>
+              <button class="button ghost" data-action="openw9" data-id="${a.id}">Open W‑9</button>
+              <button class="button secondary" data-action="zip" data-id="${a.id}">ZIP</button>
+              <button class="button" data-action="list" data-id="${a.id}">List</button>
+            </td>
+          `;
+          tableBody.appendChild(tr);
+        });
+        recentMsg.textContent = `${agents.length} result(s)`;
+      } catch (e) {
+        recentMsg.textContent = 'Failed to load agents.';
+      }
     }
 
     listBtn?.addEventListener('click', async () => {
@@ -118,5 +167,43 @@
         setMsg('Could not open W-9.');
       }
     });
+
+    // Recent list controls
+    refreshBtn?.addEventListener('click', loadAgents);
+    recentInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') loadAgents(); });
+    tableBody?.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const id = btn.getAttribute('data-id');
+      const action = btn.getAttribute('data-action');
+      if (!id || !action) return;
+      if (action === 'copy') {
+        try { await navigator.clipboard.writeText(id); btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy ID', 1000); } catch {}
+      } else if (action === 'openw9') {
+        // Reuse existing handler logic but for row ID
+        try {
+          const res = await fetch(`/api/admin/agents/${encodeURIComponent(id)}/documents/w9.pdf`, { headers: authHeaders() });
+          if (!res.ok) { alert('No W‑9 found.'); return; }
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          window.open(url, '_blank', 'noopener');
+          setTimeout(() => URL.revokeObjectURL(url), 60000);
+        } catch { alert('Could not open W‑9.'); }
+      } else if (action === 'zip') {
+        try {
+          const res = await fetch(`/api/admin/agents/${encodeURIComponent(id)}/documents/zip`, { headers: authHeaders() });
+          if (!res.ok) throw new Error('Failed');
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = `agent_${id}_packet.zip`; document.body.appendChild(a); a.click(); URL.revokeObjectURL(url); a.remove();
+        } catch { alert('Could not download ZIP.'); }
+      } else if (action === 'list') {
+        input.value = id; listBtn.click();
+      }
+    });
+
+    // Auto-load on page open
+    loadAgents();
   });
 })();

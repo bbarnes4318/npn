@@ -100,6 +100,33 @@ app.get('/api/admin/agents/find', requireAdmin, async (req, res) => {
   }
 });
 
+// List recent agents (admin)
+app.get('/api/admin/agents', requireAdmin, async (req, res) => {
+  try {
+    const q = (req.query.q || '').toString().trim().toLowerCase();
+    const limit = Math.max(1, Math.min(200, parseInt(req.query.limit, 10) || 50));
+    const entries = await fse.readdir(AGENTS_DIR, { withFileTypes: true });
+    const agents = [];
+    for (const ent of entries) {
+      if (!ent.isDirectory()) continue;
+      const p = path.join(AGENTS_DIR, ent.name, 'agent.json');
+      if (!(await fse.pathExists(p))) continue;
+      try {
+        const a = await fse.readJson(p);
+        const email = (a.profile?.email || '').toLowerCase();
+        const name = `${a.profile?.firstName || ''} ${a.profile?.lastName || ''}`.toLowerCase();
+        if (q && !(email.includes(q) || name.includes(q))) continue;
+        agents.push({ id: a.id, createdAt: a.createdAt || '', profile: a.profile || {}, progress: a.progress || {} });
+      } catch {}
+    }
+    agents.sort((x, y) => (new Date(y.createdAt || 0)) - (new Date(x.createdAt || 0)));
+    res.json({ ok: true, agents: agents.slice(0, limit) });
+  } catch (e) {
+    console.error('admin list agents error', e);
+    res.status(500).json({ ok: false, error: 'Failed to list agents' });
+  }
+});
+
 // List docs (admin)
 app.get('/api/admin/agents/:id/documents/list', requireAdmin, async (req, res) => {
   try {
