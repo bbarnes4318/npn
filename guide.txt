@@ -1,0 +1,313 @@
+It's very important that we have all the sections listed below on the digital signature sections.
+
+Please reuse the information automatically in each section from the already collected information. Use your brain to match the fields.
+
+
+Paycor 1099 Employee Information Worksheet
+first_name
+last_name
+street_address
+city
+state
+zip_code
+ssn
+date_of_hire
+date_of_birth
+employee_work_location_address
+
+
+Remote Working Rules & Expectations
+
+This ONLY applies to agents who will be selling ACA policies for us. However, please go ahead and complete this section in the event you sell for us in the future.
+
+As a remote agent we value flexibility while ensuring productivity and service excellence. To maintain a 
+high standard of work, please review and adhere to the following remote working rules:
+1. Work Hours & Availability 
+○ You are expected to be online and available during your scheduled work hours. Any 
+changes to your schedule must be communicated in advance to management. 
+○ You are allowed a 1 hour lunch break & (2) 15 min breaks 
+○ Please be punctual for all scheduled meetings, including daily check-ins via Google Meet.
+ 
+2. Communication 
+○ Always use your work email for communication with clients and team members. 
+○ If you need to reach out to management or support, please do so promptly via our 
+designated messaging system. 
+○ Keep your phone and email easily accessible during work hours for client inquiries or 
+urgent requests. 
+
+3. Workspace Setup 
+○ You are responsible for maintaining a quiet, distraction-free work environment to best 
+serve your clients. 
+○ Ensure you have the necessary technology, including a stable internet connection, 
+functional computer, headset, and any other equipment needed for your role. 
+○ If you encounter technical issues, please inform management immediately. 
+
+4. Data Security & Privacy 
+○ Always protect sensitive client information and agency data. Use encrypted channels for 
+communication, and do not share your login credentials with others. 
+○ Log off from systems when not in use and ensure your devices are protected by strong 
+passwords and up-to-date security software. 
+
+5. Team Collaboration 
+○ Regularly attend team meetings and training sessions as scheduled. 
+○ Maintain active participation in Google Meet “Remote Agents” to stay connected with the 
+team, discuss any challenges, and share updates. 
+
+6. Performance Monitoring 
+○ Your performance will be reviewed regularly, and you are expected to meet the goals 
+outlined in your onboarding and training plans. 
+○ Reach out if you need support or adjustments to meet expectations. 
+
+7. Time-Off & Absences 
+○ In the event of an emergency or planned absence, notify management as soon as 
+possible to arrange coverage. 
+○ Ensure that any scheduled time off is properly requested in advance, and try to avoid 
+taking unplanned absences during critical periods of the SEP season. 
+
+By adhering to these rules, you help ensure both your success and the success of the team. We’re here 
+to support you, and your commitment to these guidelines will make a difference in achieving our goals. 
+
+
+Full Name: {first_name} {last_name}
+
+
+Date: {current_date}
+
+
+
+
+
+PRODUCER AGREEMENT (REMOTE) 
+
+This Producer Agreement (the "Agreement") is made and entered into as of the date written 
+below by and between JJNProtection (the "Company") and the insurance producer (the 
+"Producer"): 
+
+Producer Name: {first_name} {last_name}
+
+WHEREAS, 
+● The Company is engaged in the business of providing insurance products; and 
+● The Producer is engaged in soliciting insurance applications and desires to do so on 
+behalf of the Company; 
+NOW, THEREFORE, in consideration of the mutual covenants herein, the parties agree as 
+follows: 
+
+1. Authorization to Sign Documents for Carrier 
+Appointments 
+The Producer authorizes JJNProtection to sign and submit all necessary documents on their 
+behalf related to ACA (Affordable Care Act) insurance carrier appointments. This includes 
+appointment forms, contracting packets, and certification confirmations. 
+JJNProtection is also authorized to represent the Producer with GAs, FMOs, and ACA carriers 
+to facilitate onboarding and production access.
+ 
+2. Work Schedule and Requirements 
+2.1 Work Hours 
+● Monday to Friday: 10:00 AM – 6:00 PM EST  
+2.2 Sales Expectations 
+● Producer must submit a minimum of 5 sales per day (weekdays) to remain eligible for 
+base pay. 
+
+3. Compensation Structure 
+3.1 Commission 
+● Producer will be paid $30 per effectuated policy. 
+● Payment is contingent upon: 
+○ The policy remaining active/on-book, and 
+○ Correct placement of the Producer’s NPN on the policy. 
+3.2 Base Pay 
+● Base pay may be offered at the Company’s discretion. 
+● If 5 sales are not achieved on any given workday, base pay will not be provided for 
+that day but rather commissions will be paid. 
+3.3 Chargebacks 
+● Commissions reversed due to policy cancellation will be charged back or deducted from 
+future payments within 30 days. 
+
+4. Book of Business 
+● All leads, clients, and applications submitted under this Agreement are considered part 
+of the Company's Book of Business. 
+● The Company retains full ownership of the Book. 
+● The Producer agrees not to solicit these clients for 2 years following termination of this 
+Agreement. 
+● Violation may result in legal action and liability for all related costs. 
+
+5. Confidentiality and Non-Solicitation 
+● The Producer must protect Company data during and after the relationship. 
+● No confidential information may be disclosed or reused. 
+● For 2 years after termination, the Producer shall not solicit JJNProtection clients or use 
+Company materials for competing work. 
+
+6. Daily and Performance Bonuses 
+● Bonuses, if any, are issued solely at the discretion of JJNProtection management. 
+
+7. Term and Termination 
+● This Agreement becomes effective upon execution and remains in effect until terminated 
+by either party in writing. 
+
+8. General Provisions 
+● This is an independent contractor relationship; no employer-employee relationship 
+exists. 
+
+● This Agreement is governed by the laws of the State of Florida.
+ 
+● No modifications will be valid unless in writing and signed by both parties. 
+
+IN WITNESS WHEREOF, the parties have executed this Agreement as of the 
+dates below: 
+
+Company (JJNProtection) 
+
+Signature: _________________________________ 
+
+Printed Name: Nicholas James 
+
+Title: Owner 
+
+Date: {current_name}
+
+Producer {first_name} {last_name}
+
+Signature: _________________________________ 
+
+Printed Name: {first_name} {last_name}
+
+Date: {current_date}
+
+
+
+
+
+
+Background Questions  
+
+Licensing & Contracting  
+
+Our licensing and contracting specialist will need you to answer the following background questions 
+below. If any of your answers are  YES , please provide certified documents to facilitate the approval of 
+your licenses. Should you have any questions, please do not hesitate to contact our licensing specialist, 
+Daja. 
+
+1A. Have you ever been convicted of a misdemeanor, had a judgment withheld or deferred, or are you 
+currently charged with committing a misdemeanor? You may exclude the following misdemeanor 
+convictions or pending misdemeanor charges: traffic citations, driving under the influence (DUI), driving 
+while intoxicated (DWI), driving without a license, reckless driving, or driving with a suspended or 
+revoked license. You may also exclude juvenile adjudications (offenses where you were adjudicated 
+delinquent in a juvenile court)  
+1B .Have you ever been convicted of a felony, had a judgment withheld or deferred, or are you currently 
+charged with committing a felony? You may exclude juvenile adjudications (offenses where you were 
+adjudicated delinquent in a juvenile court)  
+1B1 If you have a felony conviction involving dishonesty or breach of trust, have you applied for written 
+consent to engage in the business of insurance in your home state as required by 18 USC 1033?  
+1B2 If so, was consent granted? (Attach copy of 1033 consent approved by home state.) 
+1C Have you ever been convicted of a military offense, had a judgment withheld or deferred, or are you 
+currently charged with committing a military offense?  
+Note: For Questions 1a, 1b and 1c, “Convicted” includes, but is not limited to, having been found guilty 
+by verdict of a judge or jury, having entered a plea of guilty or nolo contendere or no contest, or having 
+been given probation, a suspended sentence, or a fine. 
+If you answer yes to any of these questions, you must attach to this application:  
+a) a written statement explaining the circumstances of each incident, 
+b) a copy of the charging document,  
+c) a copy of the official document, which demonstrates the resolution of the charges or any final 
+judgment.  
+2. Have you ever been named or involved as a party in an administrative proceeding, including FINRA 
+sanction or arbitration proceeding regarding any professional or occupational license or registration? 
+"Involved" means having a license censured, suspended, revoked, canceled, terminated; or, being assessed 
+a fine, a cease and desist order, a prohibition order, a compliance order, placed on probation, sanctioned or 
+surrendering a license to resolve an administrative action. “Involved” also means being named as a party 
+to an administrative or arbitration proceeding, which is related to a professional or occupational license, 
+or registration. “Involved” also means having a license, or registration application denied or the act of 
+withdrawing an application to avoid a denial. INCLUDE any business so named because of your actions 
+in your capacity as an owner, partner, officer or director, or member or manager of a Limited Liability 
+Company. You may EXCLUDE terminations due solely to noncompliance with continuing education 
+requirements or failure to pay a renewal fee. 
+If you answer yes, you must attach to this application:  
+a) a written statement identifying the type of license and explaining the circumstances of each incident, 
+b) a copy of the Notice of Hearing or other document that states the charges and allegations, and  
+c) a copy of the official document, which demonstrates the resolution of the charges or any final 
+judgment. 
+3. Has any demand been made or judgment rendered against you or any business in which you are or 
+were an owner, partner, officer or director, or member or manager of a limited liability company, for 
+overdue monies by an insurer, insured or producer, or have you ever been subject to a bankruptcy 
+proceeding? Do not include personal bankruptcies, unless they involve funds held on behalf of others. If 
+you answer yes, submit a statement summarizing the details of the indebtedness and arrangements for 
+repayment, and/or type and location of bankruptcy.  
+4. Have you been notified by any jurisdiction to which you are applying of any delinquent tax obligation 
+that is not the subject of a repayment agreement? If you answer yes, identify the jurisdiction(s):  
+5 Are you currently a party to, or have you ever been found liable in, any lawsuit, arbitrations or 
+mediation proceeding involving allegations of fraud, misappropriation or conversion of funds, 
+misrepresentation or breach of fiduciary duty?  
+If you answer yes, you must attach to this application:  
+a) a written statement summarizing the details of each incident,  
+b) a copy of the Petition, Complaint or other document that commenced the lawsuit, arbitration, or 
+mediation proceedings,  
+c) a copy of the official documents, which demonstrates the resolution of the charges or any final 
+judgment. 
+6. Have you or any business in which you are or were an owner, partner, officer or director, or member or 
+manager of a limited liability company, ever had an insurance agency contract or any other business 
+relationship with an insurance company terminated for any alleged misconduct? If you answer yes, you  
+must attach to this application:  
+a) a written statement summarizing the details of each incident and explaining why you feel this incident 
+should not prevent you from receiving an insurance license 
+b) copies of all relevant documents.  
+7 . Do you have a child support obligation in arrearage?  
+7A .If you answer yes, a) by how many months are you in arrearage?  
+7B b) are you currently subject to and in compliance with any repayment agreement?  
+7C c) are you the subject of a child support related subpoena/warrant? (If you answered yes, provide 
+documentation showing proof of current payments or an approved repayment plan from the appropriate 
+state child support agency.)  
+8 In response to a “yes” answer to one or more of the Background Questions for this application, are you 
+submitting document(s) to the NAIC/NIPR Attachments Warehouse? 
+8A If you answer yes Will you be associating (linking) previously filed documents from the NAIC/NIPR 
+Attachments Warehouse to this application?  
+Note: If you have previously submitted documents to the Attachments Warehouse that are intended to be 
+filed with this application, you must go to the Attachments Warehouse and associate (link) the supporting 
+document(s) to this application based upon the particular background question number you have answered 
+yes to on this application.  
+
+
+
+
+
+JJN Protection Insurance Agency LLC
+ Official Job Offer & NPN Override Agreement
+ We are pleased to present you with opportunities to join our agency for both Medicare AEP
+ Sales and ACA Marketplace Sales. JJN Protection has been granted NPN Override
+ permission, allowing us to properly set you up within our agency hierarchy and utilize your
+ NPN for overrides where applicable. This ensures that you receive proper credit and that we
+ can build a strong, compliant team under your leadership.
+Medicare Job Offer – AEP Season
+ Position: Medicare Sales Agent (On-Site or Remote)
+ Compensation: $2,000–$3,000 per week (Commission + Bonuses)
+ Role Overview: You will receive inbound calls and warm transfers, educate seniors about
+ Medicare Advantage and Supplement plans, and complete enrollments compliantly. This is a
+ high-volume, high-earning opportunity.
+ What We Offer: • Pre-qualified leads and live transfers daily • $2K–$3K per week achievable
+ during AEP • On-site training and compliance support • Weekly pay + performance bonuses •
+ Growth opportunities beyond AEP
+ Requirements: • Active Health/Life or Medicare License • Ability to work full-time during AEP
+ (Oct 15 – Dec 7) • Prior Medicare or health insurance experience preferred
+ACA Health Insurance Agent Job Offer
+ Position: ACA Health Insurance Agent
+ Compensation: $20 per sale + $10 override per sale OR $30 per sale flat
+ We have been officially granted permission to set you up with NPN Override within our
+ agency. This allows us to ensure all submitted enrollments are properly tracked under your
+ NPN and gives us the ability to use your NPN as an override for other agents you may refer or
+ supervise.
+ What We Offer: • Inbound ACA leads from HealthCare.gov • Access to multiple carriers
+ (Aetna, Ambetter, Cigna, Molina, Oscar, UHC) • Daily and weekly lead flow • Full EDE
+ integration and tracking • Training and compliance support
+ Requirements: • Active health insurance license and FFM certification • Reliable computer
+ and internet connection • Commitment to working dialer hours during Open Enrollment and
+ SEP periods
+NPN Override Agreement & Acknowledgment
+ By signing below, you acknowledge that JJN Protection Insurance Agency LLC has been
+ granted authority to set you up for NPN override and utilize your NPN as an override for other
+ agents within the agency. This will not affect your personal book of business outside of this
+ agreement and ensures proper crediting and compensation for all enrollments made through
+ the agency.
+
+ Agent Name: {first_name} {last_name}
+
+ NPN: ________________________________
+
+ Agent Signature: ___________________________
+
+ Date: {current_date}

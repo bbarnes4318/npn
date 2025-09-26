@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Portal — ACA Onboarding</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="auth-page">
+  <header class="header">
+    <div class="container header-inner">
+      <a class="logo" href="/">
+        <img class="logo-img" src="/amben.png" alt="Company logo" />
+        <span>ACA Agent Onboarding</span>
+      </a>
+      <nav class="nav">
+        <a href="/">Quick-start</a>
+        <a href="#">Portal</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container auth">
+      <h1 class="headline">Agent Portal</h1>
+      <p class="sub">Complete the 5 steps, upload your cert proof, sign agreements, and submit Intake & W‑9 — all in one place.</p>
+
+      <div class="auth-card" style="max-width:520px;margin:0 auto;">
+        <form id="emailForm" class="form">
+          <div class="field">
+            <label class="label">Work email <span class="required">*</span></label>
+            <input class="input" type="email" name="email" placeholder="you@agency.com" required />
+            <div class="help">We’ll find your portal or create one. No password needed.</div>
+          </div>
+          <div class="auth-actions">
+            <button class="button primary" type="submit">Continue</button>
+            <div id="emailMsg" class="help"></div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <footer id="contact" class="footer">
+    <div class="container footer-inner">
+      <div>
+        <strong>Need help?</strong>
+        <div>Phone: (555) 555‑5555</div>
+        <div>Email: <a href="mailto:info@yourcompany.com">info@yourcompany.com</a></div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/portal.js" defer></script>
+</body>
+</html>

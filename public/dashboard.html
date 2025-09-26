@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Signature Packet — JJN Protection</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container header-inner">
+      <a class="logo" href="/">
+        <span class="logo-mark">N</span>
+        <span>ACA Agent Onboarding</span>
+      </a>
+      <nav class="nav">
+        <a href="/">Quick-start</a>
+        <a href="/portal.html">Portal</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <div class="card" style="margin-bottom:16px;">
+        <h1 style="margin:0;">Digital Signature Packet</h1>
+        <div class="help">Complete all sections below. Your name and the current date will automatically populate everywhere needed.</div>
+      </div>
+
+      <form id="packetForm" class="form">
+        <!-- SECTION 1: Paycor 1099 Employee Information Worksheet -->
+        <section class="card agreement" id="section-paycor">
+          <h2 class="section-title">Paycor 1099 Employee Information Worksheet</h2>
+          <div class="grid columns-2">
+            <div class="field">
+              <label class="label">First name <span class="required">*</span></label>
+              <input class="input" type="text" name="first_name" id="first_name" data-source="first_name" required />
+            </div>
+            <div class="field">
+              <label class="label">Last name <span class="required">*</span></label>
+              <input class="input" type="text" name="last_name" id="last_name" data-source="last_name" required />
+            </div>
+
+            <div class="field" style="grid-column: span 2;">
+              <label class="label">Street address <span class="required">*</span></label>
+              <input class="input" type="text" name="street_address" required />
+            </div>
+            <div class="field">
+              <label class="label">City <span class="required">*</span></label>
+              <input class="input" type="text" name="city" required />
+            </div>
+            <div class="field">
+              <label class="label">State <span class="required">*</span></label>
+              <input class="input" type="text" name="state" maxlength="2" placeholder="FL" required />
+            </div>
+            <div class="field">
+              <label class="label">ZIP code <span class="required">*</span></label>
+              <input class="input" type="text" name="zip_code" inputmode="numeric" pattern="\d{5}" placeholder="12345" required />
+            </div>
+            <div class="field">
+              <label class="label">SSN <span class="required">*</span></label>
+              <input class="input" type="text" name="ssn" inputmode="numeric" placeholder="XXX-XX-XXXX" required />
+            </div>
+            <div class="field">
+              <label class="label">Date of hire</label>
+              <input class="input" type="date" name="date_of_hire" />
+            </div>
+            <div class="field">
+              <label class="label">Date of birth <span class="required">*</span></label>
+              <input class="input" type="date" name="date_of_birth" required />
+            </div>
+            <div class="field" style="grid-column: span 2;">
+              <label class="label">Employee work location address</label>
+              <input class="input" type="text" name="employee_work_location_address" />
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 2: Remote Working Rules & Expectations -->
+        <section class="card agreement" id="section-remote">
+          <h2 class="section-title">Remote Working Rules & Expectations</h2>
+          <div class="text-block">
+            <p>This ONLY applies to agents who will be selling ACA policies for us. However, please go ahead and complete this section in the event you sell for us in the future.</p>
+            <p>As a remote agent we value flexibility while ensuring productivity and service excellence. To maintain a high standard of work, please review and adhere to the following remote working rules:</p>
+            <ol>
+              <li><strong>Work Hours & Availability.</strong> You are expected to be online and available during your scheduled work hours. Any changes to your schedule must be communicated in advance to management. You are allowed a 1 hour lunch break & (2) 15 min breaks. Please be punctual for all scheduled meetings, including daily check-ins via Google Meet.</li>
+              <li><strong>Communication.</strong> Always use your work email for communication with clients and team members. If you need to reach out to management or support, please do so promptly via our designated messaging system. Keep your phone and email easily accessible during work hours for client inquiries or urgent requests.</li>
+              <li><strong>Workspace Setup.</strong> You are responsible for maintaining a quiet, distraction-free work environment to best serve your clients. Ensure you have the necessary technology, including a stable internet connection, functional computer, headset, and any other equipment needed for your role. If you encounter technical issues, please inform management immediately.</li>
+              <li><strong>Data Security & Privacy.</strong> Always protect sensitive client information and agency data. Use encrypted channels for communication, and do not share your login credentials with others. Log off from systems when not in use and ensure your devices are protected by strong passwords and up-to-date security software.</li>
+              <li><strong>Team Collaboration.</strong> Regularly attend team meetings and training sessions as scheduled. Maintain active participation in Google Meet “Remote Agents” to stay connected with the team, discuss any challenges, and share updates.</li>
+              <li><strong>Performance Monitoring.</strong> Your performance will be reviewed regularly, and you are expected to meet the goals outlined in your onboarding and training plans. Reach out if you need support or adjustments to meet expectations.</li>
+              <li><strong>Time-Off & Absences.</strong> In the event of an emergency or planned absence, notify management as soon as possible to arrange coverage. Ensure that any scheduled time off is properly requested in advance, and try to avoid taking unplanned absences during critical periods of the SEP season.</li>
+            </ol>
+            <p>By adhering to these rules, you help ensure both your success and the success of the team. We’re here to support you, and your commitment to these guidelines will make a difference in achieving our goals.</p>
+          </div>
+          <div class="ack">
+            <div><strong>Full Name:</strong> <span class="token" data-token="full_name"></span></div>
+            <div><strong>Date:</strong> <span class="token" data-token="current_date"></span></div>
+            <label style="display:flex; gap:8px; align-items:center; margin-top:8px;">
+              <input type="checkbox" id="ackRemote" required /> I have read and agree to the Remote Working Rules & Expectations.
+            </label>
+          </div>
+        </section>
+
+        <!-- SECTION 3: Producer Agreement (REMOTE) -->
+        <section class="card agreement" id="section-producer">
+          <h2 class="section-title">Producer Agreement (REMOTE)</h2>
+          <div class="text-block">
+            <p>This Producer Agreement (the "Agreement") is made and entered into as of the date written below by and between JJNProtection (the "Company") and the insurance producer (the "Producer").</p>
+            <p><strong>Producer Name:</strong> <span class="token" data-token="full_name"></span></p>
+            <ol>
+              <li><strong>Authorization to Sign Documents for Carrier Appointments.</strong> The Producer authorizes JJNProtection to sign and submit all necessary documents on their behalf related to ACA (Affordable Care Act) insurance carrier appointments. This includes appointment forms, contracting packets, and certification confirmations. JJNProtection is also authorized to represent the Producer with GAs, FMOs, and ACA carriers to facilitate onboarding and production access.</li>
+              <li><strong>Book of Business.</strong> All leads, clients, and applications submitted under this Agreement are considered part of the Company's Book of Business. The Company retains full ownership of the Book. The Producer agrees not to solicit these clients for 2 years following termination of this Agreement. Violation may result in legal action and liability for all related costs.</li>
+              <li><strong>Confidentiality and Non-Solicitation.</strong> The Producer must protect Company data during and after the relationship. No confidential information may be disclosed or reused. For 2 years after termination, the Producer shall not solicit JJNProtection clients or use Company materials for competing work.</li>
+              <li><strong>Daily and Performance Bonuses.</strong> Bonuses, if any, are issued solely at the discretion of JJNProtection management.</li>
+              <li><strong>Term and Termination.</strong> This Agreement becomes effective upon execution and remains in effect until terminated by either party in writing.</li>
+              <li><strong>General Provisions.</strong> This is an independent contractor relationship; no employer-employee relationship exists. This Agreement is governed by the laws of the State of Florida. No modifications will be valid unless in writing and signed by both parties.</li>
+            </ol>
+          </div>
+          <div class="signature">
+            <div class="grid columns-2">
+              <div class="card" style="padding:14px;">
+                <h4 style="margin:0 0 8px;">Company (JJNProtection)</h4>
+                <div><strong>Signature:</strong> _________________________________</div>
+                <div><strong>Printed Name:</strong> Nicholas James</div>
+                <div><strong>Title:</strong> Owner</div>
+                <div><strong>Date:</strong> <span class="token" data-token="current_date"></span></div>
+              </div>
+              <div class="card" style="padding:14px;">
+                <h4 style="margin:0 0 8px;">Producer</h4>
+                <div><strong>Producer:</strong> <span class="token" data-token="full_name"></span></div>
+                <canvas id="sigPad" width="560" height="160" style="border:1px dashed var(--border); border-radius:8px; background:#fff; width:100%; max-width:100%;"></canvas>
+                <div class="cta-row" style="margin-top:8px;">
+                  <button class="button ghost" id="clearSigBtn" type="button">Clear</button>
+                  <button class="button secondary" id="saveSigBtn" type="button">Save Signature</button>
+                  <div id="sigMsg" class="help"></div>
+                </div>
+                <div style="margin-top:8px;"><strong>Date:</strong> <span class="token" data-token="current_date"></span></div>
+                <label style="display:flex; gap:8px; align-items:center; margin-top:8px;">
+                  <input type="checkbox" id="ackProducer" required /> I agree to the terms of the Producer Agreement.
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 4: Background Questions -->
+        <section class="card agreement" id="section-background">
+          <h2 class="section-title">Background Questions</h2>
+          <p class="help">If you answer "Yes" to any question, you may be required to upload or provide supporting documentation.</p>
+
+          <div class="list">
+            <!-- 1A -->
+            <div class="field">
+              <label class="label">1A. Have you ever been convicted of a misdemeanor, had a judgment withheld or deferred, or are you currently charged with committing a misdemeanor? (Traffic citations and common driving offenses may be excluded.)</label>
+              <div class="inline">
+                <label><input type="radio" name="q1a" value="no" checked /> No</label>
+                <label><input type="radio" name="q1a" value="yes" /> Yes</label>
+              </div>
+              <div class="conditional" data-for="q1a">
+                <textarea class="input" name="q1a_details" placeholder="Explain the circumstances..."></textarea>
+                <input type="file" name="q1a_docs" class="input" multiple />
+              </div>
+            </div>
+
+            <!-- 1B -->
+            <div class="field">
+              <label class="label">1B. Have you ever been convicted of a felony, had a judgment withheld or deferred, or are you currently charged with committing a felony?</label>
+              <div class="inline">
+                <label><input type="radio" name="q1b" value="no" checked /> No</label>
+                <label><input type="radio" name="q1b" value="yes" /> Yes</label>
+              </div>
+              <div class="conditional" data-for="q1b">
+                <textarea class="input" name="q1b_details" placeholder="Explain the circumstances..."></textarea>
+                <input type="file" name="q1b_docs" class="input" multiple />
+              </div>
+              <div class="field">
+                <label class="label">1B1. If felony involved dishonesty or breach of trust, have you applied for written consent to engage in insurance as required by 18 USC 1033?</label>
+                <div class="inline">
+                  <label><input type="radio" name="q1b1" value="no" checked /> No</label>
+                  <label><input type="radio" name="q1b1" value="yes" /> Yes</label>
+                </div>
+                <div class="conditional" data-for="q1b1">
+                  <textarea class="input" name="q1b1_details" placeholder="Provide details..."></textarea>
+                </div>
+              </div>
+              <div class="field">
+                <label class="label">1B2. If so, was consent granted? (Attach copy of 1033 consent approved by home state.)</label>
+                <div class="inline">
+                  <label><input type="radio" name="q1b2" value="no" checked /> No</label>
+                  <label><input type="radio" name="q1b2" value="yes" /> Yes</label>
+                </div>
+                <div class="conditional" data-for="q1b2">
+                  <input type="file" name="q1b2_doc" class="input" />
+                </div>
+              </div>
+            </div>
+
+            <!-- 1C -->
+            <div class="field">
+              <label class="label">1C. Have you ever been convicted of a military offense, had a judgment withheld or deferred, or are you currently charged with committing a military offense?</label>
+              <div class="inline">
+                <label><input type="radio" name="q1c" value="no" checked /> No</label>
+                <label><input type="radio" name="q1c" value="yes" /> Yes</label>
+              </div>
+              <div class="conditional" data-for="q1c">
+                <textarea class="input" name="q1c_details" placeholder="Explain the circumstances..."></textarea>
+                <input type="file" name="q1c_docs" class="input" multiple />
+              </div>
+            </div>
+
+            <!-- 2 -->
+            <div class="field">
+              <label class="label">2. Administrative proceedings related to any professional/occupational license or registration?</label>
+              <div class="inline">
+                <label><input type="radio" name="q2" value="no" checked /> No</label>
+                <label><input type="radio" name="q2" value="yes" /> Yes</label>
+              </div>
+              <div class="conditional" data-for="q2">
+                <textarea class="input" name="q2_details" placeholder="Identify license type and explain each incident..."></textarea>
+                <input type="file" name="q2_docs" class="input" multiple />
+              </div>
+            </div>
+
+            <!-- 3 -->
+            <div class="field">
+              <label class="label">3. Demands/judgments for overdue monies or bankruptcy proceedings involving business funds?</label>
+              <div class="inline">
+                <label><input type="radio" name="q3" value="no" checked /> No</label>
+                <label><input type="radio" name="q3" value="yes" /> Yes</label>
+              </div>
+              <div class="conditional" data-for="q3">
+                <textarea class="input" name="q3_details" placeholder="Summarize details of indebtedness/repayment or bankruptcy..."></textarea>
+              </div>
+            </div>
+
+            <!-- 4 -->
+            <div class="field">
+              <label class="label">4. Any delinquent tax obligation not subject to a repayment agreement?</label>
+              <div class="inline">
+                <label><input type="radio" name="q4" value="no" checked /> No</label>
+                <label><input type="radio" name="q4" value="yes" /> Yes</label>
+              </div>
+              <div class="conditional" data-for="q4">
+                <textarea class="input" name="q4_details" placeholder="Identify jurisdiction(s) and details..."></textarea>
+              </div>
+            </div>
+
+            <!-- 5 -->
+            <div class="field">
+              <label class="label">5. Party to, or found liable in, any lawsuit/arbitration/mediation involving fraud, misappropriation, conversion of funds, misrepresentation, or breach of fiduciary duty?</label>
+              <div class="inline">
+                <label><input type="radio" name="q5" value="no" checked /> No</label>
+                <label><input type="radio" name="q5" value="yes" /> Yes</label>
+              </div>
+              <div class="conditional" data-for="q5">
+                <textarea class="input" name="q5_details" placeholder="Summarize each incident and attach documents..."></textarea>
+                <input type="file" name="q5_docs" class="input" multiple />
+              </div>
+            </div>
+
+            <!-- 6 -->
+            <div class="field">
+              <label class="label">6. Ever had an insurance agency contract or business relationship terminated for alleged misconduct?</label>
+              <div class="inline">
+                <label><input type="radio" name="q6" value="no" checked /> No</label>
+                <label><input type="radio" name="q6" value="yes" /> Yes</label>
+              </div>
+              <div class="conditional" data-for="q6">
+                <textarea class="input" name="q6_details" placeholder="Summarize details; why this should not prevent licensing..."></textarea>
+                <input type="file" name="q6_docs" class="input" multiple />
+              </div>
+            </div>
+
+            <!-- 7 and subs -->
+            <div class="field">
+              <label class="label">7. Do you have a child support obligation in arrearage?</label>
+              <div class="inline">
+                <label><input type="radio" name="q7" value="no" checked /> No</label>
+                <label><input type="radio" name="q7" value="yes" /> Yes</label>
+              </div>
+              <div class="conditional" data-for="q7">
+                <div class="grid columns-2">
+                  <div class="field">
+                    <label class="label">7A. Months in arrearage</label>
+                    <input class="input" type="number" name="q7a_months" min="0" />
+                  </div>
+                  <div class="field">
+                    <label class="label">7B. Subject to and in compliance with a repayment agreement?</label>
+                    <select name="q7b_agreement" class="input">
+                      <option value="">Select</option>
+                      <option value="yes">Yes</option>
+                      <option value="no">No</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="label">7C. Are you the subject of a child support related subpoena/warrant?</label>
+                  <select name="q7c_warrant" class="input">
+                    <option value="">Select</option>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                  </select>
+                </div>
+                <div class="help">Provide documentation showing proof of current payments or an approved repayment plan as applicable.</div>
+              </div>
+            </div>
+
+            <!-- 8 and 8A -->
+            <div class="field">
+              <label class="label">8. Are you submitting documents to the NAIC/NIPR Attachments Warehouse?</label>
+              <div class="inline">
+                <label><input type="radio" name="q8" value="no" checked /> No</label>
+                <label><input type="radio" name="q8" value="yes" /> Yes</label>
+              </div>
+              <div class="conditional" data-for="q8">
+                <label class="label">8A. Will you be associating (linking) previously filed documents from the Attachments Warehouse to this application?</label>
+                <div class="inline">
+                  <label><input type="radio" name="q8a" value="no" checked /> No</label>
+                  <label><input type="radio" name="q8a" value="yes" /> Yes</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 4.5: Agent Intake (Integrated) -->
+        <section class="card agreement" id="section-intake">
+          <h2 class="section-title">Agent Intake</h2>
+          <p class="help">Provide your contact details and the states where you are licensed. Your name and NPN are already captured in this packet.</p>
+          <div class="grid columns-2">
+            <div class="field">
+              <label class="label">Work email <span class="required">*</span></label>
+              <input class="input" type="email" name="email" placeholder="you@agency.com" required />
+            </div>
+            <div class="field">
+              <label class="label">Phone</label>
+              <input class="input" type="tel" name="phone" placeholder="(555) 555-5555" />
+            </div>
+            <div class="field">
+              <label class="label">Agency / Company</label>
+              <input class="input" type="text" name="agencyName" />
+            </div>
+            <div class="field">
+              <label class="label">Website</label>
+              <input class="input" type="url" name="website" placeholder="https://" />
+            </div>
+            <div class="field" style="grid-column: span 2;">
+              <label class="label">State(s) where you're licensed <span class="required">*</span></label>
+              <select name="statesLicensed" class="input states-multi" multiple size="8"></select>
+              <div class="help">Hold Ctrl (Windows) or Command (Mac) to select multiple states.</div>
+            </div>
+          </div>
+          <div class="field" style="margin-top:10px;">
+            <label class="label">Upload proof of CMS/FFM certification (PDF or image)</label>
+            <input class="input" type="file" id="certFile2" accept="application/pdf,image/*" />
+            <div class="cta-row" style="margin-top:8px;">
+              <button class="button secondary" id="uploadCertBtn2" type="button">Upload Certification Proof</button>
+              <button class="button ghost" id="deferCertBtn2" type="button">Save for later</button>
+              <div id="uploadCertMsg2" class="help"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 5: Official Job Offer & NPN Override Agreement -->
+        <section class="card agreement" id="section-npn">
+          <h2 class="section-title">JJN Protection Insurance Agency LLC — Official Job Offer & NPN Override Agreement</h2>
+          <div class="text-block">
+            <p>We are pleased to present you with opportunities to join our agency for both Medicare AEP Sales and ACA Marketplace Sales. JJN Protection has been granted NPN Override permission, allowing us to properly set you up within our agency hierarchy and utilize your NPN for overrides where applicable. This ensures that you receive proper credit and that we can build a strong, compliant team under your leadership.</p>
+
+            <h4>Medicare Job Offer – AEP Season</h4>
+            <ul>
+              <li>Position: Medicare Sales Agent (On-Site or Remote)</li>
+              <li>Compensation: $1,500–$2,500 per week (Commission + Bonuses)</li>
+              <li>Role Overview: Receive inbound calls and warm transfers, educate seniors about Medicare Advantage and Supplement plans, and complete enrollments compliantly. High-volume, high-earning opportunity.</li>
+              <li>What We Offer: Pre-qualified leads and live transfers daily; $2K–$3K per week achievable during AEP; On-site training and compliance support; Weekly pay + performance bonuses; Growth opportunities beyond AEP</li>
+              <li>Requirements: Active Health/Life or Medicare License; Ability to work full-time during AEP (Oct 15 – Dec 7); Prior Medicare or health insurance experience preferred</li>
+            </ul>
+
+            <h4>ACA Health Insurance Agent Job Offer</h4>
+            <ul>
+              <li>Position: ACA Health Insurance Agent</li>
+              <li>Compensation: $20 per sale + $5 override per sale OR $25 per sale flat</li>
+              <li>We have permission to set you up with NPN Override within our agency to track enrollments and assign credit.</li>
+              <li>What We Offer: Inbound ACA leads from HealthCare.gov; Access to multiple carriers (Aetna, Ambetter, Cigna, Molina, Oscar, UHC); Daily and weekly lead flow; Full EDE integration and tracking; Training and compliance support</li>
+              <li>Requirements: Active health insurance license and FFM certification; Reliable computer and internet; Commitment to working dialer hours during Open Enrollment and SEP periods</li>
+            </ul>
+
+            <h4>NPN Override Agreement & Acknowledgment</h4>
+            <p>By signing below, you acknowledge that JJN Protection Insurance Agency LLC has been granted authority to set you up for NPN override and utilize your NPN as an override for other agents within the agency. This will not affect your personal book of business outside of this agreement and ensures proper crediting and compensation for all enrollments made through the agency.</p>
+          </div>
+          <div class="ack">
+            <div><strong>Agent Name:</strong> <span class="token" data-token="full_name"></span></div>
+            <div class="field" style="max-width:340px;">
+              <label class="label">NPN <span class="required">*</span></label>
+              <input class="input" type="text" name="npn" required />
+            </div>
+            <div><strong>Agent Signature:</strong> <em>Signature on Producer Agreement applies to this section.</em></div>
+            <div><strong>Date:</strong> <span class="token" data-token="current_date"></span></div>
+            <label style="display:flex; gap:8px; align-items:center; margin-top:8px;">
+              <input type="checkbox" id="ackNpn" required /> I acknowledge and agree to the NPN Override terms above.
+            </label>
+          </div>
+        </section>
+
+        <!-- SECTION 6: Additional Forms -->
+        <section class="card agreement" id="section-forms">
+          <h2 class="section-title">Additional Forms</h2>
+          <p class="help">Open the official IRS W‑9 to complete and upload your tax form, or download your submitted documents below.</p>
+          <div class="cta-row">
+            <a class="button secondary" href="/w9.html">Open W‑9</a>
+            <a class="button ghost" id="w9PdfLink" href="#">Download signed W‑9 (PDF)</a>
+            <a class="button ghost" id="certProofLink" href="#">Download CMS/FFM Certification Proof</a>
+          </div>
+        </section>
+
+        <!-- Actions -->
+        <div class="card" style="display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
+          <div class="help">Review your information, then save your signature and submit.</div>
+          <div class="cta-row">
+            <button class="button secondary" type="button" id="printBtn">Print Packet</button>
+            <button class="button ghost" type="button" id="downloadPacketBtn">Download your packet</button>
+            <button class="button primary" type="submit">Submit Packet</button>
+            <div id="submitMsg" class="help"></div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <footer id="contact" class="footer">
+    <div class="container footer-inner">
+      <div>
+        <strong>Need help?</strong>
+        <div>Phone: XXX-XXX-XXXX</div>
+        <div>Email: <a href="mailto:info@yourcompany.com">info@yourcompany.com</a></div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/dashboard.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+spec:
+  name: npn-onboarding
+  services:
+    - name: web
+      environment_slug: node-js
+      instance_count: 1
+      instance_size_slug: basic-xxs
+      http_port: 3000
+      routes:
+        - path: /
+      build_command: npm install
+      run_command: npm start
+      envs:
+        - key: NODE_ENV
+          value: production
+          scope: RUN_TIME
+        - key: AGENTS_DIR
+          value: /data/agents
+          scope: RUN_TIME
+        - key: SUBMISSIONS_DIR
+          value: /data/submissions
+          scope: RUN_TIME
+        - key: UPLOADS_DIR
+          value: /data/uploads
+          scope: RUN_TIME
+      volumes:
+        - name: agents-volume
+          mount_path: /data/agents
+        - name: submissions-volume
+          mount_path: /data/submissions
+        - name: uploads-volume
+          mount_path: /data/uploads
+  databases: []
+  ingress:
+    rules: []

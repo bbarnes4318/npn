@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>W-9 — ACA Onboarding</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container header-inner">
+      <a class="logo" href="/">
+        <span class="logo-mark">N</span>
+        <span>ACA Agent Onboarding</span>
+      </a>
+      <nav class="nav">
+        <a href="/">Home</a>
+        <a href="/intake.html">Intake</a>
+        <a href="#">W-9</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <h2>IRS Form W‑9 (Official)</h2>
+      <p class="sub">This is the official IRS W‑9 form. We do not alter it in any way. Download, complete, and sign the form, then upload your completed W‑9 below.</p>
+
+      <div class="card" style="margin-bottom:16px;">
+        <object data="https://www.irs.gov/pub/irs-pdf/fw9.pdf" type="application/pdf" width="100%" height="820">
+          <p>Unable to display PDF. <a href="https://www.irs.gov/pub/irs-pdf/fw9.pdf" target="_blank" rel="noopener">Open the official W‑9 (PDF)</a>.</p>
+        </object>
+        <div class="cta-row" style="margin-top:8px;">
+          <a class="button secondary" href="https://www.irs.gov/pub/irs-pdf/fw9.pdf" target="_blank" rel="noopener">Open W‑9 in new tab</a>
+          <a class="button ghost" href="/intake.html">Go to Intake</a>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <h3>Complete W‑9 Online (E‑Sign)</h3>
+        <p class="help">Prefer to complete digitally? Fill out the fields below and e‑sign. This submits the same information to our secure system.</p>
+        <form id="w9Form" class="form">
+          <div class="grid columns-2">
+            <div class="field">
+              <label class="label">Name (as shown on your income tax return) <span class="required">*</span></label>
+              <input class="input" type="text" name="name" required />
+            </div>
+            <div class="field">
+              <label class="label">Business name/disregarded entity name</label>
+              <input class="input" type="text" name="businessName" />
+            </div>
+
+            <div class="field" style="grid-column: span 2;">
+              <label class="label">Federal tax classification <span class="required">*</span></label>
+              <div class="inline" style="flex-wrap:wrap; gap:10px 16px;">
+                <label><input type="radio" name="taxClassification" value="individual" required /> Individual/sole proprietor</label>
+                <label><input type="radio" name="taxClassification" value="c_corporation" /> C Corporation</label>
+                <label><input type="radio" name="taxClassification" value="s_corporation" /> S Corporation</label>
+                <label><input type="radio" name="taxClassification" value="partnership" /> Partnership</label>
+                <label><input type="radio" name="taxClassification" value="trust_estate" /> Trust/estate</label>
+                <label><input type="radio" name="taxClassification" value="llc" /> LLC</label>
+                <label><input type="radio" name="taxClassification" value="other" /> Other</label>
+              </div>
+            </div>
+            <div class="field" id="llcRow" style="display:none;">
+              <label class="label">LLC classification (C= C corp, S= S corp, P= partnership)</label>
+              <input class="input" type="text" name="llcClassification" placeholder="C, S, or P" />
+            </div>
+
+            <div class="field">
+              <label class="label">Exempt payee code (if any)</label>
+              <input class="input" type="text" name="exemptPayeeCode" />
+            </div>
+            <div class="field">
+              <label class="label">Exemption from FATCA reporting code (if any)</label>
+              <input class="input" type="text" name="fatcaCode" />
+            </div>
+
+            <div class="field" style="grid-column: span 2;">
+              <label class="label">Address (number, street, and apt. or suite no.)</label>
+              <input class="input" type="text" name="address1" />
+            </div>
+            <div class="field" style="grid-column: span 2;">
+              <label class="label">Address line 2</label>
+              <input class="input" type="text" name="address2" />
+            </div>
+            <div class="field">
+              <label class="label">City</label>
+              <input class="input" type="text" name="city" />
+            </div>
+            <div class="field">
+              <label class="label">State</label>
+              <select class="input state-select" name="state"></select>
+            </div>
+            <div class="field">
+              <label class="label">ZIP</label>
+              <input class="input" type="text" name="zip" />
+            </div>
+
+            <div class="field" style="grid-column: span 2;">
+              <label class="label">Taxpayer Identification Number (provide SSN or EIN)</label>
+              <div class="grid columns-2">
+                <div class="field">
+                  <label class="label">SSN</label>
+                  <input class="input" type="text" name="ssn" placeholder="XXX-XX-XXXX" />
+                </div>
+                <div class="field">
+                  <label class="label">EIN</label>
+                  <input class="input" type="text" name="ein" placeholder="XX-XXXXXXX" />
+                </div>
+              </div>
+              <div class="help">Enter either SSN or EIN. One is required to submit.</div>
+            </div>
+
+            <div class="field">
+              <label class="label">Signature (type your full name) <span class="required">*</span></label>
+              <input class="input" type="text" name="signature" required />
+            </div>
+            <div class="field">
+              <label class="label">Date <span class="required">*</span></label>
+              <input class="input" type="date" name="signatureDate" required />
+            </div>
+          </div>
+          <div id="w9Msg" class="help" style="margin-top:6px;"></div>
+          <div class="cta-row" style="margin-top:8px;">
+            <button class="button primary" type="submit">Submit W‑9</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>Upload Completed W‑9</h3>
+        <div class="field">
+          <input class="input" type="file" id="w9File" accept="application/pdf,image/*" />
+          <div class="help">Accepted: PDF or a clear image (JPG/PNG). If you filled digitally, export as PDF.</div>
+        </div>
+        <div class="cta-row">
+          <button class="button primary" id="uploadW9Btn" type="button">Upload W‑9</button>
+          <div id="uploadW9Msg" class="help"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <strong>Need help?</strong>
+        <div>Phone: XXX-XXX-XXXX</div>
+        <div>Email: <a href="mailto:info@yourcompany.com">info@yourcompany.com</a></div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/main.js" defer></script>
+</body>
+</html>

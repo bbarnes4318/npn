@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Agent Documents</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container header-inner">
+      <a class="logo" href="/">
+        <span class="logo-mark">N</span>
+        <span>ACA Agent Onboarding</span>
+      </a>
+      <nav class="nav">
+        <a href="/portal.html">Portal</a>
+        <a href="#">Admin</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <div class="card" style="margin-bottom:16px;">
+        <h2 style="margin:0;">Admin — Download Agent Documents</h2>
+        <p class="help">Enter an Agent ID to list artifacts and download a ZIP of all documents (W‑9, certifications, signatures, etc.).</p>
+      </div>
+
+      <div class="card">
+        <form id="adminForm" class="form" onsubmit="return false;">
+          <div class="grid columns-2">
+            <div class="field">
+              <label class="label">Agent ID</label>
+              <input class="input" type="text" id="agentIdInput" placeholder="e.g., abc123xyz" />
+            </div>
+            <div class="field">
+              <label class="label">Find by Email</label>
+              <div class="inline" style="gap:8px;">
+                <input class="input" type="email" id="emailInput" placeholder="someone@example.com" />
+                <button class="button ghost" id="findByEmailBtn" type="button">Find</button>
+              </div>
+              <div class="help">Looks up the agent and auto-fills Agent ID.</div>
+            </div>
+          </div>
+          <div class="cta-row" style="margin-top:8px;">
+            <button class="button secondary" id="listBtn" type="button">List documents</button>
+            <button class="button primary" id="downloadZipBtn" type="button">Download ZIP</button>
+          </div>
+          <div id="adminMsg" class="help"></div>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>Documents</h3>
+        <ul id="docsList" class="list"></ul>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <strong>Need help?</strong>
+        <div>Phone: XXX-XXX-XXXX</div>
+        <div>Email: <a href="mailto:info@yourcompany.com">info@yourcompany.com</a></div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/admin.js" defer></script>
+</body>
+</html>
