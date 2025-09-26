@@ -190,9 +190,31 @@ app.get('/api/admin/agents/:id/documents/cert', requireAdmin, async (req, res) =
 // --- Simple Admin token middleware ---
 function requireAdmin(req, res, next) {
   const token = process.env.ADMIN_TOKEN;
-  if (!token) return next(); // not enforced if not set
-  const provided = req.header('x-admin-token') || req.header('X-Admin-Token');
-  if (provided && provided === token) return next();
+  const password = process.env.ADMIN_PASSWORD;
+  if (!token && !password) return next(); // not enforced if neither is set
+
+  // Attempt password auth first if configured
+  if (password) {
+    const headerPwd = req.header('x-admin-password') || req.header('X-Admin-Password');
+    if (headerPwd && headerPwd === password) return next();
+    // Basic Auth support: Authorization: Basic base64(username:password)
+    const auth = req.header('authorization') || req.header('Authorization');
+    if (auth && auth.toLowerCase().startsWith('basic ')) {
+      try {
+        const decoded = Buffer.from(auth.slice(6).trim(), 'base64').toString('utf8');
+        const parts = decoded.split(':');
+        const pass = parts.slice(1).join(':'); // allow any username
+        if (pass === password) return next();
+      } catch {}
+    }
+  }
+
+  // Fallback to token auth if configured
+  if (token) {
+    const provided = req.header('x-admin-token') || req.header('X-Admin-Token');
+    if (provided && provided === token) return next();
+  }
+
   return res.status(401).json({ ok: false, error: 'Unauthorized' });
 }
 

@@ -210,7 +210,13 @@
           });
           const data = await res.json();
           if (!res.ok || !data.ok) throw new Error(data.error || 'Failed to submit');
-          showMessage(msg, 'Thanks! Your W-9 information was received.', 'success');
+          showMessage(msg, 'Submitted! Returning you to your dashboard...', 'success');
+          // Give a clear next step by returning to dashboard
+          setTimeout(() => {
+            const aId = getAgentId();
+            if (aId) window.location.href = `/dashboard.html?agentId=${encodeURIComponent(aId)}`;
+            else window.location.href = '/dashboard.html';
+          }, 900);
         } catch (err) {
           console.error(err);
           showMessage(msg, 'There was an error submitting your W-9. Please try again.', 'error');
@@ -243,6 +249,24 @@
           localStorage.setItem(`w9Uploaded:${agentId || 'anon'}`, 'pending');
           showMessage(uploadMsg, 'Saved locally. We will sync your W‑9 when online.', 'notice');
         }
+      });
+
+      // Back to Dashboard link should carry agentId if present
+      const backToDashboard = document.getElementById('backToDashboard');
+      if (backToDashboard && agentId) backToDashboard.href = `/dashboard.html?agentId=${encodeURIComponent(agentId)}`;
+
+      // Download All Documents (ZIP)
+      const downloadAllBtn = document.getElementById('downloadAllBtn');
+      downloadAllBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!agentId) { alert('Open your Dashboard to download your documents.'); return; }
+        const url = `/api/agents/${encodeURIComponent(agentId)}/documents/zip`;
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = '';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
       });
     }
   });

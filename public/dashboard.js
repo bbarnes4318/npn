@@ -181,6 +181,27 @@
     const data = loadPacket();
     if (!data.current_date) { data.current_date = todayLong(); savePacket(data); }
 
+    // Status banner: show helpful direction and a quick download-all
+    (function setupStatusBanner() {
+      const banner = document.getElementById('statusBanner');
+      const text = document.getElementById('statusText');
+      const dlAll = document.getElementById('statusDownloadAll');
+      if (!banner || !text || !dlAll) return;
+      if (agentId) {
+        dlAll.href = `/api/agents/${encodeURIComponent(agentId)}/documents/zip`;
+      } else {
+        dlAll.addEventListener('click', (e) => { e.preventDefault(); alert('Enter through your Dashboard link to download your documents.'); });
+      }
+      const state = loadPacket();
+      const submitted = !!state.packetSubmitted;
+      if (submitted) {
+        text.textContent = 'You\'re all set! Your packet has been submitted. You can download all your documents here.';
+      } else {
+        text.textContent = 'Fill out the packet below and save your signature. You can download all your documents at any time.';
+      }
+      banner.style.display = 'block';
+    })();
+
     // Populate inputs
     document.querySelectorAll('#packetForm input, #packetForm select, #packetForm textarea').forEach(el => {
       const name = el.name;
@@ -353,8 +374,11 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        submitMsg.textContent = 'Submitted! We will review and follow up.';
+        submitMsg.textContent = 'Submitted! Redirecting to next steps…';
         saveField('packetSubmitted', true);
+        setTimeout(() => {
+          window.location.href = `/completed.html?agentId=${encodeURIComponent(agentId)}`;
+        }, 900);
       } catch (err) {
         // fallback to local save only
         saveField('packetSubmitted', 'pending');

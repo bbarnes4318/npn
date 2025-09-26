@@ -5,25 +5,25 @@
     const input = document.getElementById('agentIdInput');
     const emailInput = document.getElementById('emailInput');
     const findBtn = document.getElementById('findByEmailBtn');
-    const tokenInput = document.getElementById('adminTokenInput');
+    const passwordInput = document.getElementById('adminPasswordInput');
     const list = document.getElementById('docsList');
     const msg = document.getElementById('adminMsg');
 
     function setMsg(text) { if (msg) msg.textContent = text; }
 
-    // Persist token locally for convenience
+    // Persist password locally for convenience
     try {
-      const saved = localStorage.getItem('ADMIN_TOKEN');
-      if (saved && tokenInput && !tokenInput.value) tokenInput.value = saved;
-      tokenInput?.addEventListener('change', () => {
-        localStorage.setItem('ADMIN_TOKEN', tokenInput.value || '');
+      const saved = localStorage.getItem('ADMIN_PASSWORD');
+      if (saved && passwordInput && !passwordInput.value) passwordInput.value = saved;
+      passwordInput?.addEventListener('change', () => {
+        localStorage.setItem('ADMIN_PASSWORD', passwordInput.value || '');
       });
     } catch {}
 
     function authHeaders() {
       const h = {};
-      const t = tokenInput?.value?.trim();
-      if (t) h['X-Admin-Token'] = t;
+      const p = passwordInput?.value?.trim();
+      if (p) h['X-Admin-Password'] = p;
       return h;
     }
 

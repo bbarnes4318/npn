@@ -15,11 +15,29 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    // If user already has an agent portal ID saved, take them straight to their dashboard
+    try {
+      const existing = localStorage.getItem(LS_KEY);
+      if (existing) {
+        location.replace(`/dashboard.html?agentId=${encodeURIComponent(existing)}`);
+        return; // do not render the form
+      }
+    } catch {}
+
     const emailForm = document.getElementById('emailForm');
     const emailMsg = document.getElementById('emailMsg');
     const resumeBtn = document.getElementById('resumeBtn');
     const copyLinkBtn = document.getElementById('copyLinkBtn');
     const resumeInput = document.getElementById('resumeAgentId');
+
+    // Prefill email if previously typed and stored
+    try {
+      const last = localStorage.getItem('lastEmail');
+      if (last) {
+        const emailInput = emailForm?.querySelector('input[name="email"]');
+        if (emailInput) emailInput.value = last;
+      }
+    } catch {}
 
     emailForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -27,6 +45,7 @@
       try {
         const fd = new FormData(emailForm);
         const email = String(fd.get('email') || '').trim();
+        try { localStorage.setItem('lastEmail', email); } catch {}
         // Try to find by email
         try {
           const { agent } = await api(`/api/agents/find?email=${encodeURIComponent(email)}`);

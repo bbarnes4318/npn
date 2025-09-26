@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Next Steps — ACA Agent Certification</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <meta name="description" content="Choose your ACA agent certification process: New Agent or Returning Agent." />
+</head>
+<body>
+  <header class="header">
+    <div class="container header-inner">
+      <a class="logo" href="/">
+        <img class="logo-img" src="/amben.png" alt="Company logo" />
+        <span>ACA Agent Onboarding</span>
+      </a>
+      <nav class="nav">
+        <a href="/portal.html">Portal</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <div class="card" style="margin-bottom:16px; text-align:center;">
+        <h1 style="margin:0 0 8px;">You're all set!</h1>
+        <div class="help">Your onboarding packet has been submitted. Choose your certification path below to complete your CMS training.</div>
+      </div>
+
+      <div class="grid columns-2" style="align-items:stretch;">
+        <section class="card" style="display:flex; flex-direction:column;">
+          <h2 class="section-title">New ACA Agent Certification Process</h2>
+          <p>Use this guide if you are a new agent or broker who has not previously completed Marketplace registration and training.</p>
+          <div class="cta-row" style="margin-top:auto;">
+            <a class="button primary" href="https://www.cms.gov/files/document/new-agents-and-brokers-guide-marketplace-registration-and-training.pdf" target="_blank" rel="noopener">Open New Agent Guide (PDF)</a>
+          </div>
+        </section>
+
+        <section class="card" style="display:flex; flex-direction:column;">
+          <h2 class="section-title">Returning ACA Agent Certification Process</h2>
+          <p>Use this guide if you are a returning agent or broker who completed registration and training in a prior year.</p>
+          <div class="cta-row" style="margin-top:auto;">
+            <a class="button secondary" href="https://www.cms.gov/files/document/returning-agents-and-brokers-guide-marketplace-registration-and-training.pdf" target="_blank" rel="noopener">Open Returning Agent Guide (PDF)</a>
+          </div>
+        </section>
+      </div>
+
+      <div class="card" style="margin-top:16px; display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
+        <div class="help">Need your packet or documents?</div>
+        <div class="cta-row">
+          <a class="button ghost" id="backToDashboard" href="/dashboard.html">Back to Dashboard</a>
+          <a class="button" id="downloadAllBtn" href="#">Download all documents (ZIP)</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer id="contact" class="footer">
+    <div class="container footer-inner">
+      <div>
+        <strong>Need help?</strong>
+        <div>Phone: XXX-XXX-XXXX</div>
+        <div>Email: <a href="mailto:info@yourcompany.com">info@yourcompany.com</a></div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function() {
+      const QS = new URLSearchParams(window.location.search);
+      const aId = QS.get('agentId') || localStorage.getItem('agentPortalId') || '';
+      const back = document.getElementById('backToDashboard');
+      if (back && aId) back.href = `/dashboard.html?agentId=${encodeURIComponent(aId)}`;
+      const dl = document.getElementById('downloadAllBtn');
+      if (dl) {
+        if (aId) {
+          dl.href = `/api/agents/${encodeURIComponent(aId)}/documents/zip`;
+        } else {
+          dl.addEventListener('click', (e) => { e.preventDefault(); alert('Open your Dashboard to download your documents.'); });
+        }
+      }
+    })();
+  </script>
+</body>
+</html>
