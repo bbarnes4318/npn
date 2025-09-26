@@ -31,6 +31,11 @@
         <form id="adminForm" class="form" onsubmit="return false;">
           <div class="grid columns-2">
             <div class="field">
+              <label class="label">Admin Token</label>
+              <input class="input" type="password" id="adminTokenInput" placeholder="Enter your admin token" />
+              <div class="help">Required if ADMIN_TOKEN is set on the server. Stored locally in your browser only.</div>
+            </div>
+            <div class="field">
               <label class="label">Agent ID</label>
               <input class="input" type="text" id="agentIdInput" placeholder="e.g., abc123xyz" />
             </div>

@@ -12,9 +12,36 @@ const PORT = process.env.PORT || 3000;
 // Paths
 const ROOT = __dirname;
 const PUBLIC_DIR = path.join(ROOT, 'public');
-const UPLOADS_TMP = process.env.UPLOADS_DIR || path.join(ROOT, 'uploads');
-const SUBMISSIONS_DIR = process.env.SUBMISSIONS_DIR || path.join(ROOT, 'submissions');
-const AGENTS_DIR = process.env.AGENTS_DIR || path.join(ROOT, 'agents');
+
+// Choose a writable directory, with fallbacks (helps when volumes are missing)
+function chooseDir(preferred, fallbacks = []) {
+  const candidates = [preferred, ...fallbacks].filter(Boolean);
+  for (const p of candidates) {
+    try {
+      fse.ensureDirSync(p);
+      return p;
+    } catch (e) {
+      // try next candidate
+    }
+  }
+  // last resort: use OS temp
+  const tmp = path.join(require('os').tmpdir(), 'npn');
+  fse.ensureDirSync(tmp);
+  return tmp;
+}
+
+let UPLOADS_TMP = chooseDir(
+  process.env.UPLOADS_DIR || path.join(ROOT, 'uploads'),
+  [path.join(ROOT, 'uploads'), '/tmp/npn/uploads']
+);
+let SUBMISSIONS_DIR = chooseDir(
+  process.env.SUBMISSIONS_DIR || path.join(ROOT, 'submissions'),
+  [path.join(ROOT, 'submissions'), '/tmp/npn/submissions']
+);
+let AGENTS_DIR = chooseDir(
+  process.env.AGENTS_DIR || path.join(ROOT, 'agents'),
+  [path.join(ROOT, 'agents'), '/tmp/npn/agents']
+);
 
 // Ensure directories exist
 fse.ensureDirSync(PUBLIC_DIR);
@@ -32,6 +59,142 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Multer for file uploads
 const upload = multer({ dest: UPLOADS_TMP, limits: { fileSize: 10 * 1024 * 1024 } });
+
+// --- Admin-protected variants ---
+// Find agent by email (admin)
+app.get('/api/admin/agents/find', requireAdmin, async (req, res) => {
+  try {
+    const email = (req.query.email || '').toString().trim().toLowerCase();
+    if (!email) return res.status(400).json({ ok: false, error: 'Email required' });
+    const entries = await fse.readdir(AGENTS_DIR, { withFileTypes: true });
+    for (const ent of entries) {
+      if (!ent.isDirectory()) continue;
+      const p = path.join(AGENTS_DIR, ent.name, 'agent.json');
+      if (!(await fse.pathExists(p))) continue;
+      try {
+        const a = await fse.readJson(p);
+        if ((a.profile?.email || '').toLowerCase() === email) {
+          return res.json({ ok: true, agent: a });
+        }
+      } catch {}
+    }
+    return res.status(404).json({ ok: false, error: 'Not found' });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: 'Failed to search' });
+  }
+});
+
+// List docs (admin)
+app.get('/api/admin/agents/:id/documents/list', requireAdmin, async (req, res) => {
+  try {
+    const agent = await readAgent(req.params.id);
+    if (!agent) return res.status(404).json({ ok: false, error: 'Not found' });
+    const files = await gatherAgentDocuments(agent);
+    res.json({ ok: true, files: files.map(f => ({ name: f.name })) });
+  } catch (e) {
+    console.error('admin list docs error', e);
+    res.status(500).json({ ok: false, error: 'Failed to list documents' });
+  }
+});
+
+// ZIP (admin)
+app.get('/api/admin/agents/:id/documents/zip', requireAdmin, async (req, res) => {
+  try {
+    const agent = await readAgent(req.params.id);
+    if (!agent) return res.status(404).send('Not found');
+    const files = await gatherAgentDocuments(agent);
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="agent_${agent.id}_packet.zip"`);
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    archive.on('error', () => { try { res.status(500).end('ZIP error'); } catch {} });
+    archive.pipe(res);
+    files.forEach(f => archive.file(f.path, { name: f.name }));
+    await archive.finalize();
+  } catch (e) {
+    console.error('admin zip docs error', e);
+    try { res.status(500).send('Failed to build ZIP'); } catch {}
+  }
+});
+
+// W-9 PDF (admin)
+app.get('/api/admin/agents/:id/documents/w9.pdf', requireAdmin, async (req, res) => {
+  req.url = `/api/agents/${req.params.id}/documents/w9.pdf`; // for logging
+  try {
+    const agent = await readAgent(req.params.id);
+    if (!agent) return res.status(404).send('Not found');
+    const w9Id = agent.submissions?.w9Id;
+    const uploadedPath = agent.submissions?.w9FilePath;
+    if (w9Id) {
+      const w9JsonPath = path.join(SUBMISSIONS_DIR, w9Id, 'w9.json');
+      if (await fse.pathExists(w9JsonPath)) {
+        const data = await fse.readJson(w9JsonPath);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="W9_${w9Id}.pdf"`);
+        const doc = new PDFDocument({ margin: 50 });
+        doc.pipe(res);
+        doc.fontSize(16).text('Form W-9 (Substitute)', { align: 'center' });
+        doc.moveDown();
+        doc.fontSize(11).text('Request for Taxpayer Identification Number and Certification');
+        doc.moveDown();
+        function field(label, value) {
+          doc.font('Times-Bold').text(label + ':', { continued: true });
+          doc.font('Times-Roman').text(' ' + (value || ''));
+        }
+        field('Name', data.name);
+        field('Business name', data.businessName);
+        field('Tax classification', data.taxClassification);
+        if (data.taxClassification === 'llc') field('LLC classification', data.llcClassification);
+        field('Exempt payee code', data.exemptPayeeCode);
+        field('FATCA code', data.fatcaCode);
+        field('Address 1', data.address?.address1);
+        field('Address 2', data.address?.address2);
+        field('City', data.address?.city);
+        field('State', data.address?.state);
+        field('ZIP', data.address?.zip);
+        doc.moveDown();
+        field('SSN', data.tin?.ssn);
+        field('EIN', data.tin?.ein);
+        doc.moveDown();
+        field('Certification signature (typed)', data.certification?.signature);
+        field('Certification date', data.certification?.signatureDate);
+        doc.end();
+        return;
+      }
+    }
+    if (uploadedPath && await fse.pathExists(uploadedPath)) {
+      const filename = `W9_Upload_${agent.id}${path.extname(uploadedPath)}`;
+      return res.download(uploadedPath, filename);
+    }
+    return res.status(404).send('No W-9 found');
+  } catch (e) {
+    console.error('admin w9.pdf error', e);
+    return res.status(500).send('Failed to produce W-9 PDF');
+  }
+});
+
+// Cert proof (admin)
+app.get('/api/admin/agents/:id/documents/cert', requireAdmin, async (req, res) => {
+  try {
+    const agent = await readAgent(req.params.id);
+    if (!agent) return res.status(404).send('Not found');
+    const p = agent.uploads?.certProof;
+    if (!p || !(await fse.pathExists(p))) return res.status(404).send('Not found');
+    const filename = `CMS_FFM_CertProof_${agent.id}${path.extname(p)}`;
+    return res.download(p, filename);
+  } catch (e) {
+    console.error('admin cert download error', e);
+    return res.status(500).send('Failed to download');
+  }
+});
+
+// --- Simple Admin token middleware ---
+function requireAdmin(req, res, next) {
+  const token = process.env.ADMIN_TOKEN;
+  if (!token) return next(); // not enforced if not set
+  const provided = req.header('x-admin-token') || req.header('X-Admin-Token');
+  if (provided && provided === token) return next();
+  return res.status(401).json({ ok: false, error: 'Unauthorized' });
+}
 
 // ------- Document listing and ZIP download -------
 async function gatherAgentDocuments(agent) {

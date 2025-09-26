@@ -5,10 +5,27 @@
     const input = document.getElementById('agentIdInput');
     const emailInput = document.getElementById('emailInput');
     const findBtn = document.getElementById('findByEmailBtn');
+    const tokenInput = document.getElementById('adminTokenInput');
     const list = document.getElementById('docsList');
     const msg = document.getElementById('adminMsg');
 
     function setMsg(text) { if (msg) msg.textContent = text; }
+
+    // Persist token locally for convenience
+    try {
+      const saved = localStorage.getItem('ADMIN_TOKEN');
+      if (saved && tokenInput && !tokenInput.value) tokenInput.value = saved;
+      tokenInput?.addEventListener('change', () => {
+        localStorage.setItem('ADMIN_TOKEN', tokenInput.value || '');
+      });
+    } catch {}
+
+    function authHeaders() {
+      const h = {};
+      const t = tokenInput?.value?.trim();
+      if (t) h['X-Admin-Token'] = t;
+      return h;
+    }
 
     listBtn?.addEventListener('click', async () => {
       const id = input.value.trim();
@@ -16,7 +33,9 @@
       setMsg('Loading...');
       list.innerHTML = '';
       try {
-        const res = await fetch(`/api/agents/${encodeURIComponent(id)}/documents/list`);
+        const res = await fetch(`/api/admin/agents/${encodeURIComponent(id)}/documents/list`, {
+          headers: authHeaders()
+        });
         const data = await res.json();
         if (!res.ok || data.ok === false) throw new Error(data.error || 'Failed to list');
         setMsg('');
@@ -29,13 +48,20 @@
           li.textContent = f.name;
           list.appendChild(li);
         });
+      } catch (e) {
+        console.error(e);
+        setMsg('Could not list documents.');
+      }
+    });
 
     findBtn?.addEventListener('click', async () => {
       const email = (emailInput?.value || '').trim();
       if (!email) { setMsg('Enter an email to search.'); return; }
       setMsg('Searching...');
       try {
-        const res = await fetch(`/api/agents/find?email=${encodeURIComponent(email)}`);
+        const res = await fetch(`/api/admin/agents/find?email=${encodeURIComponent(email)}`, {
+          headers: authHeaders()
+        });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || data.ok === false || !data.agent?.id) throw new Error(data.error || 'Not found');
         input.value = data.agent.id;
@@ -45,21 +71,23 @@
         setMsg('Agent not found for that email.');
       }
     });
-      } catch (e) {
-        console.error(e);
-        setMsg('Could not list documents.');
-      }
-    });
 
     zipBtn?.addEventListener('click', async () => {
       const id = input.value.trim();
       if (!id) { setMsg('Enter an Agent ID.'); return; }
       try {
+        const res = await fetch(`/api/admin/agents/${encodeURIComponent(id)}/documents/zip`, {
+          headers: authHeaders()
+        });
+        if (!res.ok) throw new Error('Failed');
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = `/api/agents/${encodeURIComponent(id)}/documents/zip`;
-        a.download = '';
+        a.href = url;
+        a.download = `agent_${id}_packet.zip`;
         document.body.appendChild(a);
         a.click();
+        URL.revokeObjectURL(url);
         a.remove();
       } catch (e) {
         setMsg('Could not download ZIP.');
