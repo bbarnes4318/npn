@@ -535,15 +535,14 @@ app.get('/docs/:doc', async (req, res) => {
       doc.pipe(res);
       doc.fontSize(16).text('Producer Agreement (REMOTE)', { align: 'center' });
       doc.moveDown();
-      doc.fontSize(11).text('This Producer Agreement (the "Agreement") is made and entered into as of the date written below by and between JJNProtection (the "Company") and the insurance producer (the "Producer").');
+      doc.fontSize(11).text('This Producer Agreement (the "Agreement") is made and entered into as of the date written below by and between Life Assurance Solutions LLC (the "Company") and the insurance producer (the "Producer").');
       doc.moveDown();
       const items = [
-        'Authorization to Sign Documents for Carrier Appointments. The Producer authorizes JJNProtection to sign and submit all necessary documents on their behalf related to ACA insurance carrier appointments, including appointment forms, contracting packets, and certification confirmations. JJNProtection is authorized to represent the Producer with GAs, FMOs, and ACA carriers to facilitate onboarding and production access.',
-        'Book of Business. All leads, clients, and applications submitted under this Agreement are considered part of the Company\'s Book of Business. The Company retains full ownership. The Producer agrees not to solicit these clients for 2 years following termination of this Agreement. Violation may result in legal action and liability for all related costs.',
-        'Confidentiality and Non-Solicitation. The Producer must protect Company data during and after the relationship. No confidential information may be disclosed or reused. For 2 years after termination, the Producer shall not solicit JJNProtection clients or use Company materials for competing work.',
-        'Daily and Performance Bonuses. Bonuses, if any, are issued solely at the discretion of JJNProtection management.',
+        'Authorization to Sign Documents for Carrier Appointments. The Producer authorizes Life Assurance Solutions LLC to sign and submit all necessary documents on their behalf related to ACA (Affordable Care Act) insurance carrier appointments. This includes appointment forms, contracting packets, and certification confirmations. Life Assurance Solutions LLC is also authorized to represent the Producer with GAs, FMOs, and ACA carriers to facilitate onboarding and production access.',
+        'Book of Business. All leads, clients, and applications submitted under this Agreement are considered part of the Company\'s Book of Business. The Company retains full ownership of the Book.',
+        'Daily and Performance Bonuses. Bonuses, if any, are issued solely at the discretion of Life Assurance Solutions LLC management.',
         'Term and Termination. This Agreement becomes effective upon execution and remains in effect until terminated by either party in writing.',
-        'General Provisions. This is an independent contractor relationship; no employer-employee relationship exists. This Agreement is governed by the laws of the State of Florida. No modifications will be valid unless in writing and signed by both parties.'
+        'General Provisions. This is an independent contractor relationship; no employer-employee relationship exists. This Agreement is governed by the laws of the State of New Jersey. No modifications will be valid unless in writing and signed by both parties.'
       ];
       items.forEach((t, i) => {
         doc.moveDown(0.6);
@@ -906,15 +905,14 @@ app.post('/api/agents/:id/signatures', async (req, res) => {
           docPdf.pipe(out);
           docPdf.fontSize(16).text('Producer Agreement (REMOTE)', { align: 'center' });
           docPdf.moveDown();
-          docPdf.fontSize(11).text('This Producer Agreement (the "Agreement") is made and entered into as of the date written below by and between JJNProtection (the "Company") and the insurance producer (the "Producer").');
+          docPdf.fontSize(11).text('This Producer Agreement (the "Agreement") is made and entered into as of the date written below by and between Life Assurance Solutions LLC (the "Company") and the insurance producer (the "Producer").');
           docPdf.moveDown();
           const items = [
-            'Authorization to Sign Documents for Carrier Appointments. The Producer authorizes JJNProtection to sign and submit all necessary documents on their behalf related to ACA insurance carrier appointments, including appointment forms, contracting packets, and certification confirmations. JJNProtection is authorized to represent the Producer with GAs, FMOs, and ACA carriers to facilitate onboarding and production access.',
-            'Book of Business. All leads, clients, and applications submitted under this Agreement are considered part of the Company\'s Book of Business. The Company retains full ownership. The Producer agrees not to solicit these clients for 2 years following termination of this Agreement. Violation may result in legal action and liability for all related costs.',
-            'Confidentiality and Non-Solicitation. The Producer must protect Company data during and after the relationship. No confidential information may be disclosed or reused. For 2 years after termination, the Producer shall not solicit JJNProtection clients or use Company materials for competing work.',
-            'Daily and Performance Bonuses. Bonuses, if any, are issued solely at the discretion of JJNProtection management.',
+            'Authorization to Sign Documents for Carrier Appointments. The Producer authorizes Life Assurance Solutions LLC to sign and submit all necessary documents on their behalf related to ACA (Affordable Care Act) insurance carrier appointments. This includes appointment forms, contracting packets, and certification confirmations. Life Assurance Solutions LLC is also authorized to represent the Producer with GAs, FMOs, and ACA carriers to facilitate onboarding and production access.',
+            'Book of Business. All leads, clients, and applications submitted under this Agreement are considered part of the Company\'s Book of Business. The Company retains full ownership of the Book.',
+            'Daily and Performance Bonuses. Bonuses, if any, are issued solely at the discretion of Life Assurance Solutions LLC management.',
             'Term and Termination. This Agreement becomes effective upon execution and remains in effect until terminated by either party in writing.',
-            'General Provisions. This is an independent contractor relationship; no employer-employee relationship exists. This Agreement is governed by the laws of the State of Florida. No modifications will be valid unless in writing and signed by both parties.'
+            'General Provisions. This is an independent contractor relationship; no employer-employee relationship exists. This Agreement is governed by the laws of the State of New Jersey. No modifications will be valid unless in writing and signed by both parties.'
           ];
           items.forEach((t, i) => {
             docPdf.moveDown(0.6);

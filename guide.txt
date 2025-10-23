@@ -80,88 +80,46 @@ Date: {current_date}
 PRODUCER AGREEMENT (REMOTE) 
 
 This Producer Agreement (the "Agreement") is made and entered into as of the date written 
-below by and between JJNProtection (the "Company") and the insurance producer (the 
+below by and between Life Assurance Solutions LLC (the "Company") and the insurance producer (the 
 "Producer"): 
 
 Producer Name: {first_name} {last_name}
 
-WHEREAS, 
-● The Company is engaged in the business of providing insurance products; and 
-● The Producer is engaged in soliciting insurance applications and desires to do so on 
-behalf of the Company; 
-NOW, THEREFORE, in consideration of the mutual covenants herein, the parties agree as 
-follows: 
-
-1. Authorization to Sign Documents for Carrier 
-Appointments 
-The Producer authorizes JJNProtection to sign and submit all necessary documents on their 
+1. Authorization to Sign Documents for Carrier Appointments 
+The Producer authorizes Life Assurance Solutions LLC to sign and submit all necessary documents on their 
 behalf related to ACA (Affordable Care Act) insurance carrier appointments. This includes 
 appointment forms, contracting packets, and certification confirmations. 
-JJNProtection is also authorized to represent the Producer with GAs, FMOs, and ACA carriers 
+Life Assurance Solutions LLC is also authorized to represent the Producer with GAs, FMOs, and ACA carriers 
 to facilitate onboarding and production access.
  
-2. Work Schedule and Requirements 
-2.1 Work Hours 
-● Monday to Friday: 10:00 AM – 6:00 PM EST  
-2.2 Sales Expectations 
-● Producer must submit a minimum of 5 sales per day (weekdays) to remain eligible for 
-base pay. 
+2. Book of Business 
+All leads, clients, and applications submitted under this Agreement are considered part 
+of the Company's Book of Business. The Company retains full ownership of the Book.
 
-3. Compensation Structure 
-3.1 Commission 
-● Producer will be paid $30 per effectuated policy. 
-● Payment is contingent upon: 
-○ The policy remaining active/on-book, and 
-○ Correct placement of the Producer’s NPN on the policy. 
-3.2 Base Pay 
-● Base pay may be offered at the Company’s discretion. 
-● If 5 sales are not achieved on any given workday, base pay will not be provided for 
-that day but rather commissions will be paid. 
-3.3 Chargebacks 
-● Commissions reversed due to policy cancellation will be charged back or deducted from 
-future payments within 30 days. 
+3. Daily and Performance Bonuses 
+Bonuses, if any, are issued solely at the discretion of Life Assurance Solutions LLC management. 
 
-4. Book of Business 
-● All leads, clients, and applications submitted under this Agreement are considered part 
-of the Company's Book of Business. 
-● The Company retains full ownership of the Book. 
-● The Producer agrees not to solicit these clients for 2 years following termination of this 
-Agreement. 
-● Violation may result in legal action and liability for all related costs. 
-
-5. Confidentiality and Non-Solicitation 
-● The Producer must protect Company data during and after the relationship. 
-● No confidential information may be disclosed or reused. 
-● For 2 years after termination, the Producer shall not solicit JJNProtection clients or use 
-Company materials for competing work. 
-
-6. Daily and Performance Bonuses 
-● Bonuses, if any, are issued solely at the discretion of JJNProtection management. 
-
-7. Term and Termination 
-● This Agreement becomes effective upon execution and remains in effect until terminated 
+4. Term and Termination 
+This Agreement becomes effective upon execution and remains in effect until terminated 
 by either party in writing. 
 
-8. General Provisions 
-● This is an independent contractor relationship; no employer-employee relationship 
-exists. 
-
-● This Agreement is governed by the laws of the State of Florida.
- 
-● No modifications will be valid unless in writing and signed by both parties. 
+5. General Provisions 
+This is an independent contractor relationship; no employer-employee relationship 
+exists. This Agreement is governed by the laws of the State of New Jersey.
+No modifications will be valid unless in writing and signed by both parties. 
 
 IN WITNESS WHEREOF, the parties have executed this Agreement as of the 
 dates below: 
 
-Company (JJNProtection) 
+Company (Life Assurance Solutions LLC) 
 
 Signature: _________________________________ 
 
-Printed Name: Nicholas James 
+Printed Name: James Kelly 
 
 Title: Owner 
 
-Date: {current_name}
+Date: {current_date}
 
 Producer {first_name} {last_name}
 
@@ -266,39 +224,27 @@ yes to on this application.
 
 
 
-JJN Protection Insurance Agency LLC
+Life Assurance Solutions LLC
  Official Job Offer & NPN Override Agreement
- We are pleased to present you with opportunities to join our agency for both Medicare AEP
- Sales and ACA Marketplace Sales. JJN Protection has been granted NPN Override
- permission, allowing us to properly set you up within our agency hierarchy and utilize your
- NPN for overrides where applicable. This ensures that you receive proper credit and that we
- can build a strong, compliant team under your leadership.
-Medicare Job Offer – AEP Season
- Position: Medicare Sales Agent (On-Site or Remote)
- Compensation: $2,000–$3,000 per week (Commission + Bonuses)
- Role Overview: You will receive inbound calls and warm transfers, educate seniors about
- Medicare Advantage and Supplement plans, and complete enrollments compliantly. This is a
- high-volume, high-earning opportunity.
- What We Offer: • Pre-qualified leads and live transfers daily • $2K–$3K per week achievable
- during AEP • On-site training and compliance support • Weekly pay + performance bonuses •
- Growth opportunities beyond AEP
- Requirements: • Active Health/Life or Medicare License • Ability to work full-time during AEP
- (Oct 15 – Dec 7) • Prior Medicare or health insurance experience preferred
+ We are pleased to present you with opportunities to join our agency for ACA Marketplace Sales.
+ Life Assurance Solutions LLC has been granted NPN Override permission, allowing us to properly 
+ set you up within our agency hierarchy and utilize your NPN for overrides where applicable. 
+ This ensures that you receive proper credit and that we can build a strong, compliant team 
+ under your leadership.
+
 ACA Health Insurance Agent Job Offer
  Position: ACA Health Insurance Agent
- Compensation: $20 per sale + $10 override per sale OR $30 per sale flat
- We have been officially granted permission to set you up with NPN Override within our
- agency. This allows us to ensure all submitted enrollments are properly tracked under your
- NPN and gives us the ability to use your NPN as an override for other agents you may refer or
- supervise.
+ Compensation: Hourly plus commission OR commission only. As agreed upon by both parties.
+ We have permission to set you up with NPN Override within our agency to track enrollments 
+ and assign credit.
  What We Offer: • Inbound ACA leads from HealthCare.gov • Access to multiple carriers
- (Aetna, Ambetter, Cigna, Molina, Oscar, UHC) • Daily and weekly lead flow • Full EDE
+ (Aetna, BCBS, Ambetter, Cigna, Molina, Oscar, UHC) • Daily and weekly lead flow • Full EDE
  integration and tracking • Training and compliance support
  Requirements: • Active health insurance license and FFM certification • Reliable computer
- and internet connection • Commitment to working dialer hours during Open Enrollment and
- SEP periods
+ and internet • Commitment to working dialer hours during Open Enrollment and SEP periods
+
 NPN Override Agreement & Acknowledgment
- By signing below, you acknowledge that JJN Protection Insurance Agency LLC has been
+ By signing below, you acknowledge that Life Assurance Solutions LLC has been
  granted authority to set you up for NPN override and utilize your NPN as an override for other
  agents within the agency. This will not affect your personal book of business outside of this
  agreement and ensures proper crediting and compensation for all enrollments made through
