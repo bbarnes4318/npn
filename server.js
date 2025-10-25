@@ -1057,6 +1057,98 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
       if (certProof?.path) {
         agent.uploads.certProof = certProof.path;
       }
+      
+      // Generate comprehensive signed documents PDF
+      try {
+        console.log('Generating comprehensive signed documents for intake submission');
+        const agentDir = path.join(AGENTS_DIR, agent.id);
+        await fse.ensureDir(agentDir);
+        const outPath = path.join(agentDir, `Complete_Agent_Onboarding_${Date.now()}.pdf`);
+        
+        // Create comprehensive PDF with all intake data
+        const pdfBytes = await new Promise((resolve, reject) => {
+          const chunks = [];
+          const doc = new PDFDocument({ 
+            margin: 50,
+            size: 'LETTER',
+            info: {
+              Title: 'Complete Agent Onboarding Package',
+              Author: 'Life Assurance Solutions LLC',
+              Subject: 'Signed Agent Onboarding Documents'
+            }
+          });
+          
+          doc.on('data', (b) => chunks.push(b));
+          doc.on('end', () => resolve(Buffer.concat(chunks)));
+          doc.on('error', reject);
+          
+          // Title Page
+          doc.fontSize(20).font('Helvetica-Bold').text('COMPLETE AGENT ONBOARDING PACKAGE', { align: 'center' });
+          doc.moveDown(1);
+          doc.fontSize(16).text('Life Assurance Solutions LLC', { align: 'center' });
+          doc.moveDown(2);
+          
+          // Agent Information
+          doc.fontSize(14).font('Helvetica-Bold').text('AGENT INFORMATION');
+          doc.moveDown(0.5);
+          doc.fontSize(12).text(`Name: ${submission.contact?.firstName || ''} ${submission.contact?.lastName || ''}`);
+          doc.text(`Email: ${submission.contact?.email || ''}`);
+          doc.text(`Phone: ${submission.contact?.phone || ''}`);
+          doc.text(`Agent ID: ${agent.id}`);
+          doc.text(`Date Submitted: ${new Date().toLocaleDateString()}`);
+          doc.moveDown(1);
+          
+          // Business Information
+          doc.fontSize(14).font('Helvetica-Bold').text('BUSINESS INFORMATION');
+          doc.moveDown(0.5);
+          doc.fontSize(12).text(`Agency Name: ${submission.business?.agencyName || ''}`);
+          doc.text(`Website: ${submission.business?.website || ''}`);
+          doc.text(`Address: ${submission.business?.address1 || ''} ${submission.business?.address2 || ''}`);
+          doc.text(`City, State, ZIP: ${submission.business?.city || ''}, ${submission.business?.state || ''} ${submission.business?.zip || ''}`);
+          doc.text(`NPN: ${submission.npn || ''}`);
+          doc.text(`States Licensed: ${submission.statesLicensed?.join(', ') || ''}`);
+          doc.moveDown(1);
+          
+          // Background Information
+          doc.fontSize(14).font('Helvetica-Bold').text('BACKGROUND INFORMATION');
+          doc.moveDown(0.5);
+          doc.fontSize(12).text(`Prior Terminations: ${submission.background?.priorTerminations ? 'YES' : 'NO'}`);
+          if (submission.background?.priorTerminationsExplain) {
+            doc.text(`Termination Explanation: ${submission.background.priorTerminationsExplain}`);
+          }
+          doc.text(`Felonies: ${submission.background?.felonies ? 'YES' : 'NO'}`);
+          if (submission.background?.feloniesExplain) {
+            doc.text(`Felony Explanation: ${submission.background.feloniesExplain}`);
+          }
+          doc.text(`Bankruptcies: ${submission.background?.bankruptcies ? 'YES' : 'NO'}`);
+          if (submission.background?.bankruptciesExplain) {
+            doc.text(`Bankruptcy Explanation: ${submission.background.bankruptciesExplain}`);
+          }
+          doc.moveDown(1);
+          
+          // Signatures Section
+          doc.fontSize(14).font('Helvetica-Bold').text('SIGNATURES AND CERTIFICATIONS');
+          doc.moveDown(0.5);
+          doc.fontSize(12).text(`Digital Signature: ${submission.acknowledgments?.signature || ''}`);
+          doc.text(`Signature Date: ${submission.acknowledgments?.signatureDate || ''}`);
+          doc.text(`Producer Agreement Accepted: ${submission.acknowledgments?.producerAgreementAccepted ? 'YES' : 'NO'}`);
+          doc.text(`Privacy Notice Accepted: ${submission.acknowledgments?.privacyNoticeAccepted ? 'YES' : 'NO'}`);
+          doc.moveDown(1);
+          
+          // Legal Notice
+          doc.fontSize(10).text('This document contains all submitted information and signatures as of the date of generation.');
+          doc.text('All signatures are legally binding and represent the agent\'s agreement to the terms and conditions.');
+          
+          doc.end();
+        });
+        
+        await fse.writeFile(outPath, pdfBytes);
+        agent.submissions.dashboardPdfPath = outPath;
+        console.log('Dashboard signed documents PDF saved to:', outPath);
+      } catch (e) {
+        console.error('Failed to generate dashboard PDF:', e);
+      }
+      
       await writeAgent(agent);
     }
     res.json({ ok: true, id });
