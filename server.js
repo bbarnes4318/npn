@@ -1137,12 +1137,33 @@ app.post('/api/w9', async (req, res) => {
             
             // Get all agent data
             const agentData = agent;
-            const intakeData = agent.submissions?.intakeId ? 
-              await fse.readJson(path.join(SUBMISSIONS_DIR, agent.submissions.intakeId, 'intake.json')).catch(() => null) : null;
-            const packetData = agent.submissions?.packetId ? 
-              await fse.readJson(path.join(SUBMISSIONS_DIR, agent.submissions.packetId, 'packet.json')).catch(() => null) : null;
-            const bankingData = agent.submissions?.bankingId ? 
-              await fse.readJson(path.join(SUBMISSIONS_DIR, agent.submissions.bankingId, 'banking.json')).catch(() => null) : null;
+            let intakeData = null;
+            let packetData = null;
+            let bankingData = null;
+            
+            if (agent.submissions?.intakeId) {
+              try {
+                intakeData = await fse.readJson(path.join(SUBMISSIONS_DIR, agent.submissions.intakeId, 'intake.json'));
+              } catch (e) {
+                console.log('Could not load intake data:', e.message);
+              }
+            }
+            
+            if (agent.submissions?.packetId) {
+              try {
+                packetData = await fse.readJson(path.join(SUBMISSIONS_DIR, agent.submissions.packetId, 'packet.json'));
+              } catch (e) {
+                console.log('Could not load packet data:', e.message);
+              }
+            }
+            
+            if (agent.submissions?.bankingId) {
+              try {
+                bankingData = await fse.readJson(path.join(SUBMISSIONS_DIR, agent.submissions.bankingId, 'banking.json'));
+              } catch (e) {
+                console.log('Could not load banking data:', e.message);
+              }
+            }
             
             // Title Page
             doc.fontSize(20).font('Helvetica-Bold').text('COMPLETE AGENT ONBOARDING PACKAGE', { align: 'center' });
