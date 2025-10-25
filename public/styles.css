@@ -168,6 +168,10 @@ a:hover { text-decoration: underline; }
   .chip { padding: 6px 10px; border-radius: 999px; border: 1px solid var(--border); background: #fff; font-size: 12px; color: var(--muted); }
   .chip.done { border-color: #c8f1d9; background: #eefcf3; color: #14532d; }
   .chip.todo { border-color: #ffe1a8; background: #fff9eb; color: #7c411a; }
+  .chip.intake { border-color: #3b82f6; background: #eff6ff; color: #1e40af; }
+  .chip.w9 { border-color: #8b5cf6; background: #f3e8ff; color: #7c3aed; }
+  .chip.banking { border-color: #059669; background: #ecfdf5; color: #047857; }
+  .chip.packet { border-color: #dc2626; background: #fef2f2; color: #b91c1c; }
   .progressbar { height: 8px; background: #edf2f7; border-radius: 999px; overflow: hidden; }
   .progressbar > span { display: block; height: 8px; background: var(--brand-red); width: 0%; transition: width .25s ease; }
 

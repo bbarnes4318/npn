@@ -13,6 +13,13 @@
     const recentMsg = document.getElementById('recentMsg');
     const recentInput = document.getElementById('recentSearchInput');
     const tableBody = document.getElementById('agentsTableBody');
+    
+    // Submissions elements
+    const submissionsTableBody = document.getElementById('submissionsTableBody');
+    const refreshSubmissionsBtn = document.getElementById('refreshSubmissionsBtn');
+    const submissionTypeFilter = document.getElementById('submissionTypeFilter');
+    const submissionSearchInput = document.getElementById('submissionSearchInput');
+    const submissionsMsg = document.getElementById('submissionsMsg');
 
     function setMsg(text) { if (msg) msg.textContent = text; }
 
@@ -203,7 +210,148 @@
       }
     });
 
+    // Load submissions
+    async function loadSubmissions() {
+      if (!submissionsTableBody) return;
+      submissionsTableBody.innerHTML = '';
+      submissionsMsg.textContent = 'Loading...';
+      try {
+        const res = await fetch('/api/admin/submissions', { headers: authHeaders() });
+        const data = await res.json();
+        if (!res.ok || data.ok === false) throw new Error(data.error || 'Failed');
+        const submissions = data.submissions || [];
+        
+        // Filter by type
+        const typeFilter = submissionTypeFilter?.value || '';
+        let filteredSubmissions = submissions;
+        if (typeFilter) {
+          filteredSubmissions = submissions.filter(s => s.type === typeFilter);
+        }
+        
+        // Filter by search
+        const searchTerm = (submissionSearchInput?.value || '').toLowerCase();
+        if (searchTerm) {
+          filteredSubmissions = filteredSubmissions.filter(s => {
+            const data = s.data;
+            const searchableText = [
+              s.id,
+              data.contact?.firstName || '',
+              data.contact?.lastName || '',
+              data.contact?.email || '',
+              data.name || '',
+              data.businessName || '',
+              data.accountHolderName || '',
+              data.bankName || ''
+            ].join(' ').toLowerCase();
+            return searchableText.includes(searchTerm);
+          });
+        }
+        
+        if (!filteredSubmissions.length) {
+          submissionsTableBody.innerHTML = '<tr><td colspan="6" class="help">No submissions found.</td></tr>';
+          submissionsMsg.textContent = '';
+          return;
+        }
+        
+        const fmt = (s) => {
+          try { return new Date(s).toLocaleString(); } catch { return s || ''; }
+        };
+        
+        filteredSubmissions.forEach(s => {
+          const tr = document.createElement('tr');
+          const data = s.data;
+          let nameEmail = '';
+          let details = '';
+          
+          // Extract name and email based on submission type
+          if (s.type === 'intake') {
+            nameEmail = `${data.contact?.firstName || ''} ${data.contact?.lastName || ''}`.trim() || data.contact?.email || '';
+            details = `NPN: ${data.npn || 'N/A'} | States: ${(data.statesLicensed || []).join(', ') || 'None'}`;
+          } else if (s.type === 'w9') {
+            nameEmail = data.name || data.businessName || '';
+            details = `Tax: ${data.taxClassification || 'N/A'} | SSN: ${data.tin?.ssn ? '***-**-' + data.tin.ssn.slice(-4) : 'N/A'}`;
+          } else if (s.type === 'banking') {
+            nameEmail = data.accountHolderName || '';
+            details = `${data.bankName || 'N/A'} | ${data.accountType || 'N/A'} | ${data.paymentMethod || 'N/A'}`;
+          } else if (s.type === 'packet') {
+            nameEmail = data.payload?.full_name || 'Packet Submission';
+            details = `Producer Agreement: ${data.payload?.signatureDataUrl ? 'Signed' : 'Not Signed'}`;
+          }
+          
+          tr.innerHTML = `
+            <td>${fmt(s.receivedAt)}</td>
+            <td><span class="chip ${s.type}">${s.type.toUpperCase()}</span></td>
+            <td><code>${s.id}</code></td>
+            <td>${nameEmail}</td>
+            <td>${details}</td>
+            <td>
+              <button class="button ghost" data-action="view-submission" data-id="${s.id}">View</button>
+              <button class="button ghost" data-action="copy-submission-id" data-id="${s.id}">Copy ID</button>
+            </td>
+          `;
+          submissionsTableBody.appendChild(tr);
+        });
+        
+        submissionsMsg.textContent = `${filteredSubmissions.length} submission(s)`;
+      } catch (e) {
+        submissionsMsg.textContent = 'Failed to load submissions.';
+      }
+    }
+    
+    // Submissions event handlers
+    refreshSubmissionsBtn?.addEventListener('click', loadSubmissions);
+    submissionTypeFilter?.addEventListener('change', loadSubmissions);
+    submissionSearchInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') loadSubmissions(); });
+    submissionSearchInput?.addEventListener('input', () => {
+      // Debounce search
+      clearTimeout(submissionSearchInput.searchTimeout);
+      submissionSearchInput.searchTimeout = setTimeout(loadSubmissions, 300);
+    });
+    
+    // Handle submission table clicks
+    submissionsTableBody?.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const id = btn.getAttribute('data-id');
+      const action = btn.getAttribute('data-action');
+      if (!id || !action) return;
+      
+      if (action === 'copy-submission-id') {
+        try { 
+          await navigator.clipboard.writeText(id); 
+          btn.textContent = 'Copied!'; 
+          setTimeout(() => btn.textContent = 'Copy ID', 1000); 
+        } catch {}
+      } else if (action === 'view-submission') {
+        try {
+          const res = await fetch(`/api/admin/submissions/${encodeURIComponent(id)}`, { headers: authHeaders() });
+          const data = await res.json();
+          if (!res.ok || data.ok === false) throw new Error(data.error || 'Failed');
+          
+          // Create a modal or new window to display submission details
+          const submission = data.submission;
+          const details = JSON.stringify(submission.data, null, 2);
+          const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
+          newWindow.document.write(`
+            <html>
+              <head><title>Submission ${id}</title></head>
+              <body style="font-family: monospace; padding: 20px;">
+                <h2>Submission Details: ${id}</h2>
+                <p><strong>Type:</strong> ${submission.type}</p>
+                <p><strong>Received:</strong> ${new Date(submission.receivedAt).toLocaleString()}</p>
+                <h3>Data:</h3>
+                <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow: auto;">${details}</pre>
+              </body>
+            </html>
+          `);
+        } catch (e) {
+          alert('Could not load submission details.');
+        }
+      }
+    });
+
     // Auto-load on page open
     loadAgents();
+    loadSubmissions();
   });
 })();

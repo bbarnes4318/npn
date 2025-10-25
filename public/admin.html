@@ -85,6 +85,37 @@
         <h3>Documents</h3>
         <ul id="docsList" class="list"></ul>
       </div>
+
+      <div class="card" style="margin-top:16px;">
+        <h3 style="margin-top:0;">All Form Submissions</h3>
+        <div class="inline" style="gap:8px; margin-bottom:8px; align-items:center; flex-wrap:wrap;">
+          <select class="input" id="submissionTypeFilter" style="min-width:120px;">
+            <option value="">All Types</option>
+            <option value="intake">Intake</option>
+            <option value="w9">W-9</option>
+            <option value="banking">Banking</option>
+            <option value="packet">Packet</option>
+          </select>
+          <input class="input" id="submissionSearchInput" type="text" placeholder="Search by name, email, or ID" style="min-width:260px;" />
+          <button class="button secondary" id="refreshSubmissionsBtn" type="button">Refresh</button>
+          <span id="submissionsMsg" class="help"></span>
+        </div>
+        <div style="overflow:auto;">
+          <table class="table" style="width:100%; min-width:800px;">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>ID</th>
+                <th>Name/Email</th>
+                <th>Details</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="submissionsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </main>
 

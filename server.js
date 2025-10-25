@@ -1251,6 +1251,120 @@ app.post('/api/banking', async (req, res) => {
   }
 });
 
+// Get all submissions (admin)
+app.get('/api/admin/submissions', requireAdmin, async (req, res) => {
+  try {
+    const submissions = [];
+    const entries = await fse.readdir(SUBMISSIONS_DIR, { withFileTypes: true });
+    
+    for (const ent of entries) {
+      if (!ent.isDirectory()) continue;
+      const submissionDir = path.join(SUBMISSIONS_DIR, ent.name);
+      
+      // Check for different submission types
+      const files = await fse.readdir(submissionDir);
+      let submissionData = null;
+      let submissionType = 'unknown';
+      
+      // Check for intake submission
+      if (files.includes('intake.json')) {
+        try {
+          submissionData = await fse.readJson(path.join(submissionDir, 'intake.json'));
+          submissionType = 'intake';
+        } catch (e) {}
+      }
+      // Check for W-9 submission
+      else if (files.includes('w9.json')) {
+        try {
+          submissionData = await fse.readJson(path.join(submissionDir, 'w9.json'));
+          submissionType = 'w9';
+        } catch (e) {}
+      }
+      // Check for banking submission
+      else if (files.includes('banking.json')) {
+        try {
+          submissionData = await fse.readJson(path.join(submissionDir, 'banking.json'));
+          submissionType = 'banking';
+        } catch (e) {}
+      }
+      // Check for packet submission
+      else if (files.includes('packet.json')) {
+        try {
+          submissionData = await fse.readJson(path.join(submissionDir, 'packet.json'));
+          submissionType = 'packet';
+        } catch (e) {}
+      }
+      
+      if (submissionData) {
+        submissions.push({
+          id: ent.name,
+          type: submissionType,
+          receivedAt: submissionData.receivedAt || submissionData.id,
+          data: submissionData,
+          files: files
+        });
+      }
+    }
+    
+    // Sort by received date (newest first)
+    submissions.sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));
+    
+    res.json({ ok: true, submissions });
+  } catch (e) {
+    console.error('Error fetching submissions', e);
+    res.status(500).json({ ok: false, error: 'Failed to fetch submissions' });
+  }
+});
+
+// Get specific submission details (admin)
+app.get('/api/admin/submissions/:id', requireAdmin, async (req, res) => {
+  try {
+    const submissionId = req.params.id;
+    const submissionDir = path.join(SUBMISSIONS_DIR, submissionId);
+    
+    if (!(await fse.pathExists(submissionDir))) {
+      return res.status(404).json({ ok: false, error: 'Submission not found' });
+    }
+    
+    const files = await fse.readdir(submissionDir);
+    let submissionData = null;
+    let submissionType = 'unknown';
+    
+    // Determine submission type and load data
+    if (files.includes('intake.json')) {
+      submissionData = await fse.readJson(path.join(submissionDir, 'intake.json'));
+      submissionType = 'intake';
+    } else if (files.includes('w9.json')) {
+      submissionData = await fse.readJson(path.join(submissionDir, 'w9.json'));
+      submissionType = 'w9';
+    } else if (files.includes('banking.json')) {
+      submissionData = await fse.readJson(path.join(submissionDir, 'banking.json'));
+      submissionType = 'banking';
+    } else if (files.includes('packet.json')) {
+      submissionData = await fse.readJson(path.join(submissionDir, 'packet.json'));
+      submissionType = 'packet';
+    }
+    
+    if (!submissionData) {
+      return res.status(404).json({ ok: false, error: 'No valid submission data found' });
+    }
+    
+    res.json({ 
+      ok: true, 
+      submission: {
+        id: submissionId,
+        type: submissionType,
+        receivedAt: submissionData.receivedAt || submissionData.id,
+        data: submissionData,
+        files: files
+      }
+    });
+  } catch (e) {
+    console.error('Error fetching submission details', e);
+    res.status(500).json({ ok: false, error: 'Failed to fetch submission details' });
+  }
+});
+
 // Fallback to index.html
 app.get('*', (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
