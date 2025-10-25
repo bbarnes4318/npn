@@ -1,89 +1,236 @@
-(function() {
-  const QS = new URLSearchParams(window.location.search);
-  const AGENT_LS_KEY = 'agentPortalId';
-  const getAgentId = () => QS.get('agentId') || localStorage.getItem(AGENT_LS_KEY) || '';
+// W-9 Form Handler
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('w9Form');
+  const msgEl = document.getElementById('w9Msg');
+  const clearBtn = document.getElementById('clearW9Btn');
 
-  function setMsg(el, text) {
-    if (!el) return;
-    el.textContent = text;
+  // Get agent ID from URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const agentId = urlParams.get('agentId');
+
+  // Set current date
+  const dateInput = document.querySelector('input[name="signatureDate"]');
+  if (dateInput) {
+    dateInput.value = new Date().toISOString().split('T')[0];
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const agentId = getAgentId();
+  // Show message
+  function showMessage(text, type = 'notice') {
+    msgEl.textContent = text;
+    msgEl.className = type;
+    msgEl.style.display = 'block';
+    setTimeout(() => {
+      msgEl.style.display = 'none';
+    }, 5000);
+  }
 
-    // Gate: ensure packet was submitted before showing W-9
-    (async function gateW9() {
-      const redirect = () => {
-        const url = agentId ? `/dashboard.html?agentId=${encodeURIComponent(agentId)}` : '/portal.html';
-        window.location.replace(url);
-      };
-      // Require agentId context
-      if (!agentId) return redirect();
-      // Try server first
-      try {
-        const res = await fetch(`/api/agents/${encodeURIComponent(agentId)}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (!(data && data.agent && data.agent.progress && data.agent.progress.packetSubmitted)) {
-            return redirect();
-          }
-        }
-      } catch {}
-      // Local fallback check
-      try {
-        const key = `packetData:${agentId}`;
-        const raw = localStorage.getItem(key);
-        if (raw) {
-          const state = JSON.parse(raw);
-          if (!(state && (state.packetSubmitted === true || state.packetSubmitted === 'pending'))) {
-            return redirect();
-          }
-        }
-      } catch {}
-    })();
-
-    // Progress tracker: Step 2 of 2 (100%) on W-9
-    (function setupProgress() {
-      const fill = document.getElementById('progressFill');
-      const label = document.getElementById('progressLabel');
-      if (fill) fill.style.width = '100%';
-      if (label) label.textContent = 'Step 2 of 2: Sign your W‑9';
-    })();
-
-    // Carry agentId on nav links if present
-    const intakeAnchor = document.querySelector('a[href="/intake.html"]');
-    if (intakeAnchor && agentId) intakeAnchor.href = `/intake.html?agentId=${encodeURIComponent(agentId)}`;
-
-    const uploadBtn = document.getElementById('uploadW9Btn');
-    const fileInput = document.getElementById('w9File');
-    const msg = document.getElementById('uploadW9Msg');
-
-    uploadBtn?.addEventListener('click', async () => {
-      if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-        setMsg(msg, 'Choose your completed W‑9 file first.');
-        return;
-      }
-      const file = fileInput.files[0];
-      setMsg(msg, 'Uploading...');
-
-      // Prefer agent-specific upload endpoint
-      const endpoint = agentId ? `/api/agents/${encodeURIComponent(agentId)}/w9` : '/api/w9/upload';
-      try {
-        const fd = new FormData();
-        fd.append('w9', file);
-        if (agentId) fd.append('agentId', agentId);
-        const res = await fetch(endpoint, { method: 'POST', body: fd });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || (data && data.ok === false)) throw new Error(data.error || 'Upload failed');
-        setMsg(msg, 'W‑9 uploaded successfully.');
-        // Flag locally that W‑9 is uploaded
-        localStorage.setItem(`w9Uploaded:${agentId || 'anon'}`, 'true');
-      } catch (err) {
-        console.error(err);
-        // Local fallback flag
-        localStorage.setItem(`w9Uploaded:${agentId || 'anon'}`, 'pending');
-        setMsg(msg, 'Saved locally. We will sync your W‑9 when online.');
+  // Handle LLC classification visibility
+  const taxClassificationRadios = document.querySelectorAll('input[name="taxClassification"]');
+  const llcField = document.getElementById('llcClassificationField');
+  
+  taxClassificationRadios.forEach(radio => {
+    radio.addEventListener('change', function() {
+      if (this.value === 'llc') {
+        llcField.style.display = 'block';
+      } else {
+        llcField.style.display = 'none';
+        // Clear LLC classification when not LLC
+        document.querySelectorAll('input[name="llcClassification"]').forEach(r => r.checked = false);
       }
     });
   });
-})();
+
+  // Handle TIN type switching
+  const ssnRadio = document.querySelector('input[name="tinType"][value="ssn"]');
+  const einRadio = document.querySelector('input[name="tinType"][value="ein"]');
+  const ssnInput = document.getElementById('w9_ssn');
+  const einInput = document.getElementById('w9_ein');
+
+  ssnRadio.addEventListener('change', function() {
+    if (this.checked) {
+      ssnInput.required = true;
+      einInput.required = false;
+      einInput.value = '';
+    }
+  });
+
+  einRadio.addEventListener('change', function() {
+    if (this.checked) {
+      einInput.required = true;
+      ssnInput.required = false;
+      ssnInput.value = '';
+    }
+  });
+
+  // Format SSN input
+  ssnInput.addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length >= 3) {
+      value = value.slice(0, 3) + '-' + value.slice(3);
+    }
+    if (value.length >= 6) {
+      value = value.slice(0, 6) + '-' + value.slice(6, 10);
+    }
+    e.target.value = value;
+  });
+
+  // Format EIN input
+  einInput.addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length >= 2) {
+      value = value.slice(0, 2) + '-' + value.slice(2, 9);
+    }
+    e.target.value = value;
+  });
+
+  // Form validation
+  function validateForm() {
+    const name = form.name.value.trim();
+    const address1 = form.address1.value.trim();
+    const city = form.city.value.trim();
+    const state = form.state.value.trim();
+    const zip = form.zip.value.trim();
+    const signature = form.signature.value.trim();
+    const signatureDate = form.signatureDate.value;
+
+    if (!name) {
+      showMessage('Name is required', 'error');
+      return false;
+    }
+
+    if (!address1 || !city || !state || !zip) {
+      showMessage('Complete address is required', 'error');
+      return false;
+    }
+
+    const ssnChecked = document.querySelector('input[name="tinType"][value="ssn"]').checked;
+    const einChecked = document.querySelector('input[name="tinType"][value="ein"]').checked;
+    
+    if (!ssnChecked && !einChecked) {
+      showMessage('Please select either SSN or EIN', 'error');
+      return false;
+    }
+
+    if (ssnChecked && !form.ssn.value.trim()) {
+      showMessage('SSN is required', 'error');
+      return false;
+    }
+
+    if (einChecked && !form.ein.value.trim()) {
+      showMessage('EIN is required', 'error');
+      return false;
+    }
+
+    if (!signature) {
+      showMessage('Digital signature is required', 'error');
+      return false;
+    }
+
+    if (!signatureDate) {
+      showMessage('Signature date is required', 'error');
+      return false;
+    }
+
+    return true;
+  }
+
+  // Form submission
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+
+    try {
+      const formData = new FormData(form);
+      
+      // Add agent ID if available
+      if (agentId) {
+        formData.append('agentId', agentId);
+      }
+
+      const response = await fetch('/api/w9', {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        showMessage('W-9 form submitted successfully!', 'success');
+        form.reset();
+        // Set current date again after reset
+        if (dateInput) {
+          dateInput.value = new Date().toISOString().split('T')[0];
+        }
+        // Redirect to dashboard or next step
+        setTimeout(() => {
+          if (agentId) {
+            window.location.href = `/dashboard.html?agentId=${encodeURIComponent(agentId)}`;
+          } else {
+            window.location.href = '/dashboard.html';
+          }
+        }, 2000);
+      } else {
+        showMessage(result.error || 'Failed to submit W-9 form', 'error');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      showMessage('Network error. Please try again.', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    }
+  });
+
+  // Clear form
+  clearBtn.addEventListener('click', function() {
+    if (confirm('Are you sure you want to clear all form data?')) {
+      form.reset();
+      if (dateInput) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+      }
+      showMessage('Form cleared', 'notice');
+    }
+  });
+
+  // Auto-populate from agent data if available
+  if (agentId) {
+    (async () => {
+      try {
+        const response = await fetch(`/api/agents/${agentId}`);
+        if (response.ok) {
+          const agent = await response.json();
+          if (agent.profile) {
+            // Pre-fill name if available
+            const nameInput = document.getElementById('w9_name');
+            if (nameInput && !nameInput.value && agent.profile.firstName && agent.profile.lastName) {
+              nameInput.value = `${agent.profile.firstName} ${agent.profile.lastName}`;
+            }
+          }
+        }
+      } catch (error) {
+        console.log('Could not load agent data:', error);
+      }
+    })();
+  }
+
+  // Security: Mask sensitive information in console logs
+  const originalLog = console.log;
+  console.log = function(...args) {
+    const maskedArgs = args.map(arg => {
+      if (typeof arg === 'string') {
+        return arg.replace(/ssn[^,}]*/gi, 'ssn: [MASKED]')
+                  .replace(/ein[^,}]*/gi, 'ein: [MASKED]');
+      }
+      return arg;
+    });
+    originalLog.apply(console, maskedArgs);
+  };
+});
