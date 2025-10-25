@@ -373,13 +373,46 @@
       payload.current_date = todayLong();
       payload.signatureDataUrl = state.signatureDataUrl || null;
 
+      // Extract banking information for separate submission
+      const bankingData = {
+        agentId: agentId,
+        bankName: payload.bankName || '',
+        routingNumber: payload.routingNumber || '',
+        accountNumber: payload.accountNumber || '',
+        accountType: payload.accountType || '',
+        accountHolderName: payload.accountHolderName || '',
+        paymentMethod: payload.paymentMethod || 'direct_deposit',
+        paymentFrequency: payload.paymentFrequency || 'bi-weekly',
+        authorizeDirectDeposit: payload.authorizeDirectDeposit === 'on' || payload.authorizeDirectDeposit === 'true',
+        verifyBankingInfo: payload.verifyBankingInfo === 'on' || payload.verifyBankingInfo === 'true',
+        privacyConsent: payload.privacyConsent === 'on' || payload.privacyConsent === 'true',
+        digitalSignature: payload.full_name,
+        signatureDate: new Date().toISOString().split('T')[0]
+      };
+
       submitMsg.textContent = 'Submitting...';
       try {
+        // Submit packet data
         await api(`/api/agents/${agentId}/packet`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
+
+        // Submit banking data if provided
+        if (bankingData.bankName && bankingData.routingNumber && bankingData.accountNumber) {
+          try {
+            await api('/api/banking', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(bankingData)
+            });
+          } catch (bankingErr) {
+            console.warn('Banking submission failed:', bankingErr);
+            // Continue even if banking fails
+          }
+        }
+
         submitMsg.textContent = 'Submitted! Taking you to your W‑9…';
         saveField('packetSubmitted', true);
         setTimeout(() => {

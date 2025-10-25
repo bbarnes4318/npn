@@ -410,6 +410,73 @@
           </div>
         </section>
 
+        <!-- SECTION 6: Banking Information -->
+        <section class="card agreement" id="section-banking">
+          <h2 class="section-title">Banking Information for Commission Payments</h2>
+          <div class="text-block">
+            <p>Please provide your banking details for commission payments and direct deposit setup. Your banking information is encrypted and stored securely.</p>
+            <div class="callout important">
+              <strong>Security Notice:</strong> Your banking information is encrypted and stored securely. We use industry-standard encryption to protect your financial data.
+            </div>
+          </div>
+          
+          <div class="grid columns-2">
+            <div class="field">
+              <label class="label">Bank Name <span class="required">*</span></label>
+              <input class="input" type="text" name="bankName" placeholder="e.g., Chase Bank, Bank of America, Wells Fargo" required />
+            </div>
+            <div class="field">
+              <label class="label">Account Type <span class="required">*</span></label>
+              <select name="accountType" class="input" required>
+                <option value="">Select account type</option>
+                <option value="checking">Checking</option>
+                <option value="savings">Savings</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="label">Routing Number <span class="required">*</span></label>
+              <input class="input" type="text" name="routingNumber" placeholder="123456789" pattern="[0-9]{9}" maxlength="9" required />
+            </div>
+            <div class="field">
+              <label class="label">Account Number <span class="required">*</span></label>
+              <input class="input" type="text" name="accountNumber" placeholder="1234567890" required />
+            </div>
+            <div class="field" style="grid-column: span 2;">
+              <label class="label">Account Holder Name <span class="required">*</span></label>
+              <input class="input" type="text" name="accountHolderName" placeholder="Name as it appears on the account" required />
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Payment Method <span class="required">*</span></label>
+            <div class="inline">
+              <label><input type="radio" name="paymentMethod" value="direct_deposit" checked /> Direct Deposit (Preferred)</label>
+              <label style="margin-left: 20px;"><input type="radio" name="paymentMethod" value="check" /> Paper Check</label>
+            </div>
+          </div>
+
+          <div class="ack">
+            <div class="field">
+              <label style="display: flex; gap: 8px; align-items: flex-start;">
+                <input type="checkbox" name="authorizeDirectDeposit" required style="margin-top: 4px;" />
+                <span>I authorize Life Assurance Solutions LLC to initiate direct deposit transactions to my bank account for commission payments and other compensation. <span class="required">*</span></span>
+              </label>
+            </div>
+            <div class="field">
+              <label style="display: flex; gap: 8px; align-items: flex-start;">
+                <input type="checkbox" name="verifyBankingInfo" required style="margin-top: 4px;" />
+                <span>I verify that the banking information provided is accurate and that I am the authorized account holder. <span class="required">*</span></span>
+              </label>
+            </div>
+            <div class="field">
+              <label style="display: flex; gap: 8px; align-items: flex-start;">
+                <input type="checkbox" name="privacyConsent" required style="margin-top: 4px;" />
+                <span>I consent to the secure storage and processing of my banking information for payment purposes. <span class="required">*</span></span>
+              </label>
+            </div>
+          </div>
+        </section>
+
         
 
         <!-- Actions -->
