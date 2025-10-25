@@ -392,6 +392,16 @@
 
       submitMsg.textContent = 'Submitting...';
       try {
+        // Submit intake data first
+        await api('/api/intake', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...payload,
+            agentId: agentId
+          })
+        });
+
         // Submit packet data
         await api(`/api/agents/${agentId}/packet`, {
           method: 'POST',
@@ -419,6 +429,7 @@
           window.location.href = `/w9.html?agentId=${encodeURIComponent(agentId)}`;
         }, 900);
       } catch (err) {
+        console.error('Submission error:', err);
         // fallback to local save only
         saveField('packetSubmitted', 'pending');
         submitMsg.textContent = 'Saved locally. We will sync when online. You can proceed to W‑9.';
