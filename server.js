@@ -169,6 +169,29 @@ app.get('/api/admin/agents/:id/documents/list', requireAdmin, async (req, res) =
   }
 });
 
+// Download specific document (admin)
+app.get('/api/admin/agents/:id/documents/download/:filename', requireAdmin, async (req, res) => {
+  try {
+    console.log('Admin: Downloading document for agent:', req.params.id, 'file:', req.params.filename);
+    const agent = await readAgent(req.params.id);
+    if (!agent) {
+      console.log('Admin: Agent not found:', req.params.id);
+      return res.status(404).send('Agent not found');
+    }
+    const files = await gatherAgentDocuments(agent, { includeW9: true });
+    const file = files.find(f => f.name === req.params.filename);
+    if (!file) {
+      console.log('Admin: File not found:', req.params.filename);
+      return res.status(404).send('File not found');
+    }
+    console.log('Admin: Sending file:', file.path);
+    return res.download(file.path, file.name);
+  } catch (e) {
+    console.error('admin download doc error', e);
+    return res.status(500).send('Failed to download document');
+  }
+});
+
 // ZIP (admin)
 app.get('/api/admin/agents/:id/documents/zip', requireAdmin, async (req, res) => {
   try {

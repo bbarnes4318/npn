@@ -102,7 +102,22 @@
         }
         data.files.forEach(f => {
           const li = document.createElement('li');
-          li.textContent = f.name;
+          const link = document.createElement('a');
+          link.href = `/api/admin/agents/${encodeURIComponent(id)}/documents/download/${encodeURIComponent(f.name)}`;
+          link.textContent = f.name;
+          link.download = f.name;
+          link.style.marginRight = '10px';
+          li.appendChild(link);
+          
+          const downloadBtn = document.createElement('button');
+          downloadBtn.textContent = 'Download';
+          downloadBtn.className = 'button ghost';
+          downloadBtn.style.marginLeft = '10px';
+          downloadBtn.onclick = () => {
+            window.open(link.href, '_blank');
+          };
+          li.appendChild(downloadBtn);
+          
           list.appendChild(li);
         });
       } catch (e) {

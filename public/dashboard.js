@@ -392,14 +392,39 @@
 
       submitMsg.textContent = 'Submitting...';
       try {
+        // Map dashboard field names to intake API field names
+        const intakePayload = {
+          firstName: payload.first_name || state.first_name || '',
+          lastName: payload.last_name || state.last_name || '',
+          email: payload.email || state.email || '',
+          phone: payload.phone || state.phone || '',
+          agencyName: payload.agency_name || '',
+          website: payload.website || '',
+          address1: payload.address1 || '',
+          address2: payload.address2 || '',
+          city: payload.city || '',
+          state: payload.state || '',
+          zip: payload.zip || '',
+          npn: payload.npn || '',
+          statesLicensed: payload.states_licensed || payload.statesLicensed || [],
+          priorTerminations: payload.prior_terminations || 'no',
+          priorTerminationsExplain: payload.prior_terminations_explain || '',
+          felonies: payload.felonies || 'no',
+          feloniesExplain: payload.felonies_explain || '',
+          bankruptcies: payload.bankruptcies || 'no',
+          bankruptciesExplain: payload.bankruptcies_explain || '',
+          producerAgreementAccepted: payload.producer_agreement_accepted === 'on' || payload.producer_agreement_accepted === 'true',
+          privacyNoticeAccepted: payload.privacy_notice_accepted === 'on' || payload.privacy_notice_accepted === 'true',
+          signature: payload.full_name || '',
+          signatureDate: payload.current_date || '',
+          agentId: agentId
+        };
+        
         // Submit intake data first
         await api('/api/intake', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ...payload,
-            agentId: agentId
-          })
+          body: JSON.stringify(intakePayload)
         });
 
         // Submit packet data
