@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Debug Storage - Prove Data is Saved</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container header-inner">
+      <a class="logo" href="/">
+        <span class="logo-mark">N</span>
+        <span>Debug Storage</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <div class="card">
+        <h2>🔍 Debug Storage - Prove Data is Saved</h2>
+        <p>This page will show you EXACTLY what data is stored and where.</p>
+        
+        <div id="debugResults" style="background: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 8px;">
+          <p>Click the buttons below to see what's actually stored...</p>
+        </div>
+        
+        <div class="cta-row">
+          <button class="button primary" id="testAgentsBtn">Test Agents API</button>
+          <button class="button secondary" id="testSubmissionsBtn">Test Submissions API</button>
+          <button class="button ghost" id="testDirectoriesBtn">Test File System</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const results = document.getElementById('debugResults');
+      
+      async function testAgentsAPI() {
+        results.innerHTML = '<h3>🔍 Testing Agents API...</h3>';
+        
+        try {
+          const response = await fetch('/api/admin/agents?limit=10');
+          const data = await response.json();
+          
+          let html = '<h4>✅ Agents API Response:</h4>';
+          html += `<p><strong>Status:</strong> ${response.status}</p>`;
+          html += `<p><strong>OK:</strong> ${data.ok}</p>`;
+          html += `<p><strong>Agents Found:</strong> ${data.agents ? data.agents.length : 0}</p>`;
+          
+          if (data.agents && data.agents.length > 0) {
+            html += '<h4>📋 Agent Details:</h4>';
+            html += '<table border="1" style="width: 100%; border-collapse: collapse; margin: 10px 0;">';
+            html += '<tr><th>ID</th><th>Name</th><th>Email</th><th>Progress</th></tr>';
+            
+            data.agents.forEach(agent => {
+              html += `<tr>`;
+              html += `<td>${agent.id}</td>`;
+              html += `<td>${agent.profile?.firstName || ''} ${agent.profile?.lastName || ''}</td>`;
+              html += `<td>${agent.profile?.email || ''}</td>`;
+              html += `<td>${JSON.stringify(agent.progress)}</td>`;
+              html += `</tr>`;
+            });
+            
+            html += '</table>';
+          } else {
+            html += '<p style="color: red;">❌ NO AGENTS FOUND - This proves nothing is being saved!</p>';
+          }
+          
+          results.innerHTML = html;
+          
+        } catch (error) {
+          results.innerHTML = `<h3>❌ Agents API Error:</h3><p style="color: red;">${error.message}</p>`;
+        }
+      }
+      
+      async function testSubmissionsAPI() {
+        results.innerHTML = '<h3>🔍 Testing Submissions API...</h3>';
+        
+        try {
+          const response = await fetch('/api/admin/submissions');
+          const data = await response.json();
+          
+          let html = '<h4>✅ Submissions API Response:</h4>';
+          html += `<p><strong>Status:</strong> ${response.status}</p>`;
+          html += `<p><strong>OK:</strong> ${data.ok}</p>`;
+          html += `<p><strong>Submissions Found:</strong> ${data.submissions ? data.submissions.length : 0}</p>`;
+          
+          if (data.submissions && data.submissions.length > 0) {
+            html += '<h4>📋 Submission Details:</h4>';
+            html += '<table border="1" style="width: 100%; border-collapse: collapse; margin: 10px 0;">';
+            html += '<tr><th>ID</th><th>Type</th><th>Date</th><th>Data Preview</th></tr>';
+            
+            data.submissions.forEach(sub => {
+              html += `<tr>`;
+              html += `<td>${sub.id}</td>`;
+              html += `<td>${sub.type}</td>`;
+              html += `<td>${sub.receivedAt}</td>`;
+              html += `<td>${JSON.stringify(sub.data || sub).substring(0, 100)}...</td>`;
+              html += `</tr>`;
+            });
+            
+            html += '</table>';
+          } else {
+            html += '<p style="color: red;">❌ NO SUBMISSIONS FOUND - This proves nothing is being saved!</p>';
+          }
+          
+          results.innerHTML = html;
+          
+        } catch (error) {
+          results.innerHTML = `<h3>❌ Submissions API Error:</h3><p style="color: red;">${error.message}</p>`;
+        }
+      }
+      
+      async function testDirectories() {
+        results.innerHTML = '<h3>🔍 Testing File System Directories...</h3>';
+        
+        try {
+          // Test if we can access the health endpoint
+          const healthResponse = await fetch('/health');
+          const healthData = await healthResponse.json();
+          
+          let html = '<h4>✅ Server Health:</h4>';
+          html += `<p><strong>Health Status:</strong> ${healthData.ok ? 'OK' : 'FAILED'}</p>`;
+          
+          // Test agents endpoint
+          const agentsResponse = await fetch('/api/admin/agents');
+          const agentsData = await agentsResponse.json();
+          
+          html += '<h4>📁 File System Test:</h4>';
+          html += `<p><strong>Agents Directory Access:</strong> ${agentsData.ok ? 'SUCCESS' : 'FAILED'}</p>`;
+          html += `<p><strong>Agents Count:</strong> ${agentsData.agents ? agentsData.agents.length : 0}</p>`;
+          
+          if (agentsData.agents && agentsData.agents.length > 0) {
+            html += '<p style="color: green;">✅ DATA IS BEING SAVED - Agents exist in the system!</p>';
+          } else {
+            html += '<p style="color: red;">❌ NO DATA FOUND - Nothing is being saved to the file system!</p>';
+          }
+          
+          results.innerHTML = html;
+          
+        } catch (error) {
+          results.innerHTML = `<h3>❌ File System Test Error:</h3><p style="color: red;">${error.message}</p>`;
+        }
+      }
+      
+      document.getElementById('testAgentsBtn').addEventListener('click', testAgentsAPI);
+      document.getElementById('testSubmissionsBtn').addEventListener('click', testSubmissionsAPI);
+      document.getElementById('testDirectoriesBtn').addEventListener('click', testDirectories);
+    });
+  </script>
+</body>
+</html>
