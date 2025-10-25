@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test Admin — Document Storage</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container header-inner">
+      <a class="logo" href="/">
+        <span class="logo-mark">N</span>
+        <span>Test Admin</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <div class="card">
+        <h2>Document Storage Test</h2>
+        <p>This page will show you exactly what documents are stored and how to access them.</p>
+        
+        <div id="testResults"></div>
+        
+        <div class="cta-row">
+          <button class="button primary" id="testStorageBtn">Test Document Storage</button>
+          <button class="button secondary" id="listAllAgentsBtn">List All Agents</button>
+          <button class="button ghost" id="listAllSubmissionsBtn">List All Submissions</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const results = document.getElementById('testResults');
+      
+      async function testStorage() {
+        results.innerHTML = '<p>Testing document storage...</p>';
+        
+        try {
+          // Test 1: List all agents
+          const agentsRes = await fetch('/api/admin/agents?limit=100');
+          const agentsData = await agentsRes.json();
+          
+          let html = '<h3>Agents Found:</h3>';
+          if (agentsData.agents && agentsData.agents.length > 0) {
+            html += `<p>Found ${agentsData.agents.length} agents</p>`;
+            html += '<ul>';
+            agentsData.agents.forEach(agent => {
+              html += `<li><strong>${agent.id}</strong> - ${agent.profile?.firstName || ''} ${agent.profile?.lastName || ''} (${agent.profile?.email || ''})</li>`;
+              html += `<li>Progress: ${JSON.stringify(agent.progress)}</li>`;
+              html += `<li>Submissions: ${JSON.stringify(agent.submissions)}</li>`;
+              html += '<br>';
+            });
+            html += '</ul>';
+          } else {
+            html += '<p>No agents found. You need to complete the onboarding process first.</p>';
+          }
+          
+          // Test 2: List all submissions
+          const submissionsRes = await fetch('/api/admin/submissions');
+          const submissionsData = await submissionsRes.json();
+          
+          html += '<h3>Submissions Found:</h3>';
+          if (submissionsData.submissions && submissionsData.submissions.length > 0) {
+            html += `<p>Found ${submissionsData.submissions.length} submissions</p>`;
+            html += '<ul>';
+            submissionsData.submissions.forEach(sub => {
+              html += `<li><strong>${sub.id}</strong> - Type: ${sub.type} - Date: ${sub.receivedAt}</li>`;
+            });
+            html += '</ul>';
+          } else {
+            html += '<p>No submissions found. You need to complete the onboarding process first.</p>';
+          }
+          
+          results.innerHTML = html;
+          
+        } catch (error) {
+          results.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+        }
+      }
+      
+      async function listAllAgents() {
+        results.innerHTML = '<p>Loading all agents...</p>';
+        
+        try {
+          const res = await fetch('/api/admin/agents?limit=100');
+          const data = await res.json();
+          
+          let html = '<h3>All Agents:</h3>';
+          if (data.agents && data.agents.length > 0) {
+            html += '<table border="1" style="width: 100%; border-collapse: collapse;">';
+            html += '<tr><th>ID</th><th>Name</th><th>Email</th><th>Progress</th><th>Submissions</th><th>Actions</th></tr>';
+            
+            data.agents.forEach(agent => {
+              html += `<tr>`;
+              html += `<td>${agent.id}</td>`;
+              html += `<td>${agent.profile?.firstName || ''} ${agent.profile?.lastName || ''}</td>`;
+              html += `<td>${agent.profile?.email || ''}</td>`;
+              html += `<td>${JSON.stringify(agent.progress)}</td>`;
+              html += `<td>${JSON.stringify(agent.submissions)}</td>`;
+              html += `<td><button onclick="testAgentDocuments('${agent.id}')">Test Documents</button></td>`;
+              html += `</tr>`;
+            });
+            
+            html += '</table>';
+          } else {
+            html += '<p>No agents found.</p>';
+          }
+          
+          results.innerHTML = html;
+          
+        } catch (error) {
+          results.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+        }
+      }
+      
+      async function listAllSubmissions() {
+        results.innerHTML = '<p>Loading all submissions...</p>';
+        
+        try {
+          const res = await fetch('/api/admin/submissions');
+          const data = await res.json();
+          
+          let html = '<h3>All Submissions:</h3>';
+          if (data.submissions && data.submissions.length > 0) {
+            html += '<table border="1" style="width: 100%; border-collapse: collapse;">';
+            html += '<tr><th>ID</th><th>Type</th><th>Date</th><th>Data Preview</th></tr>';
+            
+            data.submissions.forEach(sub => {
+              html += `<tr>`;
+              html += `<td>${sub.id}</td>`;
+              html += `<td>${sub.type}</td>`;
+              html += `<td>${sub.receivedAt}</td>`;
+              html += `<td>${JSON.stringify(sub.data).substring(0, 100)}...</td>`;
+              html += `</tr>`;
+            });
+            
+            html += '</table>';
+          } else {
+            html += '<p>No submissions found.</p>';
+          }
+          
+          results.innerHTML = html;
+          
+        } catch (error) {
+          results.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+        }
+      }
+      
+      window.testAgentDocuments = async function(agentId) {
+        try {
+          const res = await fetch(`/api/admin/agents/${agentId}/documents/list`);
+          const data = await res.json();
+          
+          let html = `<h3>Documents for Agent ${agentId}:</h3>`;
+          if (data.files && data.files.length > 0) {
+            html += '<ul>';
+            data.files.forEach(file => {
+              html += `<li>${file.name}</li>`;
+            });
+            html += '</ul>';
+          } else {
+            html += '<p>No documents found for this agent.</p>';
+          }
+          
+          results.innerHTML = html;
+          
+        } catch (error) {
+          results.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+        }
+      };
+      
+      document.getElementById('testStorageBtn').addEventListener('click', testStorage);
+      document.getElementById('listAllAgentsBtn').addEventListener('click', listAllAgents);
+      document.getElementById('listAllSubmissionsBtn').addEventListener('click', listAllSubmissions);
+    });
+  </script>
+</body>
+</html>
