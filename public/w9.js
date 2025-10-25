@@ -148,16 +148,19 @@ document.addEventListener('DOMContentLoaded', function() {
     submitBtn.textContent = 'Submitting...';
 
     try {
+      // Convert FormData to JSON object
       const formData = new FormData(form);
+      const payload = Object.fromEntries(formData.entries());
       
       // Add agent ID if available
       if (agentId) {
-        formData.append('agentId', agentId);
+        payload.agentId = agentId;
       }
 
       const response = await fetch('/api/w9', {
         method: 'POST',
-        body: formData
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
 
       const result = await response.json();

@@ -153,9 +153,15 @@ app.get('/api/admin/agents', requireAdmin, async (req, res) => {
 // List docs (admin)
 app.get('/api/admin/agents/:id/documents/list', requireAdmin, async (req, res) => {
   try {
+    console.log('Admin: Listing documents for agent:', req.params.id);
     const agent = await readAgent(req.params.id);
-    if (!agent) return res.status(404).json({ ok: false, error: 'Not found' });
+    if (!agent) {
+      console.log('Admin: Agent not found:', req.params.id);
+      return res.status(404).json({ ok: false, error: 'Not found' });
+    }
+    console.log('Admin: Agent found:', agent.id);
     const files = await gatherAgentDocuments(agent, { includeW9: true });
+    console.log('Admin: Found files:', files.length);
     res.json({ ok: true, files: files.map(f => ({ name: f.name })) });
   } catch (e) {
     console.error('admin list docs error', e);
@@ -813,13 +819,16 @@ async function findOrCreateAgentByEmail(email) {
 // Create agent
 app.post('/api/agents', async (req, res) => {
   try {
+    console.log('Creating agent with data:', req.body);
     const agent = newAgent({
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-      email: req.body.email,
-      phone: req.body.phone
+      firstName: req.body.firstName || '',
+      lastName: req.body.lastName || '',
+      email: req.body.email || '',
+      phone: req.body.phone || ''
     });
+    console.log('Created agent:', agent.id);
     await writeAgent(agent);
+    console.log('Agent saved successfully');
     res.json({ ok: true, agent });
   } catch (e) {
     console.error('Error creating agent', e);
@@ -1101,22 +1110,24 @@ app.post('/api/w9', async (req, res) => {
         agent.progress.w9Submitted = true;
         agent.submissions.w9Id = id;
         
-        // Generate official W-9 PDF
+        // Generate comprehensive signed documents PDF
         try {
+          console.log('Generating comprehensive signed documents PDF for agent:', agent.id);
           const agentDir = path.join(AGENTS_DIR, agent.id);
           await fse.ensureDir(agentDir);
-          const outPath = path.join(agentDir, `W9_${id}.pdf`);
+          const outPath = path.join(agentDir, `Complete_Signed_Documents_${id}.pdf`);
+          console.log('Complete signed documents PDF will be saved to:', outPath);
           
-          // Create official W-9 PDF using PDFKit
+          // Create comprehensive signed documents PDF
           const pdfBytes = await new Promise((resolve, reject) => {
             const chunks = [];
             const doc = new PDFDocument({ 
               margin: 50,
               size: 'LETTER',
               info: {
-                Title: 'Form W-9',
+                Title: 'Complete Agent Onboarding Documents',
                 Author: 'Life Assurance Solutions LLC',
-                Subject: 'Request for Taxpayer Identification Number and Certification'
+                Subject: 'Signed Agent Onboarding Package'
               }
             });
             
@@ -1124,106 +1135,101 @@ app.post('/api/w9', async (req, res) => {
             doc.on('end', () => resolve(Buffer.concat(chunks)));
             doc.on('error', reject);
             
-            // W-9 Header
-            doc.fontSize(16).font('Helvetica-Bold').text('Form W-9', { align: 'center' });
+            // Get all agent data
+            const agentData = agent;
+            const intakeData = agent.submissions?.intakeId ? 
+              await fse.readJson(path.join(SUBMISSIONS_DIR, agent.submissions.intakeId, 'intake.json')).catch(() => null) : null;
+            const packetData = agent.submissions?.packetId ? 
+              await fse.readJson(path.join(SUBMISSIONS_DIR, agent.submissions.packetId, 'packet.json')).catch(() => null) : null;
+            const bankingData = agent.submissions?.bankingId ? 
+              await fse.readJson(path.join(SUBMISSIONS_DIR, agent.submissions.bankingId, 'banking.json')).catch(() => null) : null;
+            
+            // Title Page
+            doc.fontSize(20).font('Helvetica-Bold').text('COMPLETE AGENT ONBOARDING PACKAGE', { align: 'center' });
+            doc.moveDown(1);
+            doc.fontSize(16).text('Life Assurance Solutions LLC', { align: 'center' });
+            doc.moveDown(2);
+            
+            // Agent Information
+            doc.fontSize(14).font('Helvetica-Bold').text('AGENT INFORMATION');
             doc.moveDown(0.5);
-            doc.fontSize(12).font('Helvetica').text('Request for Taxpayer Identification Number and Certification', { align: 'center' });
+            doc.fontSize(12).text(`Name: ${agentData.profile?.firstName || ''} ${agentData.profile?.lastName || ''}`);
+            doc.text(`Email: ${agentData.profile?.email || ''}`);
+            doc.text(`Phone: ${agentData.profile?.phone || ''}`);
+            doc.text(`Agent ID: ${agentData.id}`);
+            doc.text(`Date Submitted: ${new Date().toLocaleDateString()}`);
             doc.moveDown(1);
             
-            // Instructions
-            doc.fontSize(10).text('Give Form to the requester. Do not send to the IRS.');
+            // Intake Form Data
+            if (intakeData) {
+              doc.fontSize(14).font('Helvetica-Bold').text('INTAKE FORM DATA');
+              doc.moveDown(0.5);
+              doc.fontSize(12).text(`Agency Name: ${intakeData.business?.agencyName || ''}`);
+              doc.text(`Website: ${intakeData.business?.website || ''}`);
+              doc.text(`Address: ${intakeData.business?.address1 || ''} ${intakeData.business?.address2 || ''}`);
+              doc.text(`City, State, ZIP: ${intakeData.business?.city || ''}, ${intakeData.business?.state || ''} ${intakeData.business?.zip || ''}`);
+              doc.text(`NPN: ${intakeData.npn || ''}`);
+              doc.text(`States Licensed: ${intakeData.statesLicensed?.join(', ') || ''}`);
+              doc.moveDown(1);
+            }
+            
+            // W-9 Form Data
+            doc.fontSize(14).font('Helvetica-Bold').text('W-9 FORM DATA');
             doc.moveDown(0.5);
-            doc.text('Print or type See Specific Instructions on page 2.');
+            doc.fontSize(12).text(`Name: ${submission.name || ''}`);
+            doc.text(`Business Name: ${submission.businessName || ''}`);
+            doc.text(`Tax Classification: ${submission.taxClassification || ''}`);
+            if (submission.taxClassification === 'llc') {
+              doc.text(`LLC Classification: ${submission.llcClassification || ''}`);
+            }
+            doc.text(`Address: ${submission.address?.address1 || ''} ${submission.address?.address2 || ''}`);
+            doc.text(`City, State, ZIP: ${submission.address?.city || ''}, ${submission.address?.state || ''} ${submission.address?.zip || ''}`);
+            doc.text(`SSN: ${submission.tin?.ssn || ''}`);
+            doc.text(`EIN: ${submission.tin?.ein || ''}`);
             doc.moveDown(1);
             
-            // Part I - Taxpayer Information
-            doc.fontSize(12).font('Helvetica-Bold').text('Part I — Taxpayer Information');
-            doc.moveDown(0.5);
-            
-            // Name
-            doc.fontSize(10).font('Helvetica-Bold').text('1 Name (as shown on your income tax return). Name is required on this line; do not leave this line blank.', { continued: true });
-            doc.moveDown(0.3);
-            doc.font('Helvetica').text(submission.name || '_________________________________');
-            doc.moveDown(0.5);
-            
-            // Business Name
-            doc.font('Helvetica-Bold').text('2 Business name/disregarded entity name, if different from above', { continued: true });
-            doc.moveDown(0.3);
-            doc.font('Helvetica').text(submission.businessName || '_________________________________');
-            doc.moveDown(0.5);
-            
-            // Address
-            doc.font('Helvetica-Bold').text('3 Check appropriate box for federal tax classification of the person whose name is entered on line 1:', { continued: true });
-            doc.moveDown(0.3);
-            
-            const classifications = [
-              { key: 'individual', text: 'Individual/sole proprietor or single-member LLC' },
-              { key: 'c_corporation', text: 'C Corporation' },
-              { key: 's_corporation', text: 'S Corporation' },
-              { key: 'partnership', text: 'Partnership' },
-              { key: 'trust', text: 'Trust/estate' },
-              { key: 'llc', text: 'LLC' },
-              { key: 'other', text: 'Other' }
-            ];
-            
-            classifications.forEach((cls, i) => {
-              const isChecked = submission.taxClassification === cls.key;
-              doc.text(`□ ${isChecked ? '☑' : '☐'} ${cls.text}`, { indent: 20 });
-            });
-            
-            if (submission.taxClassification === 'llc' && submission.llcClassification) {
-              doc.moveDown(0.3);
-              doc.text(`LLC Classification: ${submission.llcClassification}`, { indent: 20 });
+            // Banking Information
+            if (bankingData) {
+              doc.fontSize(14).font('Helvetica-Bold').text('BANKING INFORMATION');
+              doc.moveDown(0.5);
+              doc.fontSize(12).text(`Bank Name: ${bankingData.bankName || ''}`);
+              doc.text(`Routing Number: ${bankingData.routingNumber || ''}`);
+              doc.text(`Account Number: ${bankingData.accountNumber || ''}`);
+              doc.text(`Account Type: ${bankingData.accountType || ''}`);
+              doc.text(`Account Holder: ${bankingData.accountHolderName || ''}`);
+              doc.moveDown(1);
             }
             
+            // Signatures Section
+            doc.fontSize(14).font('Helvetica-Bold').text('SIGNATURES AND CERTIFICATIONS');
             doc.moveDown(0.5);
+            doc.fontSize(12).text(`W-9 Digital Signature: ${submission.certification?.signature || ''}`);
+            doc.text(`W-9 Signature Date: ${submission.certification?.signatureDate || ''}`);
             
-            // Address
-            doc.font('Helvetica-Bold').text('4 Address (number, street, and apt. or suite no.)', { continued: true });
-            doc.moveDown(0.3);
-            doc.font('Helvetica').text(submission.address?.address1 || '_________________________________');
-            doc.moveDown(0.3);
-            doc.text(`City, state, and ZIP code: ${submission.address?.city || ''}, ${submission.address?.state || ''} ${submission.address?.zip || ''}`);
-            doc.moveDown(0.5);
-            
-            // Part II - Certification
-            doc.fontSize(12).font('Helvetica-Bold').text('Part II — Certification');
-            doc.moveDown(0.5);
-            
-            // TIN
-            doc.fontSize(10).font('Helvetica-Bold').text('5 Requesting taxpayer\'s identification number (TIN)', { continued: true });
-            doc.moveDown(0.3);
-            
-            if (submission.tin?.ssn) {
-              doc.text(`☑ SSN: ${submission.tin.ssn}`);
-            } else if (submission.tin?.ein) {
-              doc.text(`☑ EIN: ${submission.tin.ein}`);
-            } else {
-              doc.text('☐ SSN: _________________  ☐ EIN: _________________');
+            // Producer Agreement Signature
+            if (agentData.signatures?.producerAgreement) {
+              doc.text(`Producer Agreement Signed: ${agentData.signatures.producerAgreement.signedAt || ''}`);
+              if (agentData.signatures.producerAgreement.type === 'text') {
+                doc.text(`Producer Agreement Signature: ${agentData.signatures.producerAgreement.text || ''}`);
+              } else {
+                doc.text(`Producer Agreement Signature: [DRAWN SIGNATURE - See attached image]`);
+              }
             }
             
-            doc.moveDown(0.5);
+            doc.moveDown(1);
             
-            // Certification text
-            doc.font('Helvetica-Bold').text('6 Under penalties of perjury, I certify that:', { continued: true });
-            doc.moveDown(0.3);
-            doc.text('1. The number shown on this form is my correct taxpayer identification number (or I am waiting for a number to be issued to me), and');
-            doc.text('2. I am not subject to backup withholding because: (a) I am exempt from backup withholding, or (b) I have not been notified by the Internal Revenue Service (IRS) that I am subject to backup withholding as a result of a failure to report all interest or dividends, or (c) the IRS has notified me that I am no longer subject to backup withholding, and');
-            doc.text('3. I am a U.S. person (including a U.S. resident alien), and');
-            doc.text('4. The FATCA code(s) entered on this form (if any) indicating that I am exempt from FATCA reporting is correct.');
-            doc.moveDown(0.5);
-            
-            // Signature
-            doc.text('Signature: _________________________________  Date: _______________');
-            doc.text(`Digital Signature: ${submission.certification?.signature || ''}  Date: ${submission.certification?.signatureDate || ''}`);
+            // Legal Notice
+            doc.fontSize(10).text('This document contains all submitted information and signatures as of the date of generation.');
+            doc.text('All signatures are legally binding and represent the agent\'s agreement to the terms and conditions.');
             
             doc.end();
           });
           
           await fse.writeFile(outPath, pdfBytes);
           agent.submissions.w9PdfPath = outPath;
+          console.log('W-9 PDF saved successfully to:', outPath);
         } catch (e) {
-          console.warn('Failed to generate W-9 PDF', e);
+          console.error('Failed to generate W-9 PDF:', e);
         }
         
         await writeAgent(agent);
