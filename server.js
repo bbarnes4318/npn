@@ -404,6 +404,10 @@ async function gatherAgentDocuments(agent, { includeW9 = true } = {}) {
       const packetJson = path.join(SUBMISSIONS_DIR, packetId, 'packet.json');
       if (await fse.pathExists(packetJson)) files.push({ path: packetJson, name: `Packet_${packetId}.json` });
     }
+    // Dashboard/Intake PDF
+    if (agent.submissions?.dashboardPdfPath && await fse.pathExists(agent.submissions.dashboardPdfPath)) {
+      files.push({ path: agent.submissions.dashboardPdfPath, name: path.basename(agent.submissions.dashboardPdfPath) });
+    }
     // W-9 e-sign JSON
     if (includeW9) {
       const w9Id = agent.submissions?.w9Id;
