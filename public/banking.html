@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Banking Details — ACA Onboarding</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container header-inner">
+      <a class="logo" href="/">
+        <span class="logo-mark">N</span>
+        <span>ACA Agent Onboarding</span>
+      </a>
+      <nav class="nav">
+        <a href="/">Home</a>
+        <a href="/intake.html">Intake</a>
+        <a href="/w9.html">W-9</a>
+        <a href="#">Banking</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <div class="card" style="margin-bottom: 20px;">
+        <h1 style="margin: 0 0 8px;">Banking Information</h1>
+        <p class="sub">Provide your banking details for commission payments and direct deposit setup.</p>
+        <div class="callout important">
+          <strong>Security Notice:</strong> Your banking information is encrypted and stored securely. We use industry-standard encryption to protect your financial data.
+        </div>
+      </div>
+
+      <div id="bankingMsg" class="notice" style="display:none; margin-bottom: 16px;"></div>
+
+      <form id="bankingForm" class="form">
+        <div class="card">
+          <h3>Bank Account Information</h3>
+          <div class="field">
+            <label class="label">Bank Name <span class="required">*</span></label>
+            <input class="input" type="text" name="bankName" placeholder="e.g., Chase Bank, Bank of America, Wells Fargo" required />
+            <div class="help">Enter the full name of your bank or financial institution</div>
+          </div>
+
+          <div class="field inline">
+            <div class="field">
+              <label class="label">Routing Number <span class="required">*</span></label>
+              <input class="input" type="text" name="routingNumber" placeholder="123456789" pattern="[0-9]{9}" maxlength="9" required />
+              <div class="help">9-digit routing number (ABA number)</div>
+            </div>
+            <div class="field">
+              <label class="label">Account Number <span class="required">*</span></label>
+              <input class="input" type="text" name="accountNumber" placeholder="1234567890" required />
+              <div class="help">Your account number (no spaces or dashes)</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Account Type <span class="required">*</span></label>
+            <select name="accountType" class="input" required>
+              <option value="">Select account type</option>
+              <option value="checking">Checking</option>
+              <option value="savings">Savings</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="label">Account Holder Name <span class="required">*</span></label>
+            <input class="input" type="text" name="accountHolderName" placeholder="Name as it appears on the account" required />
+            <div class="help">Must match the name on your bank account</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Verification</h3>
+          <div class="field">
+            <label class="label">Confirm Account Number <span class="required">*</span></label>
+            <input class="input" type="text" name="confirmAccountNumber" placeholder="Re-enter your account number" required />
+            <div class="help">Please re-enter your account number to confirm accuracy</div>
+          </div>
+
+          <div class="field">
+            <label class="label">Confirm Routing Number <span class="required">*</span></label>
+            <input class="input" type="text" name="confirmRoutingNumber" placeholder="Re-enter your routing number" required />
+            <div class="help">Please re-enter your routing number to confirm accuracy</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Payment Preferences</h3>
+          <div class="field">
+            <label class="label">Payment Method <span class="required">*</span></label>
+            <div class="inline">
+              <label><input type="radio" name="paymentMethod" value="direct_deposit" checked /> Direct Deposit (Preferred)</label>
+              <label style="margin-left: 20px;"><input type="radio" name="paymentMethod" value="check" /> Paper Check</label>
+            </div>
+            <div class="help">Direct deposit is faster and more secure than paper checks</div>
+          </div>
+
+          <div class="field">
+            <label class="label">Payment Frequency</label>
+            <select name="paymentFrequency" class="input">
+              <option value="weekly">Weekly</option>
+              <option value="bi-weekly" selected>Bi-weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Authorization & Consent</h3>
+          <div class="field">
+            <label style="display: flex; gap: 8px; align-items: flex-start;">
+              <input type="checkbox" name="authorizeDirectDeposit" required style="margin-top: 4px;" />
+              <span>I authorize Life Assurance Solutions LLC to initiate direct deposit transactions to my bank account for commission payments and other compensation. <span class="required">*</span></span>
+            </label>
+          </div>
+
+          <div class="field">
+            <label style="display: flex; gap: 8px; align-items: flex-start;">
+              <input type="checkbox" name="verifyBankingInfo" required style="margin-top: 4px;" />
+              <span>I verify that the banking information provided is accurate and that I am the authorized account holder. <span class="required">*</span></span>
+            </label>
+          </div>
+
+          <div class="field">
+            <label style="display: flex; gap: 8px; align-items: flex-start;">
+              <input type="checkbox" name="privacyConsent" required style="margin-top: 4px;" />
+              <span>I consent to the secure storage and processing of my banking information for payment purposes. <span class="required">*</span></span>
+            </label>
+          </div>
+
+          <div class="field inline">
+            <div class="field">
+              <label class="label">Digital Signature <span class="required">*</span></label>
+              <input class="input" type="text" name="digitalSignature" placeholder="Type your full name" required />
+            </div>
+            <div class="field">
+              <label class="label">Date <span class="required">*</span></label>
+              <input class="input" type="date" name="signatureDate" required />
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="background: #f8f9fa; border: 1px solid #e9ecef;">
+          <h4 style="margin: 0 0 12px; color: var(--brand-navy);">Important Information</h4>
+          <ul style="margin: 0; padding-left: 20px; color: var(--muted);">
+            <li>Banking information is encrypted and stored securely</li>
+            <li>Direct deposits typically take 1-2 business days to process</li>
+            <li>You can update your banking information at any time through your dashboard</li>
+            <li>Contact support if you need to change your payment method</li>
+          </ul>
+        </div>
+
+        <div class="cta-row" style="margin-top: 24px;">
+          <button class="button primary" type="submit">Save Banking Information</button>
+          <button class="button ghost" type="button" id="clearFormBtn">Clear Form</button>
+          <a class="button ghost" href="/dashboard.html">Back to Dashboard</a>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <strong>Need help?</strong>
+        <div>Phone: (860) 351‑8270</div>
+        <div>Email: support@lifeassurancesolutions.com</div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/banking.js" defer></script>
+</body>
+</html>

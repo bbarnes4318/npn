@@ -1171,6 +1171,86 @@ app.post('/api/w9', async (req, res) => {
   }
 });
 
+// Banking details submission
+app.post('/api/banking', async (req, res) => {
+  try {
+    const body = req.body || {};
+    const agentId = body.agentId;
+    
+    // Validate required fields
+    const requiredFields = ['bankName', 'routingNumber', 'accountNumber', 'accountType', 'accountHolderName'];
+    for (const field of requiredFields) {
+      if (!body[field] || body[field].trim() === '') {
+        return res.status(400).json({ ok: false, error: `Missing required field: ${field}` });
+      }
+    }
+
+    // Validate routing number format
+    if (!/^\d{9}$/.test(body.routingNumber)) {
+      return res.status(400).json({ ok: false, error: 'Routing number must be exactly 9 digits' });
+    }
+
+    // Validate account number confirmation
+    if (body.accountNumber !== body.confirmAccountNumber) {
+      return res.status(400).json({ ok: false, error: 'Account numbers do not match' });
+    }
+
+    if (body.routingNumber !== body.confirmRoutingNumber) {
+      return res.status(400).json({ ok: false, error: 'Routing numbers do not match' });
+    }
+
+    // Create banking submission
+    const id = nanoid(10);
+    const destDir = path.join(SUBMISSIONS_DIR, id);
+    await fse.ensureDir(destDir);
+
+    const submission = {
+      id,
+      type: 'banking',
+      receivedAt: new Date().toISOString(),
+      bankName: body.bankName || '',
+      routingNumber: body.routingNumber || '',
+      accountNumber: body.accountNumber || '',
+      accountType: body.accountType || '',
+      accountHolderName: body.accountHolderName || '',
+      paymentMethod: body.paymentMethod || 'direct_deposit',
+      paymentFrequency: body.paymentFrequency || 'bi-weekly',
+      authorizations: {
+        authorizeDirectDeposit: body.authorizeDirectDeposit === 'on' || body.authorizeDirectDeposit === 'true',
+        verifyBankingInfo: body.verifyBankingInfo === 'on' || body.verifyBankingInfo === 'true',
+        privacyConsent: body.privacyConsent === 'on' || body.privacyConsent === 'true'
+      },
+      signature: {
+        digitalSignature: body.digitalSignature || '',
+        signatureDate: body.signatureDate || ''
+      }
+    };
+
+    await fse.writeJson(path.join(destDir, 'banking.json'), submission, { spaces: 2 });
+
+    // Link to agent if provided
+    if (agentId) {
+      const agent = await readAgent(agentId);
+      if (agent) {
+        agent.progress.bankingSubmitted = true;
+        agent.submissions.bankingId = id;
+        agent.banking = {
+          bankName: submission.bankName,
+          accountType: submission.accountType,
+          paymentMethod: submission.paymentMethod,
+          lastUpdated: new Date().toISOString()
+        };
+        await writeAgent(agent);
+      }
+    }
+
+    res.json({ ok: true, id });
+  } catch (err) {
+    console.error('Error handling /api/banking', err);
+    res.status(500).json({ ok: false, error: 'Failed to save banking information' });
+  }
+});
+
 // Fallback to index.html
 app.get('*', (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
