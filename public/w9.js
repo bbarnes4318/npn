@@ -169,13 +169,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (dateInput) {
           dateInput.value = new Date().toISOString().split('T')[0];
         }
-        // Redirect to dashboard or next step
+        // Redirect to completion page
         setTimeout(() => {
-          if (agentId) {
-            window.location.href = `/dashboard.html?agentId=${encodeURIComponent(agentId)}`;
-          } else {
-            window.location.href = '/dashboard.html';
-          }
+          window.location.href = '/completed.html';
         }, 2000);
       } else {
         showMessage(result.error || 'Failed to submit W-9 form', 'error');
