@@ -1296,6 +1296,7 @@ app.post('/api/w9', async (req, res) => {
           console.log('Signed W-9 PDF will be saved to:', outPath);
           
           // Create official W-9 PDF
+          console.log('W9 PDF Data:', JSON.stringify(submission, null, 2));
           const pdfBytes = await new Promise((resolve, reject) => {
             const chunks = [];
             const doc = new PDFDocument({ 
@@ -1309,40 +1310,40 @@ app.post('/api/w9', async (req, res) => {
             });
             
             doc.on('data', (b) => chunks.push(b));
-            doc.on('end', () => resolve(Buffer.concat(chunks)));
-            doc.on('error', reject);
+            doc.on('end', () => {
+              console.log('W9 PDF generation completed, size:', Buffer.concat(chunks).length);
+              resolve(Buffer.concat(chunks));
+            });
+            doc.on('error', (err) => {
+              console.error('W9 PDF generation error:', err);
+              reject(err);
+            });
             
             // W-9 Header
-            doc.fontSize(16).text('Form W-9', { align: 'center' });
-            doc.moveDown(0.5);
-            doc.fontSize(12).text('Request for Taxpayer Identification Number and Certification', { align: 'center' });
+            doc.fontSize(20).text('FORM W-9', { align: 'center' });
             doc.moveDown(1);
-            
-            // Instructions
-            doc.fontSize(10).text('Give Form to the requester. Do not send to the IRS.');
-            doc.moveDown(0.5);
-            doc.text('Print or type See Specific Instructions on page 2.');
-            doc.moveDown(1);
+            doc.fontSize(14).text('Request for Taxpayer Identification Number and Certification', { align: 'center' });
+            doc.moveDown(2);
             
             // Part I - Taxpayer Information
-            doc.fontSize(12).text('Part I — Taxpayer Information');
-            doc.moveDown(0.5);
+            doc.fontSize(16).text('PART I — TAXPAYER INFORMATION');
+            doc.moveDown(1);
             
             // Name
-            doc.fontSize(10).text('1 Name (as shown on your income tax return). Name is required on this line; do not leave this line blank.');
-            doc.moveDown(0.3);
-            doc.text(submission.name || '_________________________________');
+            doc.fontSize(12).text('1 Name (as shown on your income tax return):');
             doc.moveDown(0.5);
+            doc.fontSize(14).text(submission.name || '_________________________________');
+            doc.moveDown(1);
             
             // Business Name
-            doc.text('2 Business name/disregarded entity name, if different from above');
-            doc.moveDown(0.3);
-            doc.text(submission.businessName || '_________________________________');
+            doc.fontSize(12).text('2 Business name/disregarded entity name, if different from above:');
             doc.moveDown(0.5);
+            doc.fontSize(14).text(submission.businessName || '_________________________________');
+            doc.moveDown(1);
             
             // Tax Classification
-            doc.text('3 Check appropriate box for federal tax classification of the person whose name is entered on line 1:');
-            doc.moveDown(0.3);
+            doc.fontSize(12).text('3 Check appropriate box for federal tax classification:');
+            doc.moveDown(0.5);
             
             const classifications = [
               { key: 'individual', text: 'Individual/sole proprietor or single-member LLC' },
@@ -1356,58 +1357,61 @@ app.post('/api/w9', async (req, res) => {
             
             classifications.forEach((cls, i) => {
               const isChecked = submission.taxClassification === cls.key;
-              doc.text(`□ ${isChecked ? '☑' : '☐'} ${cls.text}`, { indent: 20 });
+              doc.text(`${isChecked ? '☑' : '☐'} ${cls.text}`);
             });
             
             if (submission.taxClassification === 'llc' && submission.llcClassification) {
-              doc.moveDown(0.3);
-              doc.text(`LLC Classification: ${submission.llcClassification}`, { indent: 20 });
+              doc.moveDown(0.5);
+              doc.text(`LLC Classification: ${submission.llcClassification}`);
             }
             
-            doc.moveDown(0.5);
+            doc.moveDown(1);
             
             // Address
-            doc.text('4 Address (number, street, and apt. or suite no.)');
-            doc.moveDown(0.3);
-            doc.text(submission.address?.address1 || '_________________________________');
-            doc.moveDown(0.3);
-            doc.text(`City, state, and ZIP code: ${submission.address?.city || ''}, ${submission.address?.state || ''} ${submission.address?.zip || ''}`);
+            doc.fontSize(12).text('4 Address (number, street, and apt. or suite no.):');
             doc.moveDown(0.5);
+            doc.fontSize(14).text(submission.address?.address1 || '_________________________________');
+            doc.moveDown(0.5);
+            doc.fontSize(12).text('City, state, and ZIP code:');
+            doc.fontSize(14).text(`${submission.address?.city || ''}, ${submission.address?.state || ''} ${submission.address?.zip || ''}`);
+            doc.moveDown(2);
             
             // Part II - Certification
-            doc.fontSize(12).text('Part II — Certification');
-            doc.moveDown(0.5);
+            doc.fontSize(16).text('PART II — CERTIFICATION');
+            doc.moveDown(1);
             
             // TIN
-            doc.fontSize(10).text('5 Requesting taxpayer\'s identification number (TIN)');
-            doc.moveDown(0.3);
+            doc.fontSize(12).text('5 Requesting taxpayer\'s identification number (TIN):');
+            doc.moveDown(0.5);
             
             if (submission.tin?.ssn) {
-              doc.text(`☑ SSN: ${submission.tin.ssn}`);
+              doc.fontSize(14).text(`☑ SSN: ${submission.tin.ssn}`);
             } else if (submission.tin?.ein) {
-              doc.text(`☑ EIN: ${submission.tin.ein}`);
+              doc.fontSize(14).text(`☑ EIN: ${submission.tin.ein}`);
             } else {
               doc.text('☐ SSN: _________________  ☐ EIN: _________________');
             }
             
-            doc.moveDown(0.5);
+            doc.moveDown(1);
             
             // Certification text
-            doc.text('6 Under penalties of perjury, I certify that:');
-            doc.moveDown(0.3);
+            doc.fontSize(12).text('6 Under penalties of perjury, I certify that:');
+            doc.moveDown(0.5);
             doc.text('1. The number shown on this form is my correct taxpayer identification number (or I am waiting for a number to be issued to me), and');
             doc.text('2. I am not subject to backup withholding because: (a) I am exempt from backup withholding, or (b) I have not been notified by the Internal Revenue Service (IRS) that I am subject to backup withholding as a result of a failure to report all interest or dividends, or (c) the IRS has notified me that I are no longer subject to backup withholding, and');
             doc.text('3. I am a U.S. person (including a U.S. resident alien), and');
             doc.text('4. The FATCA code(s) entered on this form (if any) indicating that I am exempt from FATCA reporting is correct.');
-            doc.moveDown(0.5);
+            doc.moveDown(2);
             
-            // Signature
-            doc.text('Signature: _________________________________  Date: _______________');
-            doc.text(`Digital Signature: ${submission.certification?.signature || ''}  Date: ${submission.certification?.signatureDate || ''}`);
+            // Signature Section
+            doc.fontSize(16).text('SIGNATURE SECTION');
             doc.moveDown(1);
+            doc.fontSize(14).text(`Digital Signature: ${submission.certification?.signature || 'NOT PROVIDED'}`);
+            doc.fontSize(14).text(`Signature Date: ${submission.certification?.signatureDate || 'NOT PROVIDED'}`);
+            doc.moveDown(2);
             
             // Legal Notice
-            doc.fontSize(10).text('This document contains the signed W-9 form with digital signature as of the date of generation.');
+            doc.fontSize(12).text('This document contains the signed W-9 form with digital signature as of the date of generation.');
             doc.text('The digital signature is legally binding and represents the taxpayer\'s certification under penalties of perjury.');
             
             doc.end();
