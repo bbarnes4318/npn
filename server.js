@@ -1168,13 +1168,13 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
           doc.on('error', reject);
           
           // Title Page
-          doc.fontSize(20).font('Helvetica-Bold').text('SIGNED INTAKE DOCUMENTS', { align: 'center' });
+          doc.fontSize(20).text('SIGNED INTAKE DOCUMENTS', { align: 'center' });
           doc.moveDown(1);
           doc.fontSize(16).text('Life Assurance Solutions LLC', { align: 'center' });
           doc.moveDown(2);
           
           // Agent Information
-          doc.fontSize(14).font('Helvetica-Bold').text('AGENT INFORMATION');
+          doc.fontSize(14).text('AGENT INFORMATION');
           doc.moveDown(0.5);
           doc.fontSize(12).text(`Name: ${submission.contact?.firstName || ''} ${submission.contact?.lastName || ''}`);
           doc.text(`Email: ${submission.contact?.email || ''}`);
@@ -1184,7 +1184,7 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
           doc.moveDown(1);
           
           // Business Information
-          doc.fontSize(14).font('Helvetica-Bold').text('BUSINESS INFORMATION');
+          doc.fontSize(14).text('BUSINESS INFORMATION');
           doc.moveDown(0.5);
           doc.fontSize(12).text(`Agency Name: ${submission.business?.agencyName || ''}`);
           doc.text(`Website: ${submission.business?.website || ''}`);
@@ -1195,7 +1195,7 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
           doc.moveDown(1);
           
           // Background Information
-          doc.fontSize(14).font('Helvetica-Bold').text('BACKGROUND INFORMATION');
+          doc.fontSize(14).text('BACKGROUND INFORMATION');
           doc.moveDown(0.5);
           doc.fontSize(12).text(`Prior Terminations: ${submission.background?.priorTerminations ? 'YES' : 'NO'}`);
           if (submission.background?.priorTerminationsExplain) {
@@ -1212,7 +1212,7 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
           doc.moveDown(1);
           
           // Signatures Section
-          doc.fontSize(14).font('Helvetica-Bold').text('DIGITAL SIGNATURES AND CERTIFICATIONS');
+          doc.fontSize(14).text('DIGITAL SIGNATURES AND CERTIFICATIONS');
           doc.moveDown(0.5);
           doc.fontSize(12).text(`Digital Signature: ${submission.acknowledgments?.signature || ''}`);
           doc.text(`Signature Date: ${submission.acknowledgments?.signatureDate || ''}`);
@@ -1313,9 +1313,9 @@ app.post('/api/w9', async (req, res) => {
             doc.on('error', reject);
             
             // W-9 Header
-            doc.fontSize(16).font('Helvetica-Bold').text('Form W-9', { align: 'center' });
+            doc.fontSize(16).text('Form W-9', { align: 'center' });
             doc.moveDown(0.5);
-            doc.fontSize(12).font('Helvetica').text('Request for Taxpayer Identification Number and Certification', { align: 'center' });
+            doc.fontSize(12).text('Request for Taxpayer Identification Number and Certification', { align: 'center' });
             doc.moveDown(1);
             
             // Instructions
@@ -1325,23 +1325,23 @@ app.post('/api/w9', async (req, res) => {
             doc.moveDown(1);
             
             // Part I - Taxpayer Information
-            doc.fontSize(12).font('Helvetica-Bold').text('Part I — Taxpayer Information');
+            doc.fontSize(12).text('Part I — Taxpayer Information');
             doc.moveDown(0.5);
             
             // Name
-            doc.fontSize(10).font('Helvetica-Bold').text('1 Name (as shown on your income tax return). Name is required on this line; do not leave this line blank.', { continued: true });
+            doc.fontSize(10).text('1 Name (as shown on your income tax return). Name is required on this line; do not leave this line blank.');
             doc.moveDown(0.3);
-            doc.font('Helvetica').text(submission.name || '_________________________________');
+            doc.text(submission.name || '_________________________________');
             doc.moveDown(0.5);
             
             // Business Name
-            doc.font('Helvetica-Bold').text('2 Business name/disregarded entity name, if different from above', { continued: true });
+            doc.text('2 Business name/disregarded entity name, if different from above');
             doc.moveDown(0.3);
-            doc.font('Helvetica').text(submission.businessName || '_________________________________');
+            doc.text(submission.businessName || '_________________________________');
             doc.moveDown(0.5);
             
             // Tax Classification
-            doc.font('Helvetica-Bold').text('3 Check appropriate box for federal tax classification of the person whose name is entered on line 1:', { continued: true });
+            doc.text('3 Check appropriate box for federal tax classification of the person whose name is entered on line 1:');
             doc.moveDown(0.3);
             
             const classifications = [
@@ -1367,19 +1367,19 @@ app.post('/api/w9', async (req, res) => {
             doc.moveDown(0.5);
             
             // Address
-            doc.font('Helvetica-Bold').text('4 Address (number, street, and apt. or suite no.)', { continued: true });
+            doc.text('4 Address (number, street, and apt. or suite no.)');
             doc.moveDown(0.3);
-            doc.font('Helvetica').text(submission.address?.address1 || '_________________________________');
+            doc.text(submission.address?.address1 || '_________________________________');
             doc.moveDown(0.3);
             doc.text(`City, state, and ZIP code: ${submission.address?.city || ''}, ${submission.address?.state || ''} ${submission.address?.zip || ''}`);
             doc.moveDown(0.5);
             
             // Part II - Certification
-            doc.fontSize(12).font('Helvetica-Bold').text('Part II — Certification');
+            doc.fontSize(12).text('Part II — Certification');
             doc.moveDown(0.5);
             
             // TIN
-            doc.fontSize(10).font('Helvetica-Bold').text('5 Requesting taxpayer\'s identification number (TIN)', { continued: true });
+            doc.fontSize(10).text('5 Requesting taxpayer\'s identification number (TIN)');
             doc.moveDown(0.3);
             
             if (submission.tin?.ssn) {
@@ -1393,7 +1393,7 @@ app.post('/api/w9', async (req, res) => {
             doc.moveDown(0.5);
             
             // Certification text
-            doc.font('Helvetica-Bold').text('6 Under penalties of perjury, I certify that:', { continued: true });
+            doc.text('6 Under penalties of perjury, I certify that:');
             doc.moveDown(0.3);
             doc.text('1. The number shown on this form is my correct taxpayer identification number (or I am waiting for a number to be issued to me), and');
             doc.text('2. I am not subject to backup withholding because: (a) I am exempt from backup withholding, or (b) I have not been notified by the Internal Revenue Service (IRS) that I am subject to backup withholding as a result of a failure to report all interest or dividends, or (c) the IRS has notified me that I are no longer subject to backup withholding, and');
