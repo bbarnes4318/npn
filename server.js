@@ -622,7 +622,7 @@ const DOCS = {
   w9: path.join(ROOT, 'W9.pdf'),
   background: path.join(ROOT, 'Background Questions Fillable.pdf'),
   producerAgreement: path.join(ROOT, 'PRODUCER AGREEMENT (REMOTE).pdf'),
-  paycor: path.join(ROOT, 'Paycor Fillable Form 2025.pdf')
+  square: path.join(ROOT, 'Square Fillable Form 2025.pdf')
 };
 
 app.get('/docs/:doc', async (req, res) => {
