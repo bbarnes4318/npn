@@ -1,13 +1,13 @@
 :root {
-  --primary-color: #005f73;
-  --secondary-color: #0a9396;
-  --accent-color: #94d2bd;
-  --neutral-color: #e9d8a6;
-  --dark-color: #001219;
-  --grey-color: #6c757d;
-  --success-color: #2a9d8f;
-  --error-color: #e76f51;
-  --background-color: #f8f9fa;
+  --primary-color: #2563eb;
+  --secondary-color: #1e40af;
+  --accent-color: #3b82f6;
+  --neutral-color: #f1f5f9;
+  --dark-color: #0f172a;
+  --grey-color: #64748b;
+  --success-color: #059669;
+  --error-color: #dc2626;
+  --background-color: #ffffff;
   --white-color: #ffffff;
 
   --heading-font: "Georgia", serif;
@@ -257,16 +257,10 @@ textarea.input {
   font-weight: 700;
 }
 
-.logo-mark {
-  background-color: var(--primary-color);
-  color: var(--white-color);
-  width: 32px;
-  height: 32px;
-  display: inline-block;
-  text-align: center;
-  line-height: 32px;
-  border-radius: 4px;
-  margin-right: 0.5rem;
+.logo-image {
+  height: 40px;
+  width: auto;
+  max-width: 200px;
 }
 
 .section {
