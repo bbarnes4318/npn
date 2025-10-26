@@ -1,0 +1,39 @@
+{
+  "id": "4KeTdT9XVB",
+  "type": "intake",
+  "receivedAt": "2025-10-26T20:12:11.485Z",
+  "contact": {
+    "firstName": "",
+    "lastName": "",
+    "email": "",
+    "phone": ""
+  },
+  "business": {
+    "agencyName": "",
+    "website": "",
+    "address1": "",
+    "address2": "",
+    "city": "",
+    "state": "",
+    "zip": ""
+  },
+  "npn": "",
+  "statesLicensed": [],
+  "background": {
+    "priorTerminations": false,
+    "priorTerminationsExplain": "",
+    "felonies": false,
+    "feloniesExplain": "",
+    "bankruptcies": false,
+    "bankruptciesExplain": ""
+  },
+  "acknowledgments": {
+    "producerAgreementAccepted": false,
+    "privacyNoticeAccepted": false,
+    "signature": "",
+    "signatureDate": ""
+  },
+  "attachments": {
+    "certProof": null
+  }
+}

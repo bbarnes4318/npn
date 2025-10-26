@@ -166,36 +166,112 @@ document.addEventListener('DOMContentLoaded', () => {
   submitBtn.addEventListener('click', async () => {
     const success = await handleBankingSubmit();
     if (success) {
-      nextStep();
+      currentStep++;
+      showStep(currentStep);
     }
   });
 
-  // Load form content
-  async function loadFormContent() {
-    try {
-      const [intakeRes, w9Res, bankingRes] = await Promise.all([
-        fetch('/intake.html'),
-        fetch('/w9.html'),
-        fetch('/banking.html'),
-      ]);
+  const STATES = [
+    { abbr: 'AL', name: 'Alabama' }, { abbr: 'AK', name: 'Alaska' }, { abbr: 'AZ', name: 'Arizona' },
+    { abbr: 'AR', name: 'Arkansas' }, { abbr: 'CA', name: 'California' }, { abbr: 'CO', name: 'Colorado' },
+    { abbr: 'CT', name: 'Connecticut' }, { abbr: 'DE', name: 'Delaware' }, { abbr: 'DC', name: 'District of Columbia' },
+    { abbr: 'FL', name: 'Florida' }, { abbr: 'GA', name: 'Georgia' }, { abbr: 'HI', name: 'Hawaii' },
+    { abbr: 'ID', name: 'Idaho' }, { abbr: 'IL', name: 'Illinois' }, { abbr: 'IN', name: 'Indiana' },
+    { abbr: 'IA', name: 'Iowa' }, { abbr: 'KS', name: 'Kansas' }, { abbr: 'KY', name: 'Kentucky' },
+    { abbr: 'LA', name: 'Louisiana' }, { abbr: 'ME', name: 'Maine' }, { abbr: 'MD', name: 'Maryland' },
+    { abbr: 'MA', name: 'Massachusetts' }, { abbr: 'MI', name: 'Michigan' }, { abbr: 'MN', name: 'Minnesota' },
+    { abbr: 'MS', name: 'Mississippi' }, { abbr: 'MO', name: 'Missouri' }, { abbr: 'MT', name: 'Montana' },
+    { abbr: 'NE', name: 'Nebraska' }, { abbr: 'NV', name: 'Nevada' }, { abbr: 'NH', name: 'New Hampshire' },
+    { abbr: 'NJ', name: 'New Jersey' }, { abbr: 'NM', name: 'New Mexico' }, { abbr: 'NY', name: 'New York' },
+    { abbr: 'NC', name: 'North Carolina' }, { abbr: 'ND', name: 'North Dakota' }, { abbr: 'OH', name: 'Ohio' },
+    { abbr: 'OK', name: 'Oklahoma' }, { abbr: 'OR', name: 'Oregon' }, { abbr: 'PA', name: 'Pennsylvania' },
+    { abbr: 'RI', name: 'Rhode Island' }, { abbr: 'SC', name: 'South Carolina' }, { abbr: 'SD', name: 'South Dakota' },
+    { abbr: 'TN', name: 'Tennessee' }, { abbr: 'TX', name: 'Texas' }, { abbr: 'UT', name: 'Utah' },
+    { abbr: 'VT', name: 'Vermont' }, { abbr: 'VA', name: 'Virginia' }, { abbr: 'WA', name: 'Washington' },
+    { abbr: 'WV', name: 'West Virginia' }, { abbr: 'WI', name: 'Wisconsin' }, { abbr: 'WY', name: 'Wyoming' }
+  ];
 
-      const intakeHtml = await intakeRes.text();
-      const intakeForm = new DOMParser().parseFromString(intakeHtml, 'text/html').querySelector('#intakeForm');
-      document.getElementById('intake-form-step').append(intakeForm);
-
-      const w9Html = await w9Res.text();
-      const w9Form = new DOMParser().parseFromString(w9Html, 'text/html').querySelector('#w9Form');
-      document.getElementById('w9-form-step').append(w9Form);
-
-      const bankingHtml = await bankingRes.text();
-      const bankingContainer = new DOMParser().parseFromString(bankingHtml, 'text/html').querySelector('.step-container');
-      document.getElementById('banking-form-step').append(bankingContainer);
-    } catch (err) {
-      showMessage('Failed to load form content. Please refresh the page.', 'error');
+  function populateStates(select, includeBlank) {
+    if (!select) return;
+    select.innerHTML = '';
+    if (includeBlank) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'Select state';
+      select.appendChild(opt);
     }
+    STATES.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.abbr;
+      opt.textContent = `${s.abbr} — ${s.name}`;
+      select.appendChild(opt);
+    });
   }
 
-  loadFormContent().then(() => {
-    showStep(currentStep);
-  });
+  function setupDualListBox() {
+    const availableStatesList = document.getElementById('available-states');
+    const licensedStatesList = document.getElementById('licensed-states');
+    const addStateBtn = document.getElementById('add-state-btn');
+    const removeStateBtn = document.getElementById('remove-state-btn');
+
+    // Populate available states
+    STATES.forEach(state => {
+      const li = document.createElement('li');
+      li.textContent = state.name;
+      li.dataset.value = state.abbr;
+      availableStatesList.appendChild(li);
+    });
+
+    function handleStateSelection(e) {
+      if (e.target.tagName === 'LI') {
+        e.target.classList.toggle('selected');
+      }
+    }
+
+    availableStatesList.addEventListener('click', handleStateSelection);
+    licensedStatesList.addEventListener('click', handleStateSelection);
+
+    addStateBtn.addEventListener('click', () => {
+      const selectedStates = availableStatesList.querySelectorAll('.selected');
+      selectedStates.forEach(state => {
+        licensedStatesList.appendChild(state);
+        state.classList.remove('selected');
+      });
+    });
+
+    removeStateBtn.addEventListener('click', () => {
+      const selectedStates = licensedStatesList.querySelectorAll('.selected');
+      selectedStates.forEach(state => {
+        availableStatesList.appendChild(state);
+        state.classList.remove('selected');
+      });
+    });
+  }
+
+  function setupFileUpload() {
+    const fileUploadInput = document.getElementById('certProof');
+    const fileUploadPreview = document.getElementById('certProof-preview');
+    const fileUploadText = document.querySelector('.file-upload-text');
+
+    fileUploadInput.addEventListener('change', () => {
+      const file = fileUploadInput.files[0];
+      if (file) {
+        fileUploadText.textContent = file.name;
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            fileUploadPreview.innerHTML = `<img src="${e.target.result}" alt="Image preview" style="max-width: 100%; height: auto;" />`;
+          };
+          reader.readAsDataURL(file);
+        } else {
+          fileUploadPreview.innerHTML = '';
+        }
+      }
+    });
+  }
+
+  populateStates(document.querySelector('.state-select'), true);
+  setupDualListBox();
+  setupFileUpload();
+  showStep(currentStep);
 });

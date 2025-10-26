@@ -1725,9 +1725,13 @@ app.get('/api/admin/submissions/:id', requireAdmin, async (req, res) => {
   }
 });
 
-// Fallback to index.html
+// Fallback to portal.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, 'portal.html'));
+});
+
 app.get('*', (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
+  res.sendFile(path.join(PUBLIC_DIR, req.path));
 });
 
 app.listen(PORT, () => {

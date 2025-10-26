@@ -17,7 +17,17 @@
 
   <main class="section">
     <div class="container">
-      <h2>Admin Dashboard</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2>Admin Dashboard</h2>
+        <div style="display: flex; gap: 1rem;">
+          <input type="text" id="search" class="input" placeholder="Search by name or email..." />
+          <select id="status-filter" class="input">
+            <option value="all">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="complete">Complete</option>
+          </select>
+        </div>
+      </div>
       <div class="card">
         <div class="table-responsive">
           <table class="table">
@@ -46,6 +56,16 @@
       </div>
     </div>
   </footer>
+
+  <!-- Agent Details Modal -->
+  <div id="agent-modal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" id="modal-close">&times;</span>
+      <div id="modal-content-body">
+        <!-- Agent details will be loaded here -->
+      </div>
+    </div>
+  </div>
   <script src="/admin.js" defer></script>
 </body>
 </html>
