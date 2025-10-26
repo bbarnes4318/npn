@@ -136,6 +136,18 @@ document.addEventListener('DOMContentLoaded', () => {
     prevBtn.style.display = stepIndex > 0 ? 'inline-block' : 'none';
     nextBtn.style.display = stepIndex < steps.length - 2 ? 'inline-block' : 'none';
     submitBtn.style.display = stepIndex === steps.length - 2 ? 'inline-block' : 'none';
+
+    // Scroll to top of the page when transitioning to a new step
+    // Use setTimeout to ensure DOM has updated before scrolling
+    setTimeout(() => {
+      // Try multiple scroll methods to ensure it works
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Also scroll the form container into view
+      const formContainer = document.getElementById('form-step-container');
+      if (formContainer) {
+        formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 50);
   }
 
   async function nextStep() {
