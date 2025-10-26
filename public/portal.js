@@ -35,11 +35,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const agentId = getAgentId();
     if (agentId) fd.append('agentId', agentId);
 
-    const multi = intakeForm.querySelector('.states-multi');
-    if (multi) {
-      const selected = Array.from(multi.selectedOptions).map(o => o.value);
+    const licensedStatesList = document.getElementById('licensed-states');
+    if (licensedStatesList) {
+      const licensedStates = Array.from(licensedStatesList.querySelectorAll('li')).map(li => li.dataset.value);
       fd.delete('statesLicensed');
-      selected.forEach(s => fd.append('statesLicensed', s));
+      licensedStates.forEach(state => fd.append('statesLicensed', state));
     }
 
     try {
