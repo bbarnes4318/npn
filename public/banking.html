@@ -7,9 +7,9 @@
   <link rel="stylesheet" href="/styles.css" />
   <style>
     .step-container {
-      max-width: 800px;
+      max-width: 1000px;
       margin: 0 auto;
-      min-height: 600px;
+      height: calc(100vh - 120px);
       display: flex;
       flex-direction: column;
     }
@@ -17,51 +17,55 @@
     .step {
       display: none;
       flex: 1;
-      padding: 20px;
+      padding: 10px;
+      overflow: hidden;
     }
     
     .step.active {
-      display: block;
+      display: flex;
+      flex-direction: column;
     }
     
     .step-header {
       text-align: center;
-      margin-bottom: 30px;
-      padding-bottom: 20px;
-      border-bottom: 2px solid #e9ecef;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e9ecef;
     }
     
     .step-title {
-      font-size: 24px;
+      font-size: 20px;
       font-weight: bold;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
       color: #000;
     }
     
     .step-subtitle {
-      font-size: 16px;
+      font-size: 14px;
       color: #666;
     }
     
     .step-content {
       background: white;
-      border-radius: 8px;
-      padding: 30px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
+      border-radius: 6px;
+      padding: 15px;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+      flex: 1;
+      overflow-y: auto;
     }
     
     .step-navigation {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 20px 0;
+      padding: 10px 0;
+      margin-top: 10px;
     }
     
     .step-indicator {
       display: flex;
       justify-content: center;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
     
     .step-dot {
@@ -82,33 +86,41 @@
     }
     
     .square-logo {
-      width: 60px;
-      height: 60px;
+      width: 40px;
+      height: 40px;
       background: #000;
-      border-radius: 8px;
+      border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 20px;
+      margin: 0 auto 10px;
     }
     
     .square-logo-inner {
-      width: 40px;
-      height: 40px;
+      width: 28px;
+      height: 28px;
       background: #fff;
-      border-radius: 4px;
+      border-radius: 3px;
       position: relative;
     }
     
     .square-logo-inner::after {
       content: '';
-      width: 24px;
-      height: 24px;
+      width: 16px;
+      height: 16px;
       background: #000;
-      border-radius: 2px;
+      border-radius: 1px;
       position: absolute;
-      top: 8px;
-      left: 8px;
+      top: 6px;
+      left: 6px;
+    }
+    
+    .field {
+      margin-bottom: 8px;
+    }
+    
+    .grid.columns-2 {
+      gap: 10px;
     }
   </style>
 </head>
@@ -354,57 +366,63 @@
 
   <script src="/banking.js" defer></script>
   <script>
-    // Step navigation
-    let currentStep = 1;
-    const totalSteps = 4;
+    document.addEventListener('DOMContentLoaded', () => {
+      // Step navigation
+      let currentStep = 1;
+      const totalSteps = 4;
 
-    function showStep(step) {
-      // Hide all steps
-      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-      document.querySelectorAll('.step-dot').forEach(d => d.classList.remove('active'));
-      
-      // Show current step
-      document.getElementById(`step${step}`).classList.add('active');
-      document.querySelector(`[data-step="${step}"]`).classList.add('active');
-      
-      // Mark previous steps as completed
-      for (let i = 1; i < step; i++) {
-        document.querySelector(`[data-step="${i}"]`).classList.add('completed');
+      function showStep(step) {
+        // Hide all steps
+        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.step-dot').forEach(d => d.classList.remove('active'));
+        
+        // Show current step
+        document.getElementById(`step${step}`).classList.add('active');
+        document.querySelector(`[data-step="${step}"]`).classList.add('active');
+        
+        // Mark previous steps as completed
+        for (let i = 1; i < step; i++) {
+          document.querySelector(`[data-step="${i}"]`).classList.add('completed');
+        }
+        
+        // Update navigation buttons
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        if (prevBtn) prevBtn.style.display = step > 1 ? 'block' : 'none';
+        if (nextBtn) nextBtn.style.display = step < totalSteps ? 'block' : 'none';
+        if (submitBtn) submitBtn.style.display = step === totalSteps ? 'block' : 'none';
       }
-      
-      // Update navigation buttons
-      const prevBtn = document.getElementById('prevBtn');
+
+      function nextStep() {
+        if (currentStep < totalSteps) {
+          currentStep++;
+          showStep(currentStep);
+        }
+      }
+
+      function prevStep() {
+        if (currentStep > 1) {
+          currentStep--;
+          showStep(currentStep);
+        }
+      }
+
+      // Event listeners
       const nextBtn = document.getElementById('nextBtn');
+      const prevBtn = document.getElementById('prevBtn');
       const submitBtn = document.getElementById('submitBtn');
       
-      prevBtn.style.display = step > 1 ? 'block' : 'none';
-      nextBtn.style.display = step < totalSteps ? 'block' : 'none';
-      submitBtn.style.display = step === totalSteps ? 'block' : 'none';
-    }
+      if (nextBtn) nextBtn.addEventListener('click', nextStep);
+      if (prevBtn) prevBtn.addEventListener('click', prevStep);
+      if (submitBtn) submitBtn.addEventListener('click', () => {
+        document.getElementById('bankingForm').dispatchEvent(new Event('submit'));
+      });
 
-    function nextStep() {
-      if (currentStep < totalSteps) {
-        currentStep++;
-        showStep(currentStep);
-      }
-    }
-
-    function prevStep() {
-      if (currentStep > 1) {
-        currentStep--;
-        showStep(currentStep);
-      }
-    }
-
-    // Event listeners
-    document.getElementById('nextBtn').addEventListener('click', nextStep);
-    document.getElementById('prevBtn').addEventListener('click', prevStep);
-    document.getElementById('submitBtn').addEventListener('click', () => {
-      document.getElementById('bankingForm').dispatchEvent(new Event('submit'));
+      // Initialize
+      showStep(1);
     });
-
-    // Initialize
-    showStep(1);
   </script>
 </body>
 </html>

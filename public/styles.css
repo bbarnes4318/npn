@@ -56,7 +56,7 @@ a:hover { text-decoration: underline; }
               radial-gradient(800px 300px at 90% 0%, #bb1c2914, transparent),
               var(--brand-white);
 }
-.hero-inner { padding: 64px 0 48px; display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 40px; align-items: center; }
+.hero-inner { padding: 20px 0; display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 20px; align-items: center; }
 .hero h1 { font-size: 40px; line-height: 1.15; margin: 0 0 12px; color: var(--brand-navy); }
 .hero p.lead { font-size: 18px; color: var(--muted); margin: 0 0 24px; }
 .cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
@@ -84,18 +84,18 @@ a:hover { text-decoration: underline; }
 .step p { margin: 0; font-size: 14px; color: #b9d4f5; }
 
 /* Cards/Sections */
-.section { padding: 56px 0; }
-.section h2 { margin: 0 0 16px; color: var(--brand-navy); font-size: 28px; }
-.section .sub { color: var(--muted); margin-bottom: 24px; }
-.grid { display: grid; gap: 20px; }
+.section { padding: 20px 0; }
+.section h2 { margin: 0 0 8px; color: var(--brand-navy); font-size: 24px; }
+.section .sub { color: var(--muted); margin-bottom: 12px; }
+.grid { display: grid; gap: 12px; }
 .grid.columns-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .grid.columns-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 900px) {
   .hero-inner { grid-template-columns: 1fr; }
 }
 
-.card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
-.card h3 { margin-top: 0; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+.card h3 { margin-top: 0; margin-bottom: 8px; }
 
   .list { margin: 0; padding: 0; list-style: none; }
   .list li { padding: 8px 0; border-bottom: 1px dashed var(--border); }
@@ -129,7 +129,7 @@ a:hover { text-decoration: underline; }
   .success { background: #eefcf3; border: 1px solid #c8f1d9; color: #14532d; padding: 12px 14px; border-radius: 12px; }
   .error { background: #fff4e5; border: 1px solid #ffd7ae; color: #7c411a; padding: 12px 14px; border-radius: 12px; }
 
-.footer { background: var(--brand-navy); color: #d9e6f3; padding: 20px 0; margin-top: 40px; }
+.footer { background: var(--brand-navy); color: #d9e6f3; padding: 12px 0; margin-top: 20px; }
 .footer a { color: #fff; }
 .footer .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 
