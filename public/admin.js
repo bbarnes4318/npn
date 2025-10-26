@@ -166,6 +166,36 @@
       }
     });
 
+    // Download ALL documents from ALL agents
+    const downloadAllBtn = document.getElementById('downloadAllBtn');
+    downloadAllBtn?.addEventListener('click', async () => {
+      if (!confirm('This will download ALL signed documents from ALL agents. This may be a large file. Continue?')) {
+        return;
+      }
+      
+      setMsg('Preparing download of ALL documents... This may take a moment.');
+      try {
+        const res = await fetch('/api/admin/download-all-documents', {
+          headers: authHeaders()
+        });
+        if (!res.ok) throw new Error('Failed to prepare download');
+        
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ALL_SIGNED_DOCUMENTS_${new Date().toISOString().split('T')[0]}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        URL.revokeObjectURL(url);
+        a.remove();
+        setMsg('Download completed successfully!');
+      } catch (e) {
+        console.error('Download all error:', e);
+        setMsg('Could not download all documents. Please try again.');
+      }
+    });
+
     // Open W-9 (PDF) in a new tab for viewing/printing
     openW9Btn?.addEventListener('click', async () => {
       const id = input.value.trim();
@@ -189,6 +219,165 @@
         setMsg('Could not open W-9.');
       }
     });
+
+    // Open Signed Intake PDF
+    const openIntakePdfBtn = document.getElementById('openIntakePdfBtn');
+    openIntakePdfBtn?.addEventListener('click', async () => {
+      const id = input.value.trim();
+      if (!id) { setMsg('Enter an Agent ID.'); return; }
+      setMsg('Opening signed intake PDF...');
+      try {
+        const res = await fetch(`/api/admin/agents/${encodeURIComponent(id)}/documents/intake.pdf`, {
+          headers: authHeaders()
+        });
+        if (!res.ok) {
+          if (res.status === 404) { setMsg('No signed intake documents found for this agent.'); return; }
+          throw new Error('Failed to load signed intake PDF');
+        }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank', 'noopener');
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+        setMsg('Signed intake PDF opened successfully!');
+      } catch (e) {
+        console.error('Intake PDF error:', e);
+        setMsg('Could not open signed intake PDF. Make sure the agent has completed the intake form.');
+      }
+    });
+
+    // Open Signed W9 PDF
+    const openW9SignedPdfBtn = document.getElementById('openW9SignedPdfBtn');
+    openW9SignedPdfBtn?.addEventListener('click', async () => {
+      const id = input.value.trim();
+      if (!id) { setMsg('Enter an Agent ID.'); return; }
+      setMsg('Opening signed W9 PDF...');
+      try {
+        const res = await fetch(`/api/admin/agents/${encodeURIComponent(id)}/documents/w9-signed.pdf`, {
+          headers: authHeaders()
+        });
+        if (!res.ok) {
+          if (res.status === 404) { setMsg('No signed W9 documents found for this agent.'); return; }
+          throw new Error('Failed to load signed W9 PDF');
+        }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank', 'noopener');
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+        setMsg('Signed W9 PDF opened successfully!');
+      } catch (e) {
+        console.error('W9 Signed PDF error:', e);
+        setMsg('Could not open signed W9 PDF. Make sure the agent has completed the W9 form.');
+      }
+    });
+
+    // Load all PDFs
+    async function loadAllPdfs() {
+      const allPdfsMsg = document.getElementById('allPdfsMsg');
+      const allPdfsTableBody = document.getElementById('allPdfsTableBody');
+      
+      if (!allPdfsTableBody) return;
+      
+      allPdfsMsg.textContent = 'Loading all PDFs...';
+      allPdfsTableBody.innerHTML = '';
+      
+      try {
+        const res = await fetch('/api/admin/all-pdfs', {
+          headers: authHeaders()
+        });
+        const data = await res.json();
+        
+        if (!res.ok || data.ok === false) {
+          throw new Error(data.error || 'Failed to load PDFs');
+        }
+        
+        allPdfsMsg.textContent = `Found ${data.pdfs.length} PDFs`;
+        
+        if (data.pdfs.length === 0) {
+          allPdfsTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No PDFs found</td></tr>';
+          return;
+        }
+        
+        data.pdfs.forEach(pdf => {
+          const row = document.createElement('tr');
+          const date = new Date(pdf.date).toLocaleDateString();
+          const size = (pdf.size / 1024).toFixed(1) + ' KB';
+          
+          row.innerHTML = `
+            <td>${date}</td>
+            <td><code>${pdf.agentId}</code></td>
+            <td>${pdf.agentName}</td>
+            <td><span style="padding: 4px 8px; border-radius: 4px; font-size: 12px; background: ${pdf.type === 'Signed Intake Documents' ? '#28a745' : pdf.type === 'Signed W9 Form' ? '#17a2b8' : '#6c757d'}; color: white;">${pdf.type}</span></td>
+            <td><code>${pdf.fileName}</code><br><small style="color: #666;">${size}</small></td>
+            <td>
+              <button class="button ghost" onclick="viewPdf('${pdf.agentId}', '${pdf.fileName}')" style="margin-right: 8px;">👁️ View</button>
+              <button class="button ghost" onclick="downloadPdf('${pdf.agentId}', '${pdf.fileName}')">📥 Download</button>
+            </td>
+          `;
+          allPdfsTableBody.appendChild(row);
+        });
+        
+      } catch (e) {
+        console.error('Error loading PDFs:', e);
+        allPdfsMsg.textContent = 'Failed to load PDFs';
+        allPdfsTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: red;">Error loading PDFs</td></tr>';
+      }
+    }
+    
+    // View PDF function
+    window.viewPdf = function(agentId, fileName) {
+      const url = `/api/admin/pdf/${encodeURIComponent(agentId)}/${encodeURIComponent(fileName)}`;
+      window.open(url, '_blank', 'noopener');
+    };
+    
+    // Download PDF function
+    window.downloadPdf = function(agentId, fileName) {
+      const url = `/api/admin/pdf/${encodeURIComponent(agentId)}/${encodeURIComponent(fileName)}`;
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    };
+    
+    // Refresh all PDFs button
+    const refreshAllPdfsBtn = document.getElementById('refreshAllPdfsBtn');
+    refreshAllPdfsBtn?.addEventListener('click', loadAllPdfs);
+    
+    // Download all PDFs button
+    const downloadAllPdfsBtn = document.getElementById('downloadAllPdfsBtn');
+    downloadAllPdfsBtn?.addEventListener('click', async () => {
+      if (!confirm('This will download ALL PDFs from ALL agents. This may be a large file. Continue?')) {
+        return;
+      }
+      
+      const allPdfsMsg = document.getElementById('allPdfsMsg');
+      allPdfsMsg.textContent = 'Preparing download of all PDFs...';
+      
+      try {
+        const res = await fetch('/api/admin/download-all-documents', {
+          headers: authHeaders()
+        });
+        if (!res.ok) throw new Error('Failed to prepare download');
+        
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ALL_SIGNED_DOCUMENTS_${new Date().toISOString().split('T')[0]}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        allPdfsMsg.textContent = 'Download completed successfully!';
+      } catch (e) {
+        console.error('Download all PDFs error:', e);
+        allPdfsMsg.textContent = 'Could not download all PDFs. Please try again.';
+      }
+    });
+    
+    // Load all PDFs on page load
+    loadAllPdfs();
 
     // Recent list controls
     refreshBtn?.addEventListener('click', loadAgents);

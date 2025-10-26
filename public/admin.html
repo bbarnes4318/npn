@@ -53,6 +53,14 @@
             <button class="button primary" id="downloadZipBtn" type="button">Download ZIP</button>
             <button class="button ghost" id="openW9Btn" type="button">Open W‑9 (PDF)</button>
           </div>
+          <div class="cta-row" style="margin-top:8px;">
+            <button class="button primary" id="openIntakePdfBtn" type="button" style="background: #28a745; border-color: #28a745;">📄 View Signed Intake PDF</button>
+            <button class="button primary" id="openW9SignedPdfBtn" type="button" style="background: #17a2b8; border-color: #17a2b8;">📄 View Signed W9 PDF</button>
+          </div>
+          <div class="cta-row" style="margin-top:8px; border-top: 1px solid #e9ecef; padding-top: 16px;">
+            <button class="button primary" id="downloadAllBtn" type="button" style="background: #dc3545; border-color: #dc3545;">📥 DOWNLOAD ALL SIGNED DOCUMENTS</button>
+            <div class="help" style="margin-top: 8px; color: #dc3545; font-weight: bold;">This will download EVERY signed document from EVERY agent including all W9s, signatures, and submissions in one ZIP file.</div>
+          </div>
           <div id="adminMsg" class="help"></div>
         </form>
       </div>
@@ -84,6 +92,30 @@
       <div class="card">
         <h3>Documents</h3>
         <ul id="docsList" class="list"></ul>
+      </div>
+
+      <div class="card" style="margin-top: 16px;">
+        <h3 style="margin-top: 0;">📄 ALL SUBMITTED SIGNED PDFs</h3>
+        <div class="inline" style="gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap;">
+          <button class="button secondary" id="refreshAllPdfsBtn" type="button">🔄 Refresh All PDFs</button>
+          <button class="button primary" id="downloadAllPdfsBtn" type="button" style="background: #dc3545; border-color: #dc3545;">📥 Download All PDFs ZIP</button>
+          <span id="allPdfsMsg" class="help"></span>
+        </div>
+        <div style="overflow: auto; max-height: 400px;">
+          <table class="table" style="width: 100%; min-width: 800px;">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Agent ID</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>PDF File</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="allPdfsTableBody"></tbody>
+          </table>
+        </div>
       </div>
 
       <div class="card" style="margin-top:16px;">

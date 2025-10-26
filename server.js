@@ -363,6 +363,42 @@ app.get('/api/admin/agents/:id/documents/cert', requireAdmin, async (req, res) =
   }
 });
 
+// Signed Intake Documents PDF (admin)
+app.get('/api/admin/agents/:id/documents/intake.pdf', requireAdmin, async (req, res) => {
+  try {
+    const agent = await readAgent(req.params.id);
+    if (!agent) return res.status(404).send('Not found');
+    
+    const intakePdfPath = agent.submissions?.intakePdfPath;
+    if (intakePdfPath && await fse.pathExists(intakePdfPath)) {
+      return res.download(intakePdfPath, 'Signed_Intake_Documents.pdf');
+    }
+    
+    return res.status(404).send('No signed intake documents found');
+  } catch (e) {
+    console.error('admin intake pdf error', e);
+    return res.status(500).send('Error serving intake documents');
+  }
+});
+
+// Signed W9 Documents PDF (admin)
+app.get('/api/admin/agents/:id/documents/w9-signed.pdf', requireAdmin, async (req, res) => {
+  try {
+    const agent = await readAgent(req.params.id);
+    if (!agent) return res.status(404).send('Not found');
+    
+    const w9PdfPath = agent.submissions?.w9PdfPath;
+    if (w9PdfPath && await fse.pathExists(w9PdfPath)) {
+      return res.download(w9PdfPath, 'Signed_W9_Form.pdf');
+    }
+    
+    return res.status(404).send('No signed W9 documents found');
+  } catch (e) {
+    console.error('admin w9 signed pdf error', e);
+    return res.status(500).send('Error serving signed W9 documents');
+  }
+});
+
 // --- Simple Admin token middleware ---
 function requireAdmin(req, res, next) {
   // Temporarily disable admin auth for debugging
@@ -431,6 +467,10 @@ async function gatherAgentDocuments(agent, { includeW9 = true } = {}) {
     if (agent.submissions?.dashboardPdfPath && await fse.pathExists(agent.submissions.dashboardPdfPath)) {
       files.push({ path: agent.submissions.dashboardPdfPath, name: path.basename(agent.submissions.dashboardPdfPath) });
     }
+    // Signed Intake Documents PDF
+    if (agent.submissions?.intakePdfPath && await fse.pathExists(agent.submissions.intakePdfPath)) {
+      files.push({ path: agent.submissions.intakePdfPath, name: path.basename(agent.submissions.intakePdfPath) });
+    }
     // W-9 e-sign JSON
     if (includeW9) {
       const w9Id = agent.submissions?.w9Id;
@@ -446,6 +486,24 @@ async function gatherAgentDocuments(agent, { includeW9 = true } = {}) {
       if (agent.submissions?.w9FilePath && await fse.pathExists(agent.submissions.w9FilePath)) {
         const ext = path.extname(agent.submissions.w9FilePath) || '';
         files.push({ path: agent.submissions.w9FilePath, name: `W9_Upload_${agent.id}${ext}` });
+      }
+      // Check for any W9 files in agent directory
+      try {
+        const agentDir = path.join(AGENTS_DIR, agent.id);
+        if (await fse.pathExists(agentDir)) {
+          const agentFiles = await fse.readdir(agentDir);
+          for (const file of agentFiles) {
+            if (file.toLowerCase().includes('w9') || file.toLowerCase().includes('w-9')) {
+              const filePath = path.join(agentDir, file);
+              const stat = await fse.stat(filePath);
+              if (stat.isFile()) {
+                files.push({ path: filePath, name: `W9_${agent.id}_${file}` });
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error(`Error checking agent directory for W9 files:`, e);
       }
     }
   } catch {}
@@ -1090,7 +1148,7 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
         console.log('Generating comprehensive signed documents for intake submission');
         const agentDir = path.join(AGENTS_DIR, agent.id);
         await fse.ensureDir(agentDir);
-        const outPath = path.join(agentDir, `Complete_Agent_Onboarding_${Date.now()}.pdf`);
+        const outPath = path.join(agentDir, `SIGNED_INTAKE_DOCUMENTS_${Date.now()}.pdf`);
         
         // Create comprehensive PDF with all intake data
         const pdfBytes = await new Promise((resolve, reject) => {
@@ -1099,9 +1157,9 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
             margin: 50,
             size: 'LETTER',
             info: {
-              Title: 'Complete Agent Onboarding Package',
+              Title: 'Signed Intake Documents',
               Author: 'Life Assurance Solutions LLC',
-              Subject: 'Signed Agent Onboarding Documents'
+              Subject: 'Agent Intake Form with Digital Signature'
             }
           });
           
@@ -1110,7 +1168,7 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
           doc.on('error', reject);
           
           // Title Page
-          doc.fontSize(20).font('Helvetica-Bold').text('COMPLETE AGENT ONBOARDING PACKAGE', { align: 'center' });
+          doc.fontSize(20).font('Helvetica-Bold').text('SIGNED INTAKE DOCUMENTS', { align: 'center' });
           doc.moveDown(1);
           doc.fontSize(16).text('Life Assurance Solutions LLC', { align: 'center' });
           doc.moveDown(2);
@@ -1154,7 +1212,7 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
           doc.moveDown(1);
           
           // Signatures Section
-          doc.fontSize(14).font('Helvetica-Bold').text('SIGNATURES AND CERTIFICATIONS');
+          doc.fontSize(14).font('Helvetica-Bold').text('DIGITAL SIGNATURES AND CERTIFICATIONS');
           doc.moveDown(0.5);
           doc.fontSize(12).text(`Digital Signature: ${submission.acknowledgments?.signature || ''}`);
           doc.text(`Signature Date: ${submission.acknowledgments?.signatureDate || ''}`);
@@ -1170,10 +1228,10 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
         });
         
         await fse.writeFile(outPath, pdfBytes);
-        agent.submissions.dashboardPdfPath = outPath;
-        console.log('Dashboard signed documents PDF saved to:', outPath);
+        agent.submissions.intakePdfPath = outPath;
+        console.log('Signed intake documents PDF saved to:', outPath);
       } catch (e) {
-        console.error('Failed to generate dashboard PDF:', e);
+        console.error('Failed to generate intake PDF:', e);
       }
       
       await writeAgent(agent);
@@ -1234,8 +1292,8 @@ app.post('/api/w9', async (req, res) => {
           console.log('Generating official W-9 PDF for agent:', agent.id);
           const agentDir = path.join(AGENTS_DIR, agent.id);
           await fse.ensureDir(agentDir);
-          const outPath = path.join(agentDir, `Official_W9_Form_${id}.pdf`);
-          console.log('Official W-9 PDF will be saved to:', outPath);
+          const outPath = path.join(agentDir, `SIGNED_W9_FORM_${Date.now()}.pdf`);
+          console.log('Signed W-9 PDF will be saved to:', outPath);
           
           // Create official W-9 PDF
           const pdfBytes = await new Promise((resolve, reject) => {
@@ -1244,7 +1302,7 @@ app.post('/api/w9', async (req, res) => {
               margin: 50,
               size: 'LETTER',
               info: {
-                Title: 'Form W-9',
+                Title: 'Signed W-9 Form',
                 Author: 'Life Assurance Solutions LLC',
                 Subject: 'Request for Taxpayer Identification Number and Certification'
               }
@@ -1338,7 +1396,7 @@ app.post('/api/w9', async (req, res) => {
             doc.font('Helvetica-Bold').text('6 Under penalties of perjury, I certify that:', { continued: true });
             doc.moveDown(0.3);
             doc.text('1. The number shown on this form is my correct taxpayer identification number (or I am waiting for a number to be issued to me), and');
-            doc.text('2. I am not subject to backup withholding because: (a) I am exempt from backup withholding, or (b) I have not been notified by the Internal Revenue Service (IRS) that I am subject to backup withholding as a result of a failure to report all interest or dividends, or (c) the IRS has notified me that I am no longer subject to backup withholding, and');
+            doc.text('2. I am not subject to backup withholding because: (a) I am exempt from backup withholding, or (b) I have not been notified by the Internal Revenue Service (IRS) that I am subject to backup withholding as a result of a failure to report all interest or dividends, or (c) the IRS has notified me that I are no longer subject to backup withholding, and');
             doc.text('3. I am a U.S. person (including a U.S. resident alien), and');
             doc.text('4. The FATCA code(s) entered on this form (if any) indicating that I am exempt from FATCA reporting is correct.');
             doc.moveDown(0.5);
@@ -1346,13 +1404,18 @@ app.post('/api/w9', async (req, res) => {
             // Signature
             doc.text('Signature: _________________________________  Date: _______________');
             doc.text(`Digital Signature: ${submission.certification?.signature || ''}  Date: ${submission.certification?.signatureDate || ''}`);
+            doc.moveDown(1);
+            
+            // Legal Notice
+            doc.fontSize(10).text('This document contains the signed W-9 form with digital signature as of the date of generation.');
+            doc.text('The digital signature is legally binding and represents the taxpayer\'s certification under penalties of perjury.');
             
             doc.end();
           });
           
           await fse.writeFile(outPath, pdfBytes);
           agent.submissions.w9PdfPath = outPath;
-          console.log('W-9 PDF saved successfully to:', outPath);
+          console.log('Signed W-9 PDF saved successfully to:', outPath);
         } catch (e) {
           console.error('Failed to generate W-9 PDF:', e);
         }
@@ -1510,6 +1573,208 @@ app.get('/api/admin/submissions', requireAdmin, async (req, res) => {
   } catch (e) {
     console.error('Error fetching submissions', e);
     res.status(500).json({ ok: false, error: 'Failed to fetch submissions' });
+  }
+});
+
+// Get all PDFs from all agents (admin)
+app.get('/api/admin/all-pdfs', requireAdmin, async (req, res) => {
+  try {
+    console.log('Admin: Getting all PDFs from all agents');
+    
+    const allPdfs = [];
+    const agentEntries = await fse.readdir(AGENTS_DIR, { withFileTypes: true });
+    
+    for (const ent of agentEntries) {
+      if (!ent.isDirectory()) continue;
+      const agentId = ent.name;
+      try {
+        const agent = await readAgent(agentId);
+        if (agent) {
+          const agentName = `${agent.profile?.firstName || ''} ${agent.profile?.lastName || ''}`.trim() || 'Unknown';
+          
+          // Check for signed intake PDF
+          if (agent.submissions?.intakePdfPath && await fse.pathExists(agent.submissions.intakePdfPath)) {
+            const stats = await fse.stat(agent.submissions.intakePdfPath);
+            allPdfs.push({
+              agentId: agentId,
+              agentName: agentName,
+              type: 'Signed Intake Documents',
+              pdfPath: agent.submissions.intakePdfPath,
+              fileName: path.basename(agent.submissions.intakePdfPath),
+              date: stats.mtime.toISOString(),
+              size: stats.size
+            });
+          }
+          
+          // Check for signed W9 PDF
+          if (agent.submissions?.w9PdfPath && await fse.pathExists(agent.submissions.w9PdfPath)) {
+            const stats = await fse.stat(agent.submissions.w9PdfPath);
+            allPdfs.push({
+              agentId: agentId,
+              agentName: agentName,
+              type: 'Signed W9 Form',
+              pdfPath: agent.submissions.w9PdfPath,
+              fileName: path.basename(agent.submissions.w9PdfPath),
+              date: stats.mtime.toISOString(),
+              size: stats.size
+            });
+          }
+          
+          // Check for other PDFs in agent directory
+          try {
+            const agentDir = path.join(AGENTS_DIR, agentId);
+            const files = await fse.readdir(agentDir);
+            for (const file of files) {
+              if (file.toLowerCase().endsWith('.pdf')) {
+                const filePath = path.join(agentDir, file);
+                const stats = await fse.stat(filePath);
+                allPdfs.push({
+                  agentId: agentId,
+                  agentName: agentName,
+                  type: 'Other PDF',
+                  pdfPath: filePath,
+                  fileName: file,
+                  date: stats.mtime.toISOString(),
+                  size: stats.size
+                });
+              }
+            }
+          } catch (e) {
+            console.error(`Error checking agent directory for PDFs:`, e);
+          }
+        }
+      } catch (e) {
+        console.error(`Error processing agent ${agentId}:`, e);
+      }
+    }
+    
+    // Sort by date (newest first)
+    allPdfs.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    console.log(`Admin: Found ${allPdfs.length} PDFs from all agents`);
+    res.json({ ok: true, pdfs: allPdfs });
+    
+  } catch (e) {
+    console.error('Error getting all PDFs:', e);
+    res.status(500).json({ ok: false, error: 'Failed to get PDFs' });
+  }
+});
+
+// Download specific PDF (admin)
+app.get('/api/admin/pdf/:agentId/:fileName', requireAdmin, async (req, res) => {
+  try {
+    const { agentId, fileName } = req.params;
+    const agent = await readAgent(agentId);
+    if (!agent) return res.status(404).send('Agent not found');
+    
+    // Check if it's a known PDF path
+    let pdfPath = null;
+    if (fileName.includes('SIGNED_INTAKE_DOCUMENTS') && agent.submissions?.intakePdfPath) {
+      pdfPath = agent.submissions.intakePdfPath;
+    } else if (fileName.includes('SIGNED_W9_FORM') && agent.submissions?.w9PdfPath) {
+      pdfPath = agent.submissions.w9PdfPath;
+    } else {
+      // Look for the file in agent directory
+      const agentDir = path.join(AGENTS_DIR, agentId);
+      const fullPath = path.join(agentDir, fileName);
+      if (await fse.pathExists(fullPath)) {
+        pdfPath = fullPath;
+      }
+    }
+    
+    if (!pdfPath || !await fse.pathExists(pdfPath)) {
+      return res.status(404).send('PDF not found');
+    }
+    
+    return res.download(pdfPath, fileName);
+    
+  } catch (e) {
+    console.error('Error downloading PDF:', e);
+    res.status(500).send('Error downloading PDF');
+  }
+});
+
+// Download ALL documents from ALL agents and submissions (admin)
+app.get('/api/admin/download-all-documents', requireAdmin, async (req, res) => {
+  try {
+    console.log('Admin: Generating comprehensive download of ALL documents');
+    
+    // Get all agents
+    const agentEntries = await fse.readdir(AGENTS_DIR, { withFileTypes: true });
+    const allFiles = [];
+    
+    // Collect all agent documents
+    for (const ent of agentEntries) {
+      if (!ent.isDirectory()) continue;
+      const agentId = ent.name;
+      try {
+        const agent = await readAgent(agentId);
+        if (agent) {
+          const agentFiles = await gatherAgentDocuments(agent, { includeW9: true });
+          allFiles.push(...agentFiles.map(f => ({
+            ...f,
+            name: `Agent_${agentId}_${f.name}`,
+            agentId: agentId
+          })));
+        }
+      } catch (e) {
+        console.error(`Error processing agent ${agentId}:`, e);
+      }
+    }
+    
+    // Collect all submission files
+    const submissionEntries = await fse.readdir(SUBMISSIONS_DIR, { withFileTypes: true });
+    for (const ent of submissionEntries) {
+      if (!ent.isDirectory()) continue;
+      const submissionDir = path.join(SUBMISSIONS_DIR, ent.name);
+      try {
+        const files = await fse.readdir(submissionDir);
+        for (const file of files) {
+          const filePath = path.join(submissionDir, file);
+          const stat = await fse.stat(filePath);
+          if (stat.isFile()) {
+            allFiles.push({
+              path: filePath,
+              name: `Submission_${ent.name}_${file}`,
+              agentId: 'submission'
+            });
+          }
+        }
+      } catch (e) {
+        console.error(`Error processing submission ${ent.name}:`, e);
+      }
+    }
+    
+    console.log(`Admin: Found ${allFiles.length} total files to include in download`);
+    
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="ALL_SIGNED_DOCUMENTS_${new Date().toISOString().split('T')[0]}.zip"`);
+    
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    archive.on('error', (err) => {
+      console.error('Archive error:', err);
+      try { res.status(500).end('ZIP error'); } catch {}
+    });
+    
+    archive.pipe(res);
+    
+    // Add all files to the archive
+    for (const file of allFiles) {
+      try {
+        if (await fse.pathExists(file.path)) {
+          archive.file(file.path, { name: file.name });
+        }
+      } catch (e) {
+        console.error(`Error adding file ${file.path}:`, e);
+      }
+    }
+    
+    await archive.finalize();
+    console.log('Admin: Comprehensive download completed');
+    
+  } catch (e) {
+    console.error('Error generating comprehensive download:', e);
+    res.status(500).json({ ok: false, error: 'Failed to generate comprehensive download' });
   }
 });
 
