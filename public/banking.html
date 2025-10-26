@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Banking Details — ACA Onboarding</title>
+  <title>Square 1099 Employee Information & Banking — ACA Onboarding</title>
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
@@ -25,16 +25,73 @@
   <main class="section">
     <div class="container">
       <div class="card" style="margin-bottom: 20px;">
-        <h1 style="margin: 0 0 8px;">Banking Information</h1>
-        <p class="sub">Provide your banking details for commission payments and direct deposit setup.</p>
+        <div style="display: flex; align-items: center; margin-bottom: 16px;">
+          <div style="width: 60px; height: 60px; background: #000; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 16px;">
+            <div style="width: 40px; height: 40px; background: #fff; border-radius: 4px; position: relative;">
+              <div style="width: 24px; height: 24px; background: #000; border-radius: 2px; position: absolute; top: 8px; left: 8px;"></div>
+            </div>
+          </div>
+          <div>
+            <h1 style="margin: 0 0 4px; font-size: 28px; color: #000;">Square</h1>
+            <p style="margin: 0; color: #666; font-size: 16px;">1099 Employee Information Worksheet</p>
+          </div>
+        </div>
+        <p class="sub">Complete your employee information and banking details for commission payments and direct deposit setup.</p>
         <div class="callout important">
-          <strong>Security Notice:</strong> Your banking information is encrypted and stored securely. We use industry-standard encryption to protect your financial data.
+          <strong>Security Notice:</strong> Your personal and banking information is encrypted and stored securely. We use industry-standard encryption to protect your financial data.
         </div>
       </div>
 
       <div id="bankingMsg" class="notice" style="display:none; margin-bottom: 16px;"></div>
 
       <form id="bankingForm" class="form">
+        <div class="card">
+          <h3>Square 1099 Employee Information</h3>
+          <div class="grid columns-2">
+            <div class="field">
+              <label class="label">First Name <span class="required">*</span></label>
+              <input class="input" type="text" name="firstName" placeholder="James" required />
+            </div>
+            <div class="field">
+              <label class="label">Last Name <span class="required">*</span></label>
+              <input class="input" type="text" name="lastName" placeholder="Kelly" required />
+            </div>
+            <div class="field">
+              <label class="label">Street Address <span class="required">*</span></label>
+              <input class="input" type="text" name="streetAddress" placeholder="2635 Timber Highlands Ln" required />
+            </div>
+            <div class="field">
+              <label class="label">City <span class="required">*</span></label>
+              <input class="input" type="text" name="city" placeholder="Knoxville" required />
+            </div>
+            <div class="field">
+              <label class="label">State <span class="required">*</span></label>
+              <input class="input" type="text" name="state" placeholder="TN" maxlength="2" required />
+            </div>
+            <div class="field">
+              <label class="label">ZIP Code <span class="required">*</span></label>
+              <input class="input" type="text" name="zipCode" placeholder="37932" pattern="[0-9]{5}(-[0-9]{4})?" required />
+            </div>
+            <div class="field">
+              <label class="label">SSN <span class="required">*</span></label>
+              <input class="input" type="text" name="ssn" placeholder="411633219" pattern="[0-9]{9}" maxlength="9" required />
+              <div class="help">9-digit Social Security Number</div>
+            </div>
+            <div class="field">
+              <label class="label">Date of Hire</label>
+              <input class="input" type="date" name="dateOfHire" />
+            </div>
+            <div class="field">
+              <label class="label">Date of Birth <span class="required">*</span></label>
+              <input class="input" type="date" name="dateOfBirth" required />
+            </div>
+            <div class="field" style="grid-column: span 2;">
+              <label class="label">Employee Work Location Address</label>
+              <input class="input" type="text" name="workLocationAddress" placeholder="Enter your work location address" />
+            </div>
+          </div>
+        </div>
+
         <div class="card">
           <h3>Bank Account Information</h3>
           <div class="field">
@@ -154,7 +211,7 @@
         </div>
 
         <div class="cta-row" style="margin-top: 24px;">
-          <button class="button primary" type="submit">Save Banking Information</button>
+          <button class="button primary" type="submit">Save Employee Information & Banking Details</button>
           <button class="button ghost" type="button" id="clearFormBtn">Clear Form</button>
           <a class="button ghost" href="/dashboard.html">Back to Dashboard</a>
         </div>

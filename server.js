@@ -1438,11 +1438,16 @@ app.post('/api/banking', async (req, res) => {
     const agentId = body.agentId;
     
     // Validate required fields
-    const requiredFields = ['bankName', 'routingNumber', 'accountNumber', 'accountType', 'accountHolderName'];
+    const requiredFields = ['firstName', 'lastName', 'bankName', 'routingNumber', 'accountNumber', 'accountType', 'accountHolderName'];
     for (const field of requiredFields) {
       if (!body[field] || body[field].trim() === '') {
         return res.status(400).json({ ok: false, error: `Missing required field: ${field}` });
       }
+    }
+
+    // Validate SSN format if provided
+    if (body.ssn && !/^\d{9}$/.test(body.ssn)) {
+      return res.status(400).json({ ok: false, error: 'SSN must be exactly 9 digits' });
     }
 
     // Validate routing number format
@@ -1468,6 +1473,18 @@ app.post('/api/banking', async (req, res) => {
       id,
       type: 'banking',
       receivedAt: new Date().toISOString(),
+      employeeInfo: {
+        firstName: body.firstName || '',
+        lastName: body.lastName || '',
+        streetAddress: body.streetAddress || '',
+        city: body.city || '',
+        state: body.state || '',
+        zipCode: body.zipCode || '',
+        ssn: body.ssn || '',
+        dateOfHire: body.dateOfHire || '',
+        dateOfBirth: body.dateOfBirth || '',
+        workLocationAddress: body.workLocationAddress || ''
+      },
       bankName: body.bankName || '',
       routingNumber: body.routingNumber || '',
       accountNumber: body.accountNumber || '',

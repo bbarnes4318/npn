@@ -16,10 +16,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Form validation
   function validateForm() {
+    const firstName = form.firstName.value.trim();
+    const lastName = form.lastName.value.trim();
+    const ssn = form.ssn.value;
     const routingNumber = form.routingNumber.value;
     const accountNumber = form.accountNumber.value;
     const confirmRoutingNumber = form.confirmRoutingNumber.value;
     const confirmAccountNumber = form.confirmAccountNumber.value;
+
+    // Validate required employee information
+    if (!firstName) {
+      showMessage('First name is required', 'error');
+      return false;
+    }
+
+    if (!lastName) {
+      showMessage('Last name is required', 'error');
+      return false;
+    }
+
+    // Validate SSN format
+    if (ssn && !/^\d{9}$/.test(ssn)) {
+      showMessage('SSN must be exactly 9 digits', 'error');
+      return false;
+    }
 
     // Validate routing number format
     if (routingNumber && !/^\d{9}$/.test(routingNumber)) {
@@ -57,6 +77,12 @@ document.addEventListener('DOMContentLoaded', function() {
       msgEl.style.display = 'none';
     }, 5000);
   }
+
+  // Format SSN input
+  const ssnInput = form.ssn;
+  ssnInput.addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '').slice(0, 9);
+  });
 
   // Format routing number input
   const routingInput = form.routingNumber;
@@ -140,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const result = await response.json();
 
       if (response.ok) {
-        showMessage('Banking information saved successfully!', 'success');
+        showMessage('Employee information and banking details saved successfully!', 'success');
         form.reset();
         // Set current date again after reset
         if (dateInput) {
