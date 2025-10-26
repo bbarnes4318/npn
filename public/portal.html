@@ -109,8 +109,20 @@
               </div>
               <div class="field">
                 <label class="label">State(s) where you're licensed <span class="required">*</span></label>
-                <select name="statesLicensed" class="input states-multi" multiple size="8"></select>
-                <div class="help">Hold Ctrl (Windows) or Command (Mac) to select multiple states.</div>
+                <div class="dual-list-box">
+                  <div class="list-box">
+                    <div class="list-box-header">Available States</div>
+                    <ul id="available-states" class="state-list"></ul>
+                  </div>
+                  <div class="list-box-actions">
+                    <button type="button" class="button ghost" id="add-state-btn">&gt;</button>
+                    <button type="button" class="button ghost" id="remove-state-btn">&lt;</button>
+                  </div>
+                  <div class="list-box">
+                    <div class="list-box-header">Licensed States</div>
+                    <ul id="licensed-states" class="state-list"></ul>
+                  </div>
+                </div>
               </div>
               <div class="field">
                 <label class="label">Upload proof of CMS/FFM certification (PDF or image)</label>
@@ -123,33 +135,87 @@
               </div>
 
               <h3 style="margin-top: 24px;">Background Questions</h3>
-              <div class="help" style="margin-bottom:8px;">Reference: <a href="/docs/background" target="_blank">Background Questions PDF</a></div>
+              <div class="help" style="margin-bottom:8px;">Please answer the following background questions. If you answer "Yes" to any question, please provide a detailed explanation.</div>
 
               <div class="field">
-                <label class="label">Have you ever been terminated or had a contract cancelled for cause by any insurance company?</label>
+                <label class="label">1A. Have you ever been convicted of a crime? <span class="required">*</span></label>
                 <div>
-                  <label><input type="radio" name="priorTerminations" value="no" checked /> No</label>
-                  <label style="margin-left:12px;"><input type="radio" name="priorTerminations" value="yes" /> Yes</label>
+                  <label><input type="radio" name="crimeConvicted" value="no" checked required /> No</label>
+                  <label style="margin-left:12px;"><input type="radio" name="crimeConvicted" value="yes" required /> Yes</label>
                 </div>
-                <textarea class="input" name="priorTerminationsExplain" placeholder="If yes, please explain" style="display:none"></textarea>
+                <textarea class="input" name="crimeConvictedExplain" placeholder="If yes, please explain" style="display:none"></textarea>
               </div>
-
               <div class="field">
-                <label class="label">Have you ever been convicted of a felony?</label>
+                <label class="label">1B. Are you currently charged with committing a crime? <span class="required">*</span></label>
                 <div>
-                  <label><input type="radio" name="felonies" value="no" checked /> No</label>
-                  <label style="margin-left:12px;"><input type="radio" name="felonies" value="yes" /> Yes</label>
+                  <label><input type="radio" name="crimeCharged" value="no" checked required /> No</label>
+                  <label style="margin-left:12px;"><input type="radio" name="crimeCharged" value="yes" required /> Yes</label>
                 </div>
-                <textarea class="input" name="feloniesExplain" placeholder="If yes, please explain" style="display:none"></textarea>
+                <textarea class="input" name="crimeChargedExplain" placeholder="If yes, please explain" style="display:none"></textarea>
               </div>
-
               <div class="field">
-                <label class="label">Have you declared bankruptcy in the last 7 years?</label>
+                <label class="label">1C. Have you ever been a party to a lawsuit? <span class="required">*</span></label>
                 <div>
-                  <label><input type="radio" name="bankruptcies" value="no" checked /> No</label>
-                  <label style="margin-left:12px;"><input type="radio" name="bankruptcies" value="yes" /> Yes</label>
+                  <label><input type="radio" name="lawsuitParty" value="no" checked required /> No</label>
+                  <label style="margin-left:12px;"><input type="radio" name="lawsuitParty" value="yes" required /> Yes</label>
                 </div>
-                <textarea class="input" name="bankruptciesExplain" placeholder="If yes, please explain" style="display:none"></textarea>
+                <textarea class="input" name="lawsuitPartyExplain" placeholder="If yes, please explain" style="display:none"></textarea>
+              </div>
+              <div class="field">
+                <label class="label">2. Have you ever had a judgment lien or otherwise had a judgment entered against you? <span class="required">*</span></label>
+                <div>
+                  <label><input type="radio" name="judgmentLien" value="no" checked required /> No</label>
+                  <label style="margin-left:12px;"><input type="radio" name="judgmentLien" value="yes" required /> Yes</label>
+                </div>
+                <textarea class="input" name="judgmentLienExplain" placeholder="If yes, please explain" style="display:none"></textarea>
+              </div>
+              <div class="field">
+                <label class="label">3. Have you ever had a lawsuit filed against you for failure to pay your debts in any capacity? <span class="required">*</span></label>
+                <div>
+                  <label><input type="radio" name="debtLawsuit" value="no" checked required /> No</label>
+                  <label style="margin-left:12px;"><input type="radio" name="debtLawsuit" value="yes" required /> Yes</label>
+                </div>
+                <textarea class="input" name="debtLawsuitExplain" placeholder="If yes, please explain" style="display:none"></textarea>
+              </div>
+              <div class="field">
+                <label class="label">4. Have you ever been notified by any jurisdiction to which you are applying of any delinquent tax obligation that is not the subject of a repayment agreement? <span class="required">*</span></label>
+                <div>
+                  <label><input type="radio" name="delinquentTax" value="no" checked required /> No</label>
+                  <label style="margin-left:12px;"><input type="radio" name="delinquentTax" value="yes" required /> Yes</label>
+                </div>
+                <textarea class="input" name="delinquentTaxExplain" placeholder="If yes, please explain" style="display:none"></textarea>
+              </div>
+              <div class="field">
+                <label class="label">5. Have you ever been terminated for cause or are you currently under investigation for cause? <span class="required">*</span></label>
+                <div>
+                  <label><input type="radio" name="terminatedForCause" value="no" checked required /> No</label>
+                  <label style="margin-left:12px;"><input type="radio" name="terminatedForCause" value="yes" required /> Yes</label>
+                </div>
+                <textarea class="input" name="terminatedForCauseExplain" placeholder="If yes, please explain" style="display:none"></textarea>
+              </div>
+              <div class="field">
+                <label class="label">6. Have you ever had an insurance license, financial services license, or other professional license denied, suspended or revoked in this or any other state? <span class="required">*</span></label>
+                <div>
+                  <label><input type="radio" name="licenseRevoked" value="no" checked required /> No</label>
+                  <label style="margin-left:12px;"><input type="radio" name="licenseRevoked" value="yes" required /> Yes</label>
+                </div>
+                <textarea class="input" name="licenseRevokedExplain" placeholder="If yes, please explain" style="display:none"></textarea>
+              </div>
+              <div class="field">
+                <label class="label">7. Have you ever been indebted to any insurance company, agency, or FMO? <span class="required">*</span></label>
+                <div>
+                  <label><input type="radio" name="indebted" value="no" checked required /> No</label>
+                  <label style="margin-left:12px;"><input type="radio" name="indebted" value="yes" required /> Yes</label>
+                </div>
+                <textarea class="input" name="indebtedExplain" placeholder="If yes, please explain" style="display:none"></textarea>
+              </div>
+              <div class="field">
+                <label class="label">8. Do you have any outstanding child support obligations? <span class="required">*</span></label>
+                <div>
+                  <label><input type="radio" name="childSupport" value="no" checked required /> No</label>
+                  <label style="margin-left:12px;"><input type="radio" name="childSupport" value="yes" required /> Yes</label>
+                </div>
+                <textarea class="input" name="childSupportExplain" placeholder="If yes, please explain" style="display:none"></textarea>
               </div>
 
               <h3 style="margin-top: 24px;">Acknowledgments</h3>

@@ -1725,13 +1725,9 @@ app.get('/api/admin/submissions/:id', requireAdmin, async (req, res) => {
   }
 });
 
-// Fallback to portal.html
-app.get('/', (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, 'portal.html'));
-});
-
+// Fallback to serving portal.html for any unhandled routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, req.path));
+  res.sendFile(path.join(PUBLIC_DIR, 'portal.html'));
 });
 
 app.listen(PORT, () => {
