@@ -3,47 +3,80 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Agent Portal — ACA Onboarding</title>
-  <link rel="stylesheet" href="/styles.css" />
+  <title>Agent Onboarding Portal</title>
+  <link rel="stylesheet" href="/new-styles.css" />
 </head>
-<body class="auth-page">
+<body>
   <header class="header">
     <div class="container header-inner">
       <a class="logo" href="/">
-        <img class="logo-img" src="/amben.png" alt="Company logo" />
+        <span class="logo-mark">N</span>
         <span>ACA Agent Onboarding</span>
       </a>
-      <nav class="nav">
-        <a href="/">Quick-start</a>
-        <a href="#">Portal</a>
-        <a href="/completed.html">Complete</a>
-        <a href="#contact">Contact</a>
-      </nav>
     </div>
   </header>
 
   <main class="section">
-    <div class="container auth">
-      <h1 class="headline">Agent Portal</h1>
-      <p class="sub">Complete the 5 steps, upload your cert proof, sign agreements, and submit Intake & W‑9 — all in one place.</p>
+    <div class="container">
+      <div class="progress-tracker">
+        <div class="progress-step active">
+          <div class="progress-dot"></div>
+          <div class="progress-label">Intake</div>
+        </div>
+        <div class="progress-step">
+          <div class="progress-dot"></div>
+          <div class="progress-label">W-9</div>
+        </div>
+        <div class="progress-step">
+          <div class="progress-dot"></div>
+          <div class="progress-label">Banking</div>
+        </div>
+        <div class="progress-step">
+          <div class="progress-dot"></div>
+          <div class="progress-label">Complete</div>
+        </div>
+      </div>
 
-      <div class="auth-card" style="max-width:520px;margin:0 auto;">
-        <form id="emailForm" class="form">
-          <div class="field">
-            <label class="label">Work email <span class="required">*</span></label>
-            <input class="input" type="email" name="email" placeholder="you@agency.com" required />
-            <div class="help">We’ll find your portal or create one. No password needed.</div>
+      <div class="card">
+        <div id="form-step-container">
+          <!-- Intake Form -->
+          <div id="intake-form-step" class="form-step active">
+            <h2>Agent Intake</h2>
+            <p class="sub">Provide your contact details, NPN, licensed states, and upload your CMS/FFM certification proof.</p>
+            <!-- Intake form fields will be rendered here -->
           </div>
-          <div class="auth-actions">
-            <button class="button primary" type="submit">Continue</button>
-            <div id="emailMsg" class="help"></div>
+
+          <!-- W-9 Form -->
+          <div id="w9-form-step" class="form-step">
+            <h2>W-9 Form</h2>
+            <p class="sub">Complete the W-9 form to set up your tax information.</p>
+            <!-- W-9 form fields will be rendered here -->
           </div>
-        </form>
+
+          <!-- Banking Form -->
+          <div id="banking-form-step" class="form-step">
+            <h2>Banking Information</h2>
+            <p class="sub">Provide your banking details for commission payments.</p>
+            <!-- Banking form fields will be rendered here -->
+          </div>
+
+          <!-- Completion Step -->
+          <div id="completion-step" class="form-step">
+            <h2>Onboarding Complete</h2>
+            <p class="sub">Thank you for completing the onboarding process. We will review your information and be in touch shortly.</p>
+          </div>
+        </div>
+
+        <div class="cta-row">
+          <button class="button secondary" id="prev-btn" style="display: none;">Previous</button>
+          <button class="button primary" id="next-btn">Next</button>
+          <button class="button primary" id="submit-btn" style="display: none;">Submit</button>
+        </div>
       </div>
     </div>
   </main>
 
-  <footer id="contact" class="footer">
+  <footer class="footer">
     <div class="container footer-inner">
       <div>
         <strong>Need help?</strong>
@@ -51,7 +84,6 @@
       </div>
     </div>
   </footer>
-
   <script src="/portal.js" defer></script>
 </body>
 </html>

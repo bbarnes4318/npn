@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="/new-styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container header-inner">
+      <a class="logo" href="/">
+        <span class="logo-mark">N</span>
+        <span>ACA Agent Onboarding</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <h2>Admin Dashboard</h2>
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Agent Name</th>
+                <th>Email</th>
+                <th>Onboarding Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>John Doe</td>
+                <td>john.doe@example.com</td>
+                <td><span class="status-badge status-complete">Complete</span></td>
+                <td>
+                  <button class="button primary">View Details</button>
+                  <button class="button secondary">Download PDFs</button>
+                </td>
+              </tr>
+              <tr>
+                <td>Jane Smith</td>
+                <td>jane.smith@example.com</td>
+                <td><span class="status-badge status-pending">Pending W-9</span></td>
+                <td>
+                  <button class="button primary">View Details</button>
+                  <button class="button secondary" disabled>Download PDFs</button>
+                </td>
+              </tr>
+              <!-- More agents -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <strong>Need help?</strong>
+        <div>Phone: (860) 351‑8270</div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

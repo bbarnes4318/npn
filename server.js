@@ -304,36 +304,11 @@ app.get('/api/admin/agents/:id/documents/w9.pdf', requireAdmin, async (req, res)
           console.warn('pdf-lib W9 fill failed, falling back to simple PDF', e);
         }
         // Fallback: simple generated summary PDF
+        const { generateW9SubstitutePdf } = require('./pdf-generator');
+        const pdfBuffer = await generateW9SubstitutePdf(data);
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="W9_${w9Id}.pdf"`);
-        const doc = new PDFDocument({ margin: 50 });
-        doc.pipe(res);
-        doc.fontSize(16).text('Form W-9 (Substitute)', { align: 'center' });
-        doc.moveDown();
-        doc.fontSize(11).text('Request for Taxpayer Identification Number and Certification');
-        doc.moveDown();
-        function field(label, value) {
-          doc.font('Times-Bold').text(label + ':', { continued: true });
-          doc.font('Times-Roman').text(' ' + (value || ''));
-        }
-        field('Name', data.name);
-        field('Business name', data.businessName);
-        field('Tax classification', data.taxClassification);
-        if (data.taxClassification === 'llc') field('LLC classification', data.llcClassification);
-        field('Exempt payee code', data.exemptPayeeCode);
-        field('FATCA code', data.fatcaCode);
-        field('Address 1', data.address?.address1);
-        field('Address 2', data.address?.address2);
-        field('City', data.address?.city);
-        field('State', data.address?.state);
-        field('ZIP', data.address?.zip);
-        doc.moveDown();
-        field('SSN', data.tin?.ssn);
-        field('EIN', data.tin?.ein);
-        doc.moveDown();
-        field('Certification signature (typed)', data.certification?.signature);
-        field('Certification date', data.certification?.signatureDate);
-        doc.end();
+        res.send(pdfBuffer);
         return;
       }
     }
@@ -1000,49 +975,13 @@ app.post('/api/agents/:id/signatures', async (req, res) => {
     // When Producer Agreement is signed, also generate and persist a signed PDF copy for records
     if (doc === 'producerAgreement') {
       try {
+        const { generateProducerAgreementPdf } = require('./pdf-generator');
+        const pdfBuffer = await generateProducerAgreementPdf(agent);
         const pdfPath = path.join(dir, `ProducerAgreement_Signed_${Date.now()}.pdf`);
-        await new Promise((resolve, reject) => {
-          const out = fs.createWriteStream(pdfPath);
-          out.on('finish', resolve);
-          out.on('error', reject);
-          const docPdf = new PDFDocument({ margin: 50 });
-          docPdf.pipe(out);
-          docPdf.fontSize(16).text('Producer Agreement (REMOTE)', { align: 'center' });
-          docPdf.moveDown();
-          docPdf.fontSize(11).text('This Producer Agreement (the "Agreement") is made and entered into as of the date written below by and between Life Assurance Solutions LLC (the "Company") and the insurance producer (the "Producer").');
-          docPdf.moveDown();
-          const items = [
-            'Authorization to Sign Documents for Carrier Appointments. The Producer authorizes Life Assurance Solutions LLC to sign and submit all necessary documents on their behalf related to ACA (Affordable Care Act) insurance carrier appointments. This includes appointment forms, contracting packets, and certification confirmations. Life Assurance Solutions LLC is also authorized to represent the Producer with GAs, FMOs, and ACA carriers to facilitate onboarding and production access.',
-            'Book of Business. All leads, clients, and applications submitted under this Agreement are considered part of the Company\'s Book of Business. The Company retains full ownership of the Book.',
-            'Daily and Performance Bonuses. Bonuses, if any, are issued solely at the discretion of Life Assurance Solutions LLC management.',
-            'Term and Termination. This Agreement becomes effective upon execution and remains in effect until terminated by either party in writing.',
-            'General Provisions. This is an independent contractor relationship; no employer-employee relationship exists. This Agreement is governed by the laws of the State of New Jersey. No modifications will be valid unless in writing and signed by both parties.'
-          ];
-          items.forEach((t, i) => {
-            docPdf.moveDown(0.6);
-            docPdf.font('Times-Bold').text(`${i+1}.`, { continued: true });
-            docPdf.font('Times-Roman').text(` ${t}`);
-          });
-          docPdf.moveDown();
-          const fullName = `${agent.profile?.firstName || ''} ${agent.profile?.lastName || ''}`.trim();
-          if (fullName) docPdf.font('Times-Bold').text('Producer: ', { continued: true }).font('Times-Roman').text(fullName);
-          docPdf.moveDown(0.4);
-          const signedAt = new Date().toLocaleDateString();
-          docPdf.font('Times-Bold').text('Date: ', { continued: true }).font('Times-Roman').text(signedAt);
-          try {
-            const sigPath = agent.signatures?.producerAgreement?.path;
-            if (sigPath && fs.existsSync(sigPath)) {
-              docPdf.moveDown();
-              docPdf.font('Times-Bold').text('Signature:');
-              docPdf.image(sigPath, { fit: [300, 120] });
-            }
-          } catch {}
-          docPdf.end();
-        });
+        await fse.writeFile(pdfPath, pdfBuffer);
+
         agent.submissions = agent.submissions || {};
-        agent.submissions.producerAgreementPdfPath = agent.submissions.producerAgreementPdfPath || null;
-        // Save latest
-        agent.submissions.producerAgreementPdfPath = path.join(AGENTS_DIR, agent.id, path.basename(pdfPath));
+        agent.submissions.producerAgreementPdfPath = pdfPath;
       } catch (e) {
         console.warn('Failed to persist Producer Agreement PDF copy', e);
       }
@@ -1145,89 +1084,12 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
       
       // Generate comprehensive signed documents PDF
       try {
-        console.log('Generating comprehensive signed documents for intake submission');
+        const { generateIntakePdf } = require('./pdf-generator');
+        const pdfBuffer = await generateIntakePdf(submission, agent);
         const agentDir = path.join(AGENTS_DIR, agent.id);
         await fse.ensureDir(agentDir);
         const outPath = path.join(agentDir, `SIGNED_INTAKE_DOCUMENTS_${Date.now()}.pdf`);
-        
-        // Create comprehensive PDF with all intake data
-        const pdfBytes = await new Promise((resolve, reject) => {
-          const chunks = [];
-          const doc = new PDFDocument({ 
-            margin: 50,
-            size: 'LETTER',
-            info: {
-              Title: 'Signed Intake Documents',
-              Author: 'Life Assurance Solutions LLC',
-              Subject: 'Agent Intake Form with Digital Signature'
-            }
-          });
-          
-          doc.on('data', (b) => chunks.push(b));
-          doc.on('end', () => resolve(Buffer.concat(chunks)));
-          doc.on('error', reject);
-          
-          // Title Page
-          doc.fontSize(20).text('SIGNED INTAKE DOCUMENTS', { align: 'center' });
-          doc.moveDown(1);
-          doc.fontSize(16).text('Life Assurance Solutions LLC', { align: 'center' });
-          doc.moveDown(2);
-          
-          // Agent Information
-          doc.fontSize(14).text('AGENT INFORMATION');
-          doc.moveDown(0.5);
-          doc.fontSize(12).text(`Name: ${submission.contact?.firstName || ''} ${submission.contact?.lastName || ''}`);
-          doc.text(`Email: ${submission.contact?.email || ''}`);
-          doc.text(`Phone: ${submission.contact?.phone || ''}`);
-          doc.text(`Agent ID: ${agent.id}`);
-          doc.text(`Date Submitted: ${new Date().toLocaleDateString()}`);
-          doc.moveDown(1);
-          
-          // Business Information
-          doc.fontSize(14).text('BUSINESS INFORMATION');
-          doc.moveDown(0.5);
-          doc.fontSize(12).text(`Agency Name: ${submission.business?.agencyName || ''}`);
-          doc.text(`Website: ${submission.business?.website || ''}`);
-          doc.text(`Address: ${submission.business?.address1 || ''} ${submission.business?.address2 || ''}`);
-          doc.text(`City, State, ZIP: ${submission.business?.city || ''}, ${submission.business?.state || ''} ${submission.business?.zip || ''}`);
-          doc.text(`NPN: ${submission.npn || ''}`);
-          doc.text(`States Licensed: ${submission.statesLicensed?.join(', ') || ''}`);
-          doc.moveDown(1);
-          
-          // Background Information
-          doc.fontSize(14).text('BACKGROUND INFORMATION');
-          doc.moveDown(0.5);
-          doc.fontSize(12).text(`Prior Terminations: ${submission.background?.priorTerminations ? 'YES' : 'NO'}`);
-          if (submission.background?.priorTerminationsExplain) {
-            doc.text(`Termination Explanation: ${submission.background.priorTerminationsExplain}`);
-          }
-          doc.text(`Felonies: ${submission.background?.felonies ? 'YES' : 'NO'}`);
-          if (submission.background?.feloniesExplain) {
-            doc.text(`Felony Explanation: ${submission.background.feloniesExplain}`);
-          }
-          doc.text(`Bankruptcies: ${submission.background?.bankruptcies ? 'YES' : 'NO'}`);
-          if (submission.background?.bankruptciesExplain) {
-            doc.text(`Bankruptcy Explanation: ${submission.background.bankruptciesExplain}`);
-          }
-          doc.moveDown(1);
-          
-          // Signatures Section
-          doc.fontSize(14).text('DIGITAL SIGNATURES AND CERTIFICATIONS');
-          doc.moveDown(0.5);
-          doc.fontSize(12).text(`Digital Signature: ${submission.acknowledgments?.signature || ''}`);
-          doc.text(`Signature Date: ${submission.acknowledgments?.signatureDate || ''}`);
-          doc.text(`Producer Agreement Accepted: ${submission.acknowledgments?.producerAgreementAccepted ? 'YES' : 'NO'}`);
-          doc.text(`Privacy Notice Accepted: ${submission.acknowledgments?.privacyNoticeAccepted ? 'YES' : 'NO'}`);
-          doc.moveDown(1);
-          
-          // Legal Notice
-          doc.fontSize(10).text('This document contains all submitted information and signatures as of the date of generation.');
-          doc.text('All signatures are legally binding and represent the agent\'s agreement to the terms and conditions.');
-          
-          doc.end();
-        });
-        
-        await fse.writeFile(outPath, pdfBytes);
+        await fse.writeFile(outPath, pdfBuffer);
         agent.submissions.intakePdfPath = outPath;
         console.log('Signed intake documents PDF saved to:', outPath);
       } catch (e) {
@@ -1521,6 +1383,21 @@ app.post('/api/banking', async (req, res) => {
           paymentMethod: submission.paymentMethod,
           lastUpdated: new Date().toISOString()
         };
+
+        // Generate and save banking PDF
+        try {
+          const { generateBankingPdf } = require('./pdf-generator');
+          const pdfBuffer = await generateBankingPdf(submission);
+          const agentDir = path.join(AGENTS_DIR, agent.id);
+          await fse.ensureDir(agentDir);
+          const pdfPath = path.join(agentDir, `SIGNED_BANKING_FORM_${Date.now()}.pdf`);
+          await fse.writeFile(pdfPath, pdfBuffer);
+          agent.submissions.bankingPdfPath = pdfPath;
+          console.log('Signed banking PDF saved to:', pdfPath);
+        } catch (e) {
+          console.error('Failed to generate banking PDF:', e);
+        }
+
         await writeAgent(agent);
       }
     }
