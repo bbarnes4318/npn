@@ -163,47 +163,47 @@
           
           <div class="step-content">
             <form id="bankingForm">
-              <div class="grid columns-2">
-                <div class="field">
-                  <label class="label">First Name <span class="required">*</span></label>
-                  <input class="input" type="text" name="firstName" placeholder="James" required />
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">First Name <span class="required">*</span></label>
+                  <input class="form-control" type="text" name="firstName" placeholder="James" required />
                 </div>
-                <div class="field">
-                  <label class="label">Last Name <span class="required">*</span></label>
-                  <input class="input" type="text" name="lastName" placeholder="Kelly" required />
+                <div class="form-group">
+                  <label class="form-label">Last Name <span class="required">*</span></label>
+                  <input class="form-control" type="text" name="lastName" placeholder="Kelly" required />
                 </div>
-                <div class="field">
-                  <label class="label">Street Address <span class="required">*</span></label>
-                  <input class="input" type="text" name="streetAddress" placeholder="2635 Timber Highlands Ln" required />
+                <div class="form-group">
+                  <label class="form-label">Street Address <span class="required">*</span></label>
+                  <input class="form-control" type="text" name="streetAddress" placeholder="2635 Timber Highlands Ln" required />
                 </div>
-                <div class="field">
-                  <label class="label">City <span class="required">*</span></label>
-                  <input class="input" type="text" name="city" placeholder="Knoxville" required />
+                <div class="form-group">
+                  <label class="form-label">City <span class="required">*</span></label>
+                  <input class="form-control" type="text" name="city" placeholder="Knoxville" required />
                 </div>
-                <div class="field">
-                  <label class="label">State <span class="required">*</span></label>
-                  <input class="input" type="text" name="state" placeholder="TN" maxlength="2" required />
+                <div class="form-group">
+                  <label class="form-label">State <span class="required">*</span></label>
+                  <input class="form-control" type="text" name="state" placeholder="TN" maxlength="2" required />
                 </div>
-                <div class="field">
-                  <label class="label">ZIP Code <span class="required">*</span></label>
-                  <input class="input" type="text" name="zipCode" placeholder="37932" pattern="[0-9]{5}(-[0-9]{4})?" required />
+                <div class="form-group">
+                  <label class="form-label">ZIP Code <span class="required">*</span></label>
+                  <input class="form-control" type="text" name="zipCode" placeholder="37932" pattern="[0-9]{5}(-[0-9]{4})?" required />
                 </div>
-                <div class="field">
-                  <label class="label">SSN <span class="required">*</span></label>
-                  <input class="input" type="text" name="ssn" placeholder="411633219" pattern="[0-9]{9}" maxlength="9" required />
+                <div class="form-group">
+                  <label class="form-label">SSN <span class="required">*</span></label>
+                  <input class="form-control" type="text" name="ssn" placeholder="411633219" pattern="[0-9]{9}" maxlength="9" required />
                   <div class="help">9-digit Social Security Number</div>
                 </div>
-                <div class="field">
-                  <label class="label">Date of Birth <span class="required">*</span></label>
-                  <input class="input" type="date" name="dateOfBirth" required />
+                <div class="form-group">
+                  <label class="form-label">Date of Birth <span class="required">*</span></label>
+                  <input class="form-control" type="date" name="dateOfBirth" required />
                 </div>
-                <div class="field">
-                  <label class="label">Date of Hire</label>
-                  <input class="input" type="date" name="dateOfHire" />
+                <div class="form-group">
+                  <label class="form-label">Date of Hire</label>
+                  <input class="form-control" type="date" name="dateOfHire" />
                 </div>
-                <div class="field" style="grid-column: span 2;">
-                  <label class="label">Employee Work Location Address</label>
-                  <input class="input" type="text" name="workLocationAddress" placeholder="Enter your work location address" />
+                <div class="form-group grid-col-span-2">
+                  <label class="form-label">Employee Work Location Address</label>
+                  <input class="form-control" type="text" name="workLocationAddress" placeholder="Enter your work location address" />
                 </div>
               </div>
             </form>
@@ -218,37 +218,37 @@
           </div>
           
           <div class="step-content">
-            <div class="field">
-              <label class="label">Bank Name <span class="required">*</span></label>
-              <input class="input" type="text" name="bankName" placeholder="e.g., Chase Bank, Bank of America, Wells Fargo" required />
+            <div class="form-group">
+              <label class="form-label">Bank Name <span class="required">*</span></label>
+              <input class="form-control" type="text" name="bankName" placeholder="e.g., Chase Bank, Bank of America, Wells Fargo" required />
               <div class="help">Enter the full name of your bank or financial institution</div>
             </div>
 
-            <div class="field inline">
-              <div class="field">
-                <label class="label">Routing Number <span class="required">*</span></label>
-                <input class="input" type="text" name="routingNumber" placeholder="123456789" pattern="[0-9]{9}" maxlength="9" required />
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Routing Number <span class="required">*</span></label>
+                <input class="form-control" type="text" name="routingNumber" placeholder="123456789" pattern="[0-9]{9}" maxlength="9" required />
                 <div class="help">9-digit routing number (ABA number)</div>
               </div>
-              <div class="field">
-                <label class="label">Account Number <span class="required">*</span></label>
-                <input class="input" type="text" name="accountNumber" placeholder="1234567890" required />
+              <div class="form-group">
+                <label class="form-label">Account Number <span class="required">*</span></label>
+                <input class="form-control" type="text" name="accountNumber" placeholder="1234567890" required />
                 <div class="help">Your account number (no spaces or dashes)</div>
               </div>
             </div>
 
-            <div class="field">
-              <label class="label">Account Type <span class="required">*</span></label>
-              <select name="accountType" class="input" required>
+            <div class="form-group">
+              <label class="form-label">Account Type <span class="required">*</span></label>
+              <select name="accountType" class="form-control" required>
                 <option value="">Select account type</option>
                 <option value="checking">Checking</option>
                 <option value="savings">Savings</option>
               </select>
             </div>
 
-            <div class="field">
-              <label class="label">Account Holder Name <span class="required">*</span></label>
-              <input class="input" type="text" name="accountHolderName" placeholder="Name as it appears on the account" required />
+            <div class="form-group">
+              <label class="form-label">Account Holder Name <span class="required">*</span></label>
+              <input class="form-control" type="text" name="accountHolderName" placeholder="Name as it appears on the account" required />
               <div class="help">Must match the name on your bank account</div>
             </div>
           </div>
@@ -262,29 +262,29 @@
           </div>
           
           <div class="step-content">
-            <div class="field">
-              <label class="label">Confirm Account Number <span class="required">*</span></label>
-              <input class="input" type="text" name="confirmAccountNumber" placeholder="Re-enter your account number" required />
+            <div class="form-group">
+              <label class="form-label">Confirm Account Number <span class="required">*</span></label>
+              <input class="form-control" type="text" name="confirmAccountNumber" placeholder="Re-enter your account number" required />
               <div class="help">Please re-enter your account number to confirm accuracy</div>
             </div>
 
-            <div class="field">
-              <label class="label">Confirm Routing Number <span class="required">*</span></label>
-              <input class="input" type="text" name="confirmRoutingNumber" placeholder="Re-enter your routing number" required />
+            <div class="form-group">
+              <label class="form-label">Confirm Routing Number <span class="required">*</span></label>
+              <input class="form-control" type="text" name="confirmRoutingNumber" placeholder="Re-enter your routing number" required />
               <div class="help">Please re-enter your routing number to confirm accuracy</div>
             </div>
 
-            <div class="field">
-              <label class="label">Payment Method <span class="required">*</span></label>
-              <select name="paymentMethod" class="input" required>
+            <div class="form-group">
+              <label class="form-label">Payment Method <span class="required">*</span></label>
+              <select name="paymentMethod" class="form-control" required>
                 <option value="direct_deposit">Direct Deposit (Recommended)</option>
                 <option value="check">Paper Check</option>
               </select>
             </div>
 
-            <div class="field">
-              <label class="label">Payment Frequency <span class="required">*</span></label>
-              <select name="paymentFrequency" class="input" required>
+            <div class="form-group">
+              <label class="form-label">Payment Frequency <span class="required">*</span></label>
+              <select name="paymentFrequency" class="form-control" required>
                 <option value="bi-weekly">Bi-weekly</option>
                 <option value="monthly">Monthly</option>
                 <option value="quarterly">Quarterly</option>
@@ -301,39 +301,36 @@
           </div>
           
           <div class="step-content">
-            <div class="field">
-              <label class="checkbox">
-                <input type="checkbox" name="authorizeDirectDeposit" required />
-                <span class="checkmark"></span>
-                I authorize direct deposit of commission payments to the bank account specified above
-              </label>
+            <div class="form-group">
+              <div class="form-check">
+                <input type="checkbox" name="authorizeDirectDeposit" class="form-check-input" required />
+                <label class="form-check-label">I authorize direct deposit of commission payments to the bank account specified above</label>
+              </div>
             </div>
 
-            <div class="field">
-              <label class="checkbox">
-                <input type="checkbox" name="verifyBankingInfo" required />
-                <span class="checkmark"></span>
-                I verify that all banking information provided is accurate and complete
-              </label>
+            <div class="form-group">
+              <div class="form-check">
+                <input type="checkbox" name="verifyBankingInfo" class="form-check-input" required />
+                <label class="form-check-label">I verify that all banking information provided is accurate and complete</label>
+              </div>
             </div>
 
-            <div class="field">
-              <label class="checkbox">
-                <input type="checkbox" name="privacyConsent" required />
-                <span class="checkmark"></span>
-                I consent to the collection and processing of my personal and banking information for payment purposes
-              </label>
+            <div class="form-group">
+              <div class="form-check">
+                <input type="checkbox" name="privacyConsent" class="form-check-input" required />
+                <label class="form-check-label">I consent to the collection and processing of my personal and banking information for payment purposes</label>
+              </div>
             </div>
 
-            <div class="field">
-              <label class="label">Digital Signature <span class="required">*</span></label>
-              <input class="input" type="text" name="digitalSignature" placeholder="Type your full name as signature" required />
+            <div class="form-group">
+              <label class="form-label">Digital Signature <span class="required">*</span></label>
+              <input class="form-control" type="text" name="digitalSignature" placeholder="Type your full name as signature" required />
               <div class="help">This serves as your digital signature and is legally binding</div>
             </div>
 
-            <div class="field">
-              <label class="label">Signature Date <span class="required">*</span></label>
-              <input class="input" type="date" name="signatureDate" required />
+            <div class="form-group">
+              <label class="form-label">Signature Date <span class="required">*</span></label>
+              <input class="form-control" type="date" name="signatureDate" required />
             </div>
 
             <div class="callout important">

@@ -40,120 +40,138 @@
       <div id="w9Msg" class="notice" style="display:none; margin-bottom: 16px;"></div>
 
       <form id="w9Form" class="form">
-        <div class="card">
-          <h3>Official IRS Form W-9</h3>
-          <div class="grid columns-2">
-            <div class="field">
-              <label class="label">Name (as shown on your income tax return) <span class="required">*</span></label>
-              <input class="input" type="text" name="name" id="w9_name" required />
-            </div>
-            <div class="field">
-              <label class="label">Business name/disregarded entity name</label>
-              <input class="input" type="text" name="businessName" id="w9_businessName" />
-            </div>
+        <h3 class="form-section-heading">Official IRS Form W-9</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Name (as shown on your income tax return) <span class="required">*</span></label>
+            <input class="form-control" type="text" name="name" id="w9_name" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Business name/disregarded entity name</label>
+            <input class="form-control" type="text" name="businessName" id="w9_businessName" />
+          </div>
 
-            <div class="field" style="grid-column: span 2;">
-              <label class="label">Federal tax classification <span class="required">*</span></label>
-              <div class="inline" style="flex-wrap:wrap; gap:10px 16px;">
-                <label><input type="radio" name="taxClassification" value="individual" required /> Individual/sole proprietor or single-member LLC</label>
-                <label><input type="radio" name="taxClassification" value="c_corporation" required /> C Corporation</label>
-                <label><input type="radio" name="taxClassification" value="s_corporation" required /> S Corporation</label>
-                <label><input type="radio" name="taxClassification" value="partnership" required /> Partnership</label>
-                <label><input type="radio" name="taxClassification" value="trust" required /> Trust/estate</label>
-                <label><input type="radio" name="taxClassification" value="llc" required /> LLC</label>
-                <label><input type="radio" name="taxClassification" value="other" required /> Other</label>
+          <div class="form-group grid-col-span-2">
+            <label class="form-label">Federal tax classification <span class="required">*</span></label>
+            <div class="form-check">
+              <input type="radio" name="taxClassification" value="individual" class="form-check-input" required />
+              <label class="form-check-label">Individual/sole proprietor or single-member LLC</label>
+            </div>
+            <div class="form-check">
+              <input type="radio" name="taxClassification" value="c_corporation" class="form-check-input" required />
+              <label class="form-check-label">C Corporation</label>
+            </div>
+            <div class="form-check">
+              <input type="radio" name="taxClassification" value="s_corporation" class="form-check-input" required />
+              <label class="form-check-label">S Corporation</label>
+            </div>
+            <div class="form-check">
+              <input type="radio" name="taxClassification" value="partnership" class="form-check-input" required />
+              <label class="form-check-label">Partnership</label>
+            </div>
+            <div class="form-check">
+              <input type="radio" name="taxClassification" value="trust" class="form-check-input" required />
+              <label class="form-check-label">Trust/estate</label>
+            </div>
+            <div class="form-check">
+              <input type="radio" name="taxClassification" value="llc" class="form-check-input" required />
+              <label class="form-check-label">LLC</label>
+            </div>
+            <div class="form-check">
+              <input type="radio" name="taxClassification" value="other" class="form-check-input" required />
+              <label class="form-check-label">Other</label>
+            </div>
+          </div>
+
+          <div class="form-group grid-col-span-2" id="llcClassificationField" style="display:none;">
+            <label class="form-label">LLC Classification</label>
+            <div class="form-check">
+              <input type="radio" name="llcClassification" value="c_corporation" class="form-check-input" />
+              <label class="form-check-label">C Corporation</label>
+            </div>
+            <div class="form-check">
+              <input type="radio" name="llcClassification" value="s_corporation" class="form-check-input" />
+              <label class="form-check-label">S Corporation</label>
+            </div>
+            <div class="form-check">
+              <input type="radio" name="llcClassification" value="partnership" class="form-check-input" />
+              <label class="form-check-label">Partnership</label>
+            </div>
+          </div>
+
+          <div class="form-group grid-col-span-2">
+            <label class="form-label">Address (number, street, and apt. or suite no.) <span class="required">*</span></label>
+            <input class="form-control" type="text" name="address1" id="w9_address1" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">City <span class="required">*</span></label>
+            <input class="form-control" type="text" name="city" id="w9_city" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">State <span class="required">*</span></label>
+            <input class="form-control" type="text" name="state" id="w9_state" maxlength="2" placeholder="FL" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">ZIP code <span class="required">*</span></label>
+            <input class="form-control" type="text" name="zip" id="w9_zip" pattern="[0-9]{5}(-[0-9]{4})?" placeholder="12345" required />
+          </div>
+
+          <div class="form-group grid-col-span-2">
+            <label class="form-label">Taxpayer Identification Number <span class="required">*</span></label>
+            <div class="form-grid">
+              <div class="form-check">
+                <input type="radio" name="tinType" value="ssn" class="form-check-input" required />
+                <label class="form-check-label">SSN</label>
+                <input class="form-control" type="text" name="ssn" id="w9_ssn" placeholder="XXX-XX-XXXX" pattern="[0-9]{3}-[0-9]{2}-[0-9]{4}" />
+              </div>
+              <div class="form-check">
+                <input type="radio" name="tinType" value="ein" class="form-check-input" required />
+                <label class="form-check-label">EIN</label>
+                <input class="form-control" type="text" name="ein" id="w9_ein" placeholder="XX-XXXXXXX" pattern="[0-9]{2}-[0-9]{7}" />
               </div>
             </div>
+          </div>
 
-            <div class="field" id="llcClassificationField" style="display:none; grid-column: span 2;">
-              <label class="label">LLC Classification</label>
-              <div class="inline" style="flex-wrap:wrap; gap:10px 16px;">
-                <label><input type="radio" name="llcClassification" value="c_corporation" /> C Corporation</label>
-                <label><input type="radio" name="llcClassification" value="s_corporation" /> S Corporation</label>
-                <label><input type="radio" name="llcClassification" value="partnership" /> Partnership</label>
-              </div>
-            </div>
+          <div class="form-group grid-col-span-2">
+            <label class="form-label">Exempt payee code (if any)</label>
+            <input class="form-control" type="text" name="exemptPayeeCode" id="w9_exemptPayeeCode" />
+          </div>
 
-            <div class="field" style="grid-column: span 2;">
-              <label class="label">Address (number, street, and apt. or suite no.) <span class="required">*</span></label>
-              <input class="input" type="text" name="address1" id="w9_address1" required />
-            </div>
-            <div class="field">
-              <label class="label">City <span class="required">*</span></label>
-              <input class="input" type="text" name="city" id="w9_city" required />
-            </div>
-            <div class="field">
-              <label class="label">State <span class="required">*</span></label>
-              <input class="input" type="text" name="state" id="w9_state" maxlength="2" placeholder="FL" required />
-            </div>
-            <div class="field">
-              <label class="label">ZIP code <span class="required">*</span></label>
-              <input class="input" type="text" name="zip" id="w9_zip" pattern="[0-9]{5}(-[0-9]{4})?" placeholder="12345" required />
-            </div>
-
-            <div class="field" style="grid-column: span 2;">
-              <label class="label">Taxpayer Identification Number <span class="required">*</span></label>
-              <div class="inline" style="gap: 20px;">
-                <div>
-                  <label><input type="radio" name="tinType" value="ssn" required /> SSN</label>
-                  <input class="input" type="text" name="ssn" id="w9_ssn" placeholder="XXX-XX-XXXX" pattern="[0-9]{3}-[0-9]{2}-[0-9]{4}" />
-                </div>
-                <div>
-                  <label><input type="radio" name="tinType" value="ein" required /> EIN</label>
-                  <input class="input" type="text" name="ein" id="w9_ein" placeholder="XX-XXXXXXX" pattern="[0-9]{2}-[0-9]{7}" />
-                </div>
-              </div>
-            </div>
-
-            <div class="field" style="grid-column: span 2;">
-              <label class="label">Exempt payee code (if any)</label>
-              <input class="input" type="text" name="exemptPayeeCode" id="w9_exemptPayeeCode" />
-            </div>
-
-            <div class="field" style="grid-column: span 2;">
-              <label class="label">Exemption from FATCA reporting code (if any)</label>
-              <input class="input" type="text" name="fatcaCode" id="w9_fatcaCode" />
-            </div>
+          <div class="form-group grid-col-span-2">
+            <label class="form-label">Exemption from FATCA reporting code (if any)</label>
+            <input class="form-control" type="text" name="fatcaCode" id="w9_fatcaCode" />
           </div>
         </div>
 
-        <div class="card">
-          <h3>Certification</h3>
-          <div class="text-block">
-            <p>Under penalties of perjury, I certify that:</p>
-            <ol>
-              <li>The number shown on this form is my correct taxpayer identification number (or I am waiting for a number to be issued to me), and</li>
-              <li>I am not subject to backup withholding because: (a) I am exempt from backup withholding, or (b) I have not been notified by the Internal Revenue Service (IRS) that I am subject to backup withholding as a result of a failure to report all interest or dividends, or (c) the IRS has notified me that I am no longer subject to backup withholding, and</li>
-              <li>I am a U.S. person (including a U.S. resident alien), and</li>
-              <li>The FATCA code(s) entered on this form (if any) indicating that I am exempt from FATCA reporting is correct.</li>
-            </ol>
-          </div>
+        <h3 class="form-section-heading">Certification</h3>
+        <div class="text-block">
+          <p>Under penalties of perjury, I certify that:</p>
+          <ol>
+            <li>The number shown on this form is my correct taxpayer identification number (or I am waiting for a number to be issued to me), and</li>
+            <li>I am not subject to backup withholding because: (a) I am exempt from backup withholding, or (b) I have not been notified by the Internal Revenue Service (IRS) that I am subject to backup withholding as a result of a failure to report all interest or dividends, or (c) the IRS has notified me that I am no longer subject to backup withholding, and</li>
+            <li>I am a U.S. person (including a U.S. resident alien), and</li>
+            <li>The FATCA code(s) entered on this form (if any) indicating that I am exempt from FATCA reporting is correct.</li>
+          </ol>
+        </div>
 
-          <div class="field">
-            <label class="label">Digital Signature <span class="required">*</span></label>
-            <input class="input" type="text" name="signature" id="w9_signature" placeholder="Type your full name as signature" required />
-          </div>
+        <div class="form-group">
+          <label class="form-label">Digital Signature <span class="required">*</span></label>
+          <input class="form-control" type="text" name="signature" id="w9_signature" placeholder="Type your full name as signature" required />
+        </div>
 
-          <div class="field">
-            <label class="label">Date <span class="required">*</span></label>
-            <input class="input" type="date" name="signatureDate" id="w9_signatureDate" required />
-          </div>
+        <div class="form-group">
+          <label class="form-label">Date <span class="required">*</span></label>
+          <input class="form-control" type="date" name="signatureDate" id="w9_signatureDate" required />
         </div>
 
         <div class="card" style="background: #f8f9fa; border: 1px solid #e9ecef;">
-          <h4 style="margin: 0 0 12px; color: var(--brand-navy);">Important Information</h4>
-          <ul style="margin: 0; padding-left: 20px; color: var(--muted);">
+          <h4 style="margin: 0 0 12px; color: var(--primary-color);">Important Information</h4>
+          <ul style="margin: 0; padding-left: 20px; color: var(--grey-color);">
             <li>This is the official IRS Form W-9 required for tax reporting</li>
             <li>All information must be accurate and complete</li>
             <li>Your signature certifies the information under penalties of perjury</li>
             <li>This form will be used for 1099 tax reporting purposes</li>
           </ul>
-        </div>
-
-        <div class="cta-row" style="margin-top: 24px;">
-          <button class="button primary" type="submit">Submit W-9 Form</button>
-          <button class="button ghost" type="button" id="clearW9Btn">Clear Form</button>
-          <a class="button ghost" href="/dashboard.html">Back to Dashboard</a>
         </div>
       </form>
     </div>
