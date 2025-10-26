@@ -1,229 +1,238 @@
-// Banking Details Form Handler
-document.addEventListener('DOMContentLoaded', function() {
-  const form = document.getElementById('bankingForm');
-  const msgEl = document.getElementById('bankingMsg');
-  const clearBtn = document.getElementById('clearFormBtn');
+(function() {
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('bankingForm');
+    const msg = document.getElementById('bankingMsg');
+    const submitBtn = document.getElementById('submitBtn');
 
-  // Get agent ID from URL parameters
-  const urlParams = new URLSearchParams(window.location.search);
-  const agentId = urlParams.get('agentId');
-
-  // Set current date
-  const dateInput = document.querySelector('input[name="signatureDate"]');
-  if (dateInput) {
-    dateInput.value = new Date().toISOString().split('T')[0];
-  }
-
-  // Form validation
-  function validateForm() {
-    const firstName = form.firstName.value.trim();
-    const lastName = form.lastName.value.trim();
-    const ssn = form.ssn.value;
-    const routingNumber = form.routingNumber.value;
-    const accountNumber = form.accountNumber.value;
-    const confirmRoutingNumber = form.confirmRoutingNumber.value;
-    const confirmAccountNumber = form.confirmAccountNumber.value;
-
-    // Validate required employee information
-    if (!firstName) {
-      showMessage('First name is required', 'error');
-      return false;
-    }
-
-    if (!lastName) {
-      showMessage('Last name is required', 'error');
-      return false;
-    }
-
-    // Validate SSN format
-    if (ssn && !/^\d{9}$/.test(ssn)) {
-      showMessage('SSN must be exactly 9 digits', 'error');
-      return false;
-    }
-
-    // Validate routing number format
-    if (routingNumber && !/^\d{9}$/.test(routingNumber)) {
-      showMessage('Routing number must be exactly 9 digits', 'error');
-      return false;
-    }
-
-    // Validate account number
-    if (accountNumber && accountNumber.length < 4) {
-      showMessage('Account number must be at least 4 digits', 'error');
-      return false;
-    }
-
-    // Check if routing numbers match
-    if (routingNumber !== confirmRoutingNumber) {
-      showMessage('Routing numbers do not match', 'error');
-      return false;
-    }
-
-    // Check if account numbers match
-    if (accountNumber !== confirmAccountNumber) {
-      showMessage('Account numbers do not match', 'error');
-      return false;
-    }
-
-    return true;
-  }
-
-  // Show message
-  function showMessage(text, type = 'notice') {
-    msgEl.textContent = text;
-    msgEl.className = type;
-    msgEl.style.display = 'block';
-    setTimeout(() => {
-      msgEl.style.display = 'none';
-    }, 5000);
-  }
-
-  // Format SSN input
-  const ssnInput = form.ssn;
-  ssnInput.addEventListener('input', function() {
-    this.value = this.value.replace(/\D/g, '').slice(0, 9);
-  });
-
-  // Format routing number input
-  const routingInput = form.routingNumber;
-  const confirmRoutingInput = form.confirmRoutingNumber;
-  
-  [routingInput, confirmRoutingInput].forEach(input => {
-    input.addEventListener('input', function(e) {
-      // Remove non-digits
-      e.target.value = e.target.value.replace(/\D/g, '');
-      // Limit to 9 digits
-      if (e.target.value.length > 9) {
-        e.target.value = e.target.value.slice(0, 9);
+    function setMsg(text, type = 'info') {
+      if (msg) {
+        msg.textContent = text;
+        msg.className = `notice ${type}`;
+        msg.style.display = 'block';
       }
-    });
-  });
-
-  // Format account number input
-  const accountInput = form.accountNumber;
-  const confirmAccountInput = form.confirmAccountNumber;
-  
-  [accountInput, confirmAccountInput].forEach(input => {
-    input.addEventListener('input', function(e) {
-      // Remove non-digits
-      e.target.value = e.target.value.replace(/\D/g, '');
-    });
-  });
-
-  // Real-time validation
-  function validateRoutingNumber(routing) {
-    if (routing.length === 9) {
-      // Basic routing number validation (checksum)
-      const digits = routing.split('').map(Number);
-      const weights = [3, 7, 1, 3, 7, 1, 3, 7, 1];
-      let sum = 0;
-      
-      for (let i = 0; i < 9; i++) {
-        sum += digits[i] * weights[i];
-      }
-      
-      return sum % 10 === 0;
-    }
-    return true; // Don't show error for incomplete numbers
-  }
-
-  // Add validation feedback
-  routingInput.addEventListener('blur', function() {
-    if (this.value.length === 9 && !validateRoutingNumber(this.value)) {
-      this.style.borderColor = '#bb1c29';
-      showMessage('Invalid routing number. Please check and try again.', 'error');
-    } else {
-      this.style.borderColor = '';
-    }
-  });
-
-  // Form submission
-  form.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
     }
 
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Saving...';
-
-    try {
-      const formData = new FormData(form);
+    function validateForm() {
+      const requiredFields = ['firstName', 'lastName', 'streetAddress', 'city', 'state', 'zipCode', 'ssn', 'dateOfBirth', 'bankName', 'routingNumber', 'accountNumber', 'accountType', 'accountHolderName', 'confirmAccountNumber', 'confirmRoutingNumber', 'digitalSignature', 'signatureDate'];
       
-      // Add agent ID if available
-      if (agentId) {
-        formData.append('agentId', agentId);
-      }
-
-      const response = await fetch('/api/banking', {
-        method: 'POST',
-        body: formData
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        showMessage('Employee information and banking details saved successfully!', 'success');
-        form.reset();
-        // Set current date again after reset
-        if (dateInput) {
-          dateInput.value = new Date().toISOString().split('T')[0];
+      for (const field of requiredFields) {
+        const input = form[field];
+        if (!input || !input.value.trim()) {
+          setMsg(`Please fill in all required fields. Missing: ${field}`, 'error');
+          return false;
         }
-      } else {
-        showMessage(result.error || 'Failed to save banking information', 'error');
       }
-    } catch (error) {
-      console.error('Error:', error);
-      showMessage('Network error. Please try again.', 'error');
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = originalText;
-    }
-  });
 
-  // Clear form
-  clearBtn.addEventListener('click', function() {
-    if (confirm('Are you sure you want to clear all form data?')) {
-      form.reset();
-      if (dateInput) {
-        dateInput.value = new Date().toISOString().split('T')[0];
+      // Validate SSN format
+      const ssn = form.ssn.value;
+      if (!/^\d{9}$/.test(ssn)) {
+        setMsg('SSN must be exactly 9 digits', 'error');
+        return false;
       }
-      showMessage('Form cleared', 'notice');
-    }
-  });
 
-  // Auto-populate account holder name if agent data is available
-  if (agentId) {
-    (async () => {
+      // Validate routing number format
+      const routingNumber = form.routingNumber.value;
+      if (!/^\d{9}$/.test(routingNumber)) {
+        setMsg('Routing number must be exactly 9 digits', 'error');
+        return false;
+      }
+
+      // Validate account number confirmation
+      if (form.accountNumber.value !== form.confirmAccountNumber.value) {
+        setMsg('Account numbers do not match', 'error');
+        return false;
+      }
+
+      if (form.routingNumber.value !== form.confirmRoutingNumber.value) {
+        setMsg('Routing numbers do not match', 'error');
+        return false;
+      }
+
+      // Validate checkboxes
+      if (!form.authorizeDirectDeposit.checked) {
+        setMsg('You must authorize direct deposit', 'error');
+        return false;
+      }
+
+      if (!form.verifyBankingInfo.checked) {
+        setMsg('You must verify your banking information', 'error');
+        return false;
+      }
+
+      if (!form.privacyConsent.checked) {
+        setMsg('You must consent to privacy policy', 'error');
+        return false;
+      }
+
+      return true;
+    }
+
+    // Format SSN input
+    const ssnInput = form.ssn;
+    ssnInput.addEventListener('input', function() {
+      this.value = this.value.replace(/\D/g, '').slice(0, 9);
+    });
+
+    // Format routing number input
+    const routingInput = form.routingNumber;
+    routingInput.addEventListener('input', function() {
+      this.value = this.value.replace(/\D/g, '').slice(0, 9);
+    });
+
+    // Format confirm routing number input
+    const confirmRoutingInput = form.confirmRoutingNumber;
+    confirmRoutingInput.addEventListener('input', function() {
+      this.value = this.value.replace(/\D/g, '').slice(0, 9);
+    });
+
+    // Auto-fill confirm fields
+    form.accountNumber.addEventListener('input', function() {
+      if (form.confirmAccountNumber.value === '') {
+        form.confirmAccountNumber.value = this.value;
+      }
+    });
+
+    form.routingNumber.addEventListener('input', function() {
+      if (form.confirmRoutingNumber.value === '') {
+        form.confirmRoutingNumber.value = this.value;
+      }
+    });
+
+    // Set today's date as default for signature date
+    const today = new Date().toISOString().split('T')[0];
+    form.signatureDate.value = today;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      if (!validateForm()) {
+        return;
+      }
+
+      setMsg('Submitting your information...', 'info');
+      submitBtn.disabled = true;
+
       try {
-        const response = await fetch(`/api/agents/${agentId}`);
-        if (response.ok) {
-          const agent = await response.json();
-          if (agent.firstName && agent.lastName) {
-            const accountHolderInput = form.accountHolderName;
-            if (accountHolderInput && !accountHolderInput.value) {
-              accountHolderInput.value = `${agent.firstName} ${agent.lastName}`;
-            }
-          }
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        // Get agent ID from URL or localStorage
+        const urlParams = new URLSearchParams(window.location.search);
+        const agentId = urlParams.get('agentId') || localStorage.getItem('agentId');
+        if (agentId) {
+          data.agentId = agentId;
+        }
+
+        const res = await fetch('/api/banking', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+
+        const result = await res.json();
+
+        if (res.ok && result.ok) {
+          setMsg('Employee information and banking details saved successfully!', 'success');
+          form.reset();
+          
+          // Redirect to success page or next step
+          setTimeout(() => {
+            window.location.href = '/portal.html';
+          }, 2000);
+        } else {
+          throw new Error(result.error || 'Failed to save information');
         }
       } catch (error) {
-        console.log('Could not load agent data:', error);
+        console.error('Error:', error);
+        setMsg(`Error: ${error.message}`, 'error');
+      } finally {
+        submitBtn.disabled = false;
       }
-    })();
-  }
-
-  // Security: Mask account number in console logs
-  const originalLog = console.log;
-  console.log = function(...args) {
-    const maskedArgs = args.map(arg => {
-      if (typeof arg === 'string' && arg.includes('accountNumber')) {
-        return arg.replace(/accountNumber[^,}]*/g, 'accountNumber: [MASKED]');
-      }
-      return arg;
     });
-    originalLog.apply(console, maskedArgs);
-  };
-});
+
+    // Step validation
+    function validateCurrentStep() {
+      const currentStep = document.querySelector('.step.active');
+      const stepNumber = currentStep.id.replace('step', '');
+      
+      switch(stepNumber) {
+        case '1':
+          const step1Fields = ['firstName', 'lastName', 'streetAddress', 'city', 'state', 'zipCode', 'ssn', 'dateOfBirth'];
+          for (const field of step1Fields) {
+            if (!form[field] || !form[field].value.trim()) {
+              setMsg(`Please fill in all required fields in Step 1`, 'error');
+              return false;
+            }
+          }
+          // Validate SSN format
+          if (!/^\d{9}$/.test(form.ssn.value)) {
+            setMsg('SSN must be exactly 9 digits', 'error');
+            return false;
+          }
+          break;
+          
+        case '2':
+          const step2Fields = ['bankName', 'routingNumber', 'accountNumber', 'accountType', 'accountHolderName'];
+          for (const field of step2Fields) {
+            if (!form[field] || !form[field].value.trim()) {
+              setMsg(`Please fill in all required fields in Step 2`, 'error');
+              return false;
+            }
+          }
+          // Validate routing number format
+          if (!/^\d{9}$/.test(form.routingNumber.value)) {
+            setMsg('Routing number must be exactly 9 digits', 'error');
+            return false;
+          }
+          break;
+          
+        case '3':
+          const step3Fields = ['confirmAccountNumber', 'confirmRoutingNumber', 'paymentMethod', 'paymentFrequency'];
+          for (const field of step3Fields) {
+            if (!form[field] || !form[field].value.trim()) {
+              setMsg(`Please fill in all required fields in Step 3`, 'error');
+              return false;
+            }
+          }
+          // Validate confirmations
+          if (form.accountNumber.value !== form.confirmAccountNumber.value) {
+            setMsg('Account numbers do not match', 'error');
+            return false;
+          }
+          if (form.routingNumber.value !== form.confirmRoutingNumber.value) {
+            setMsg('Routing numbers do not match', 'error');
+            return false;
+          }
+          break;
+          
+        case '4':
+          const step4Fields = ['digitalSignature', 'signatureDate'];
+          for (const field of step4Fields) {
+            if (!form[field] || !form[field].value.trim()) {
+              setMsg(`Please fill in all required fields in Step 4`, 'error');
+              return false;
+            }
+          }
+          // Validate checkboxes
+          if (!form.authorizeDirectDeposit.checked || !form.verifyBankingInfo.checked || !form.privacyConsent.checked) {
+            setMsg('Please check all required authorization boxes', 'error');
+            return false;
+          }
+          break;
+      }
+      
+      setMsg('', 'info');
+      return true;
+    }
+
+    // Override the next button to validate current step
+    document.getElementById('nextBtn').addEventListener('click', (e) => {
+      if (!validateCurrentStep()) {
+        e.preventDefault();
+        return false;
+      }
+    });
+  });
+})();
