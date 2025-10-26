@@ -325,7 +325,11 @@
                   <button class="button secondary" id="saveW9SigBtn" type="button">Save Signature</button>
                   <div id="w9SigMsg" class="help"></div>
                 </div>
-                <input type="hidden" name="signature" id="w9_signature" required />
+                <div class="help" style="margin-top:8px;">
+                  <strong>Alternative:</strong> If the drawing pad doesn't work, you can type your full name below:
+                </div>
+                <input class="input" type="text" name="signatureText" id="w9_signatureText" placeholder="Type your full name as signature (fallback)" style="margin-top:8px;" />
+                <input type="hidden" name="signature" id="w9_signature" />
               </div>
 
               <div class="field">

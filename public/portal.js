@@ -61,11 +61,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const w9Form = document.getElementById('w9Form');
     if (!w9Form) return false;
 
-    // Check if signature is saved
+    // Check if signature is saved (either drawn or typed)
     const signatureValue = document.getElementById('w9_signature').value;
-    if (!signatureValue) {
-      showMessage('Please draw and save your signature before submitting.', 'error');
+    const signatureText = document.getElementById('w9_signatureText').value;
+    
+    if (!signatureValue && !signatureText.trim()) {
+      showMessage('Please either draw and save your signature or type your full name.', 'error');
       return false;
+    }
+
+    // If only text signature is provided, use that
+    if (!signatureValue && signatureText.trim()) {
+      document.getElementById('w9_signature').value = signatureText.trim();
     }
 
     const formData = new FormData(w9Form);
@@ -319,33 +326,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function setupW9SignaturePad() {
     const canvas = document.getElementById('w9SigPad');
-    if (!canvas) return;
+    if (!canvas) {
+      console.log('W9 signature canvas not found');
+      return;
+    }
     
+    console.log('Setting up W9 signature pad');
     const ctx = canvas.getContext('2d');
+    
+    // Set up canvas properties
+    ctx.strokeStyle = '#0b5fa7';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    
     let drawing = false;
     let last = null;
     let hasInk = false;
     
     // Mouse events
     canvas.addEventListener('mousedown', e => {
+      e.preventDefault();
       drawing = true;
       last = { x: e.offsetX, y: e.offsetY };
+      console.log('Mouse down at:', last);
     });
     
     canvas.addEventListener('mousemove', e => {
       if (!drawing) return;
-      ctx.strokeStyle = '#0b5fa7';
-      ctx.lineWidth = 2.5;
-      ctx.lineCap = 'round';
+      e.preventDefault();
+      
       ctx.beginPath();
       ctx.moveTo(last.x, last.y);
       ctx.lineTo(e.offsetX, e.offsetY);
       ctx.stroke();
+      
       last = { x: e.offsetX, y: e.offsetY };
       hasInk = true;
     });
     
-    window.addEventListener('mouseup', () => drawing = false);
+    canvas.addEventListener('mouseup', e => {
+      e.preventDefault();
+      drawing = false;
+    });
+    
+    canvas.addEventListener('mouseout', e => {
+      drawing = false;
+    });
     
     // Touch events for mobile
     canvas.addEventListener('touchstart', e => {
@@ -354,45 +381,76 @@ document.addEventListener('DOMContentLoaded', () => {
       const rect = canvas.getBoundingClientRect();
       drawing = true;
       last = { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+      console.log('Touch start at:', last);
     });
     
     canvas.addEventListener('touchmove', e => {
       e.preventDefault();
       if (!drawing) return;
+      
       const touch = e.touches[0];
       const rect = canvas.getBoundingClientRect();
-      ctx.strokeStyle = '#0b5fa7';
-      ctx.lineWidth = 2.5;
-      ctx.lineCap = 'round';
+      
       ctx.beginPath();
       ctx.moveTo(last.x, last.y);
       ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
       ctx.stroke();
+      
       last = { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
       hasInk = true;
     });
     
-    window.addEventListener('touchend', () => drawing = false);
+    canvas.addEventListener('touchend', e => {
+      e.preventDefault();
+      drawing = false;
+    });
     
     // Clear button
-    document.getElementById('clearW9SigBtn').addEventListener('click', () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      hasInk = false;
-      document.getElementById('w9SigMsg').textContent = '';
-      document.getElementById('w9_signature').value = '';
-    });
+    const clearBtn = document.getElementById('clearW9SigBtn');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        hasInk = false;
+        const msgEl = document.getElementById('w9SigMsg');
+        if (msgEl) msgEl.textContent = '';
+        const sigInput = document.getElementById('w9_signature');
+        if (sigInput) sigInput.value = '';
+        console.log('Signature cleared');
+      });
+    }
     
     // Save button
-    document.getElementById('saveW9SigBtn').addEventListener('click', () => {
-      if (!hasInk) {
-        document.getElementById('w9SigMsg').textContent = 'Please draw your signature first.';
-        return;
-      }
-      
-      const dataUrl = canvas.toDataURL('image/png');
-      document.getElementById('w9_signature').value = dataUrl;
-      document.getElementById('w9SigMsg').textContent = 'Signature saved.';
-    });
+    const saveBtn = document.getElementById('saveW9SigBtn');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', () => {
+        if (!hasInk) {
+          const msgEl = document.getElementById('w9SigMsg');
+          if (msgEl) msgEl.textContent = 'Please draw your signature first.';
+          return;
+        }
+        
+        const dataUrl = canvas.toDataURL('image/png');
+        const sigInput = document.getElementById('w9_signature');
+        if (sigInput) sigInput.value = dataUrl;
+        
+        const msgEl = document.getElementById('w9SigMsg');
+        if (msgEl) msgEl.textContent = 'Signature saved.';
+        console.log('Signature saved');
+      });
+    }
+    
+    // Handle fallback text input
+    const textInput = document.getElementById('w9_signatureText');
+    if (textInput) {
+      textInput.addEventListener('input', () => {
+        const sigInput = document.getElementById('w9_signature');
+        if (sigInput && textInput.value.trim()) {
+          sigInput.value = textInput.value.trim();
+        }
+      });
+    }
+    
+    console.log('W9 signature pad setup complete');
   }
 
   populateStates(document.querySelector('.state-select'), true);
