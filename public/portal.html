@@ -68,16 +68,6 @@
               </div>
 
               <h3 style="margin-top: 24px;">Business Details</h3>
-              <div class="field inline">
-                <div class="field">
-                  <label class="label">Agency / Company</label>
-                  <input class="input" type="text" name="agencyName" />
-                </div>
-                <div class="field">
-                  <label class="label">Website</label>
-                  <input class="input" type="url" name="website" placeholder="https://" />
-                </div>
-              </div>
               <div class="field">
                 <label class="label">Address line 1</label>
                 <input class="input" type="text" name="address1" />
@@ -329,7 +319,13 @@
 
               <div class="field">
                 <label class="label">Digital Signature <span class="required">*</span></label>
-                <input class="input" type="text" name="signature" id="w9_signature" placeholder="Type your full name as signature" required />
+                <canvas id="w9SigPad" width="400" height="120" style="border:1px dashed var(--border); border-radius:8px; background:#fff; width:100%; max-width:400px; cursor:crosshair;"></canvas>
+                <div class="cta-row" style="margin-top:8px;">
+                  <button class="button ghost" id="clearW9SigBtn" type="button">Clear</button>
+                  <button class="button secondary" id="saveW9SigBtn" type="button">Save Signature</button>
+                  <div id="w9SigMsg" class="help"></div>
+                </div>
+                <input type="hidden" name="signature" id="w9_signature" required />
               </div>
 
               <div class="field">
@@ -429,15 +425,6 @@
                 <select name="paymentMethod" class="input" required>
                   <option value="direct_deposit">Direct Deposit (Recommended)</option>
                   <option value="check">Paper Check</option>
-                </select>
-              </div>
-
-              <div class="field">
-                <label class="label">Payment Frequency <span class="required">*</span></label>
-                <select name="paymentFrequency" class="input" required>
-                  <option value="bi-weekly">Bi-weekly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="quarterly">Quarterly</option>
                 </select>
               </div>
 

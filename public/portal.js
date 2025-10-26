@@ -61,6 +61,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const w9Form = document.getElementById('w9Form');
     if (!w9Form) return false;
 
+    // Check if signature is saved
+    const signatureValue = document.getElementById('w9_signature').value;
+    if (!signatureValue) {
+      showMessage('Please draw and save your signature before submitting.', 'error');
+      return false;
+    }
+
     const formData = new FormData(w9Form);
     const payload = Object.fromEntries(formData.entries());
     const agentId = getAgentId();
@@ -85,11 +92,26 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function handleBankingSubmit() {
+    console.log('handleBankingSubmit called');
     const bankingForm = document.getElementById('bankingForm');
-    if (!bankingForm) return false;
+    if (!bankingForm) {
+      console.log('Banking form not found');
+      return false;
+    }
 
+    // Check form validity
+    if (!bankingForm.checkValidity()) {
+      console.log('Form validation failed');
+      bankingForm.reportValidity();
+      showMessage('Please complete all required fields.', 'error');
+      return false;
+    }
+
+    console.log('Form found, collecting data...');
     const formData = new FormData(bankingForm);
     const data = Object.fromEntries(formData.entries());
+    console.log('Form data:', data);
+    
     const agentId = getAgentId();
     if (agentId) {
       data.agentId = agentId;
@@ -97,15 +119,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       showMessage('Submitting banking information...', 'info');
+      console.log('Sending request to /api/banking');
       const res = await fetch('/api/banking', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
+      console.log('Response status:', res.status);
       const result = await res.json();
+      console.log('Response data:', result);
       if (!res.ok || !result.ok) throw new Error(result.error || 'Failed to save banking information');
       return true;
     } catch (err) {
+      console.error('Banking submit error:', err);
       showMessage(err.message, 'error');
       return false;
     }
@@ -176,7 +202,9 @@ document.addEventListener('DOMContentLoaded', () => {
   prevBtn.addEventListener('click', prevStep);
   nextBtn.addEventListener('click', nextStep);
   submitBtn.addEventListener('click', async () => {
+    console.log('Submit button clicked');
     const success = await handleBankingSubmit();
+    console.log('Banking submit result:', success);
     if (success) {
       currentStep++;
       showStep(currentStep);
@@ -236,7 +264,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleStateSelection(e) {
       if (e.target.tagName === 'LI') {
-        e.target.classList.toggle('selected');
+        // If clicking on available states, move to licensed states
+        if (e.target.parentElement === availableStatesList) {
+          licensedStatesList.appendChild(e.target);
+          e.target.classList.remove('selected');
+        } else {
+          // If clicking on licensed states, just toggle selection
+          e.target.classList.toggle('selected');
+        }
       }
     }
 
@@ -282,8 +317,87 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function setupW9SignaturePad() {
+    const canvas = document.getElementById('w9SigPad');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+    let last = null;
+    let hasInk = false;
+    
+    // Mouse events
+    canvas.addEventListener('mousedown', e => {
+      drawing = true;
+      last = { x: e.offsetX, y: e.offsetY };
+    });
+    
+    canvas.addEventListener('mousemove', e => {
+      if (!drawing) return;
+      ctx.strokeStyle = '#0b5fa7';
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(last.x, last.y);
+      ctx.lineTo(e.offsetX, e.offsetY);
+      ctx.stroke();
+      last = { x: e.offsetX, y: e.offsetY };
+      hasInk = true;
+    });
+    
+    window.addEventListener('mouseup', () => drawing = false);
+    
+    // Touch events for mobile
+    canvas.addEventListener('touchstart', e => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      drawing = true;
+      last = { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+    });
+    
+    canvas.addEventListener('touchmove', e => {
+      e.preventDefault();
+      if (!drawing) return;
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      ctx.strokeStyle = '#0b5fa7';
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(last.x, last.y);
+      ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+      ctx.stroke();
+      last = { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+      hasInk = true;
+    });
+    
+    window.addEventListener('touchend', () => drawing = false);
+    
+    // Clear button
+    document.getElementById('clearW9SigBtn').addEventListener('click', () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      hasInk = false;
+      document.getElementById('w9SigMsg').textContent = '';
+      document.getElementById('w9_signature').value = '';
+    });
+    
+    // Save button
+    document.getElementById('saveW9SigBtn').addEventListener('click', () => {
+      if (!hasInk) {
+        document.getElementById('w9SigMsg').textContent = 'Please draw your signature first.';
+        return;
+      }
+      
+      const dataUrl = canvas.toDataURL('image/png');
+      document.getElementById('w9_signature').value = dataUrl;
+      document.getElementById('w9SigMsg').textContent = 'Signature saved.';
+    });
+  }
+
   populateStates(document.querySelector('.state-select'), true);
   setupDualListBox();
   setupFileUpload();
+  setupW9SignaturePad();
   showStep(currentStep);
 });

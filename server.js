@@ -1321,15 +1321,6 @@ app.post('/api/banking', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Routing number must be exactly 9 digits' });
     }
 
-    // Validate account number confirmation
-    if (body.accountNumber !== body.confirmAccountNumber) {
-      return res.status(400).json({ ok: false, error: 'Account numbers do not match' });
-    }
-
-    if (body.routingNumber !== body.confirmRoutingNumber) {
-      return res.status(400).json({ ok: false, error: 'Routing numbers do not match' });
-    }
-
     // Create banking submission
     const id = nanoid(10);
     const destDir = path.join(SUBMISSIONS_DIR, id);
