@@ -49,6 +49,33 @@ body {
   margin-bottom: 1.5rem;
 }
 
+/* Radio Group Styling */
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  cursor: pointer;
+}
+
+.radio-option input[type="radio"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.radio-option:hover {
+  background-color: var(--neutral-color);
+  border-radius: 4px;
+  padding: 8px;
+  margin: -8px;
+}
+
 .field.inline {
   display: flex;
   gap: 1.5rem;

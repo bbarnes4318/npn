@@ -244,23 +244,23 @@
 
                 <div class="field" style="grid-column: span 2;">
                   <label class="label">Federal tax classification <span class="required">*</span></label>
-                  <div class="inline" style="flex-wrap:wrap; gap:10px 16px;">
-                    <label><input type="radio" name="taxClassification" value="individual" required /> Individual/sole proprietor or single-member LLC</label>
-                    <label><input type="radio" name="taxClassification" value="c_corporation" required /> C Corporation</label>
-                    <label><input type="radio" name="taxClassification" value="s_corporation" required /> S Corporation</label>
-                    <label><input type="radio" name="taxClassification" value="partnership" required /> Partnership</label>
-                    <label><input type="radio" name="taxClassification" value="trust" required /> Trust/estate</label>
-                    <label><input type="radio" name="taxClassification" value="llc" required /> LLC</label>
-                    <label><input type="radio" name="taxClassification" value="other" required /> Other</label>
+                  <div class="radio-group">
+                    <label class="radio-option"><input type="radio" name="taxClassification" value="individual" required /> Individual/sole proprietor or single-member LLC</label>
+                    <label class="radio-option"><input type="radio" name="taxClassification" value="c_corporation" required /> C Corporation</label>
+                    <label class="radio-option"><input type="radio" name="taxClassification" value="s_corporation" required /> S Corporation</label>
+                    <label class="radio-option"><input type="radio" name="taxClassification" value="partnership" required /> Partnership</label>
+                    <label class="radio-option"><input type="radio" name="taxClassification" value="trust" required /> Trust/estate</label>
+                    <label class="radio-option"><input type="radio" name="taxClassification" value="llc" required /> LLC</label>
+                    <label class="radio-option"><input type="radio" name="taxClassification" value="other" required /> Other</label>
                   </div>
                 </div>
 
                 <div class="field" id="llcClassificationField" style="display:none; grid-column: span 2;">
                   <label class="label">LLC Classification</label>
-                  <div class="inline" style="flex-wrap:wrap; gap:10px 16px;">
-                    <label><input type="radio" name="llcClassification" value="c_corporation" /> C Corporation</label>
-                    <label><input type="radio" name="llcClassification" value="s_corporation" /> S Corporation</label>
-                    <label><input type="radio" name="llcClassification" value="partnership" /> Partnership</label>
+                  <div class="radio-group">
+                    <label class="radio-option"><input type="radio" name="llcClassification" value="c_corporation" /> C Corporation</label>
+                    <label class="radio-option"><input type="radio" name="llcClassification" value="s_corporation" /> S Corporation</label>
+                    <label class="radio-option"><input type="radio" name="llcClassification" value="partnership" /> Partnership</label>
                   </div>
                 </div>
 
