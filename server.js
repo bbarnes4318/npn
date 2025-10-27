@@ -639,6 +639,46 @@ app.get('/docs/:doc', async (req, res) => {
   }
 });
 
+// Generate intake PDF from e-sign JSON if available
+app.get('/api/agents/:id/documents/intake.pdf', async (req, res) => {
+  try {
+    const agent = await readAgent(req.params.id);
+    if (!agent) return res.status(404).send('Not found');
+    
+    const intakeId = agent.submissions?.intakeId;
+    const persistedPdf = agent.submissions?.intakePdfPath;
+    
+    if (persistedPdf && await fse.pathExists(persistedPdf)) {
+      return res.download(persistedPdf, path.basename(persistedPdf));
+    }
+    
+    if (intakeId) {
+      const intakeJsonPath = path.join(SUBMISSIONS_DIR, intakeId, 'intake.json');
+      if (await fse.pathExists(intakeJsonPath)) {
+        const data = await fse.readJson(intakeJsonPath);
+        
+        // Generate PDF using the existing generator
+        try {
+          const { generateIntakePdf } = require('./pdf-generator');
+          const pdfBuffer = await generateIntakePdf(data, agent);
+          
+          res.setHeader('Content-Type', 'application/pdf');
+          res.setHeader('Content-Disposition', `attachment; filename="Signed_Intake_Documents_${agent.id}.pdf"`);
+          return res.send(pdfBuffer);
+        } catch (e) {
+          console.error('Failed to generate intake PDF:', e);
+          return res.status(500).send('Failed to generate PDF');
+        }
+      }
+    }
+    
+    return res.status(404).send('Intake documents not found');
+  } catch (e) {
+    console.error('intake pdf error', e);
+    return res.status(500).send('Error generating intake PDF');
+  }
+});
+
 // Per-document downloads
 // Generate W-9 PDF from e-sign JSON if available; otherwise return uploaded file if present
 app.get('/api/agents/:id/documents/w9.pdf', async (req, res) => {

@@ -11,7 +11,7 @@
 
     async function loadAgents() {
       if (!tableBody) return;
-      tableBody.innerHTML = '<tr><td colspan="4" class="help">Loading...</td></tr>';
+      tableBody.innerHTML = '<tr><td colspan="5" class="help">Loading...</td></tr>';
 
       try {
         const res = await fetch('/api/admin/agents');
@@ -19,9 +19,21 @@
         if (!res.ok || data.ok === false) throw new Error(data.error || 'Failed');
 
         allAgents = data.agents || [];
+        
+        // Load documents for each agent
+        for (let agent of allAgents) {
+          try {
+            const docsRes = await fetch(`/api/admin/agents/${agent.id}/documents/list`);
+            const docsData = await docsRes.json();
+            agent.documents = docsData.files || [];
+          } catch (e) {
+            agent.documents = [];
+          }
+        }
+        
         renderAgents();
       } catch (e) {
-        tableBody.innerHTML = '<tr><td colspan="4" class="help">Failed to load agents.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="5" class="help">Failed to load agents.</td></tr>';
       }
     }
 
@@ -42,16 +54,39 @@
 
       tableBody.innerHTML = '';
       if (!filteredAgents.length) {
-        tableBody.innerHTML = '<tr><td colspan="4" class="help">No agents match the current filters.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="5" class="help">No agents match the current filters.</td></tr>';
         return;
       }
 
       filteredAgents.forEach(agent => {
         const tr = document.createElement('tr');
+        
+        // Create documents HTML with direct download links
+        let documentsHtml = '<div class="documents-list">';
+        if (agent.documents && agent.documents.length > 0) {
+          agent.documents.forEach(doc => {
+            const isPdf = doc.toLowerCase().includes('.pdf');
+            const icon = isPdf ? '📄' : '📎';
+            documentsHtml += `
+              <div class="document-item">
+                <a href="/api/admin/agents/${encodeURIComponent(agent.id)}/documents/download/${encodeURIComponent(doc)}" 
+                   class="document-link" 
+                   title="Download ${doc}">
+                  ${icon} ${doc}
+                </a>
+              </div>
+            `;
+          });
+        } else {
+          documentsHtml += '<span class="help">No documents</span>';
+        }
+        documentsHtml += '</div>';
+        
         tr.innerHTML = `
           <td>${agent.profile?.firstName || ''} ${agent.profile?.lastName || ''}</td>
           <td>${agent.profile?.email || ''}</td>
           <td><span class="status-badge ${agent.progress?.bankingSubmitted ? 'status-complete' : 'status-pending'}">${agent.progress?.bankingSubmitted ? 'Complete' : 'Pending'}</span></td>
+          <td class="documents-cell">${documentsHtml}</td>
           <td>
             <button class="button primary" data-action="view" data-id="${agent.id}">View Details</button>
             <button class="button secondary" data-action="zip" data-id="${agent.id}">Download ZIP</button>

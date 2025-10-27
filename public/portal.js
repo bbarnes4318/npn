@@ -505,4 +505,94 @@ document.addEventListener('DOMContentLoaded', () => {
   setupW9SignaturePad();
   prePopulateFromMarketing();
   showStep(currentStep);
+  
+  // Document download functionality
+  let currentAgentId = null;
+  
+  // Get agent ID from URL or localStorage
+  function getAgentId() {
+    if (currentAgentId) return currentAgentId;
+    
+    // Try to get from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const agentId = urlParams.get('agentId');
+    if (agentId) {
+      currentAgentId = agentId;
+      return agentId;
+    }
+    
+    // Try to get from localStorage (if user came from marketing form)
+    const marketingData = localStorage.getItem('marketingFormData');
+    if (marketingData) {
+      try {
+        const data = JSON.parse(marketingData);
+        if (data.agentId) {
+          currentAgentId = data.agentId;
+          return data.agentId;
+        }
+      } catch (e) {
+        console.error('Error parsing marketing data:', e);
+      }
+    }
+    
+    return null;
+  }
+  
+  // Download intake documents
+  document.getElementById('downloadIntakeBtn')?.addEventListener('click', async () => {
+    const agentId = getAgentId();
+    if (!agentId) {
+      alert('Unable to find your agent ID. Please contact support.');
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/agents/${agentId}/documents/intake.pdf`);
+      if (!response.ok) {
+        throw new Error('Failed to download intake documents');
+      }
+      
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Signed_Intake_Documents_${agentId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(url);
+      a.remove();
+    } catch (error) {
+      console.error('Download error:', error);
+      alert('Failed to download intake documents. Please contact support.');
+    }
+  });
+  
+  // Download W-9 form
+  document.getElementById('downloadW9Btn')?.addEventListener('click', async () => {
+    const agentId = getAgentId();
+    if (!agentId) {
+      alert('Unable to find your agent ID. Please contact support.');
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/agents/${agentId}/documents/w9.pdf`);
+      if (!response.ok) {
+        throw new Error('Failed to download W-9 form');
+      }
+      
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Signed_W9_Form_${agentId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(url);
+      a.remove();
+    } catch (error) {
+      console.error('Download error:', error);
+      alert('Failed to download W-9 form. Please contact support.');
+    }
+  });
 });
