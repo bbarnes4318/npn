@@ -160,6 +160,10 @@ app.get('/api/admin/agents/:id/documents/list', requireAdmin, async (req, res) =
       return res.status(404).json({ ok: false, error: 'Not found' });
     }
     console.log('Admin: Agent found:', agent.id);
+    
+    // Ensure all PDFs are generated before listing
+    await ensurePdfsGenerated(agent);
+    
     const files = await gatherAgentDocuments(agent, { includeW9: true });
     console.log('Admin: Found files:', files.length);
     res.json({ ok: true, files: files.map(f => ({ name: f.name })) });
@@ -408,6 +412,109 @@ function requireAdmin(req, res, next) {
   return res.status(401).json({ ok: false, error: 'Unauthorized' });
 }
 
+// ------- PDF Generation Fallback -------
+async function ensurePdfsGenerated(agent) {
+  try {
+    const agentDir = path.join(AGENTS_DIR, agent.id);
+    await fse.ensureDir(agentDir);
+    
+    // Check and generate intake PDF if missing
+    if (agent.submissions?.intakeId && !agent.submissions?.intakePdfPath) {
+      console.log('⚠️ Intake PDF missing, attempting to generate...');
+      try {
+        const intakeJson = path.join(SUBMISSIONS_DIR, agent.submissions.intakeId, 'intake.json');
+        if (await fse.pathExists(intakeJson)) {
+          const submission = await fse.readJson(intakeJson);
+          const { generateIntakePdf } = require('./pdf-generator');
+          const pdfBuffer = await generateIntakePdf(submission, agent);
+          const outPath = path.join(agentDir, `SIGNED_INTAKE_DOCUMENTS_${Date.now()}.pdf`);
+          await fse.writeFile(outPath, pdfBuffer);
+          agent.submissions.intakePdfPath = outPath;
+          console.log('✅ Generated missing intake PDF:', outPath);
+        }
+      } catch (e) {
+        console.error('❌ Failed to generate missing intake PDF:', e);
+      }
+    }
+    
+    // Check and generate W-9 PDF if missing
+    if (agent.submissions?.w9Id && !agent.submissions?.w9PdfPath) {
+      console.log('⚠️ W-9 PDF missing, attempting to generate...');
+      try {
+        const w9Json = path.join(SUBMISSIONS_DIR, agent.submissions.w9Id, 'w9.json');
+        if (await fse.pathExists(w9Json)) {
+          const submission = await fse.readJson(w9Json);
+          const pdfBytes = await new Promise((resolve, reject) => {
+            const chunks = [];
+            const doc = new PDFDocument({ margin: 50, size: 'LETTER' });
+            doc.on('data', chunks.push.bind(chunks));
+            doc.on('end', () => resolve(Buffer.concat(chunks)));
+            doc.on('error', reject);
+            
+            // Generate W-9 PDF content (simplified version)
+            doc.fontSize(20).text('FORM W-9', { align: 'center' });
+            doc.moveDown(1);
+            doc.fontSize(14).text('Request for Taxpayer Identification Number and Certification', { align: 'center' });
+            doc.moveDown(2);
+            doc.fontSize(16).text('PART I — TAXPAYER INFORMATION');
+            doc.moveDown(1);
+            doc.fontSize(14).text(`Name: ${submission.name || 'N/A'}`);
+            doc.fontSize(14).text(`Business Name: ${submission.businessName || 'N/A'}`);
+            doc.fontSize(14).text(`Tax Classification: ${submission.taxClassification || 'N/A'}`);
+            doc.moveDown(1);
+            doc.fontSize(14).text(`Address: ${submission.address?.address1 || 'N/A'}`);
+            doc.fontSize(14).text(`City: ${submission.address?.city || 'N/A'}`);
+            doc.fontSize(14).text(`State: ${submission.address?.state || 'N/A'}`);
+            doc.fontSize(14).text(`ZIP: ${submission.address?.zip || 'N/A'}`);
+            doc.moveDown(1);
+            doc.fontSize(14).text(`SSN: ${submission.tin?.ssn || 'N/A'}`);
+            doc.fontSize(14).text(`EIN: ${submission.tin?.ein || 'N/A'}`);
+            doc.moveDown(2);
+            doc.fontSize(16).text('SIGNATURE SECTION');
+            doc.moveDown(1);
+            doc.fontSize(14).text(`Digital Signature: ${submission.certification?.signature || 'NOT PROVIDED'}`);
+            doc.fontSize(14).text(`Signature Date: ${submission.certification?.signatureDate || 'NOT PROVIDED'}`);
+            doc.end();
+          });
+          
+          const outPath = path.join(agentDir, `SIGNED_W9_FORM_${Date.now()}.pdf`);
+          await fse.writeFile(outPath, pdfBytes);
+          agent.submissions.w9PdfPath = outPath;
+          console.log('✅ Generated missing W-9 PDF:', outPath);
+        }
+      } catch (e) {
+        console.error('❌ Failed to generate missing W-9 PDF:', e);
+      }
+    }
+    
+    // Check and generate banking PDF if missing
+    if (agent.submissions?.bankingId && !agent.submissions?.bankingPdfPath) {
+      console.log('⚠️ Banking PDF missing, attempting to generate...');
+      try {
+        const bankingJson = path.join(SUBMISSIONS_DIR, agent.submissions.bankingId, 'banking.json');
+        if (await fse.pathExists(bankingJson)) {
+          const submission = await fse.readJson(bankingJson);
+          const { generateBankingPdf } = require('./pdf-generator');
+          const pdfBuffer = await generateBankingPdf(submission);
+          const outPath = path.join(agentDir, `SIGNED_BANKING_FORM_${Date.now()}.pdf`);
+          await fse.writeFile(outPath, pdfBuffer);
+          agent.submissions.bankingPdfPath = outPath;
+          console.log('✅ Generated missing banking PDF:', outPath);
+        }
+      } catch (e) {
+        console.error('❌ Failed to generate missing banking PDF:', e);
+      }
+    }
+    
+    // Save agent if any PDFs were generated
+    if (agent.submissions?.intakePdfPath || agent.submissions?.w9PdfPath || agent.submissions?.bankingPdfPath) {
+      await writeAgent(agent);
+    }
+  } catch (e) {
+    console.error('Error in ensurePdfsGenerated:', e);
+  }
+}
+
 // ------- Document listing and ZIP download -------
 async function gatherAgentDocuments(agent, { includeW9 = true } = {}) {
   const files = [];
@@ -438,6 +545,12 @@ async function gatherAgentDocuments(agent, { includeW9 = true } = {}) {
       const packetJson = path.join(SUBMISSIONS_DIR, packetId, 'packet.json');
       if (await fse.pathExists(packetJson)) files.push({ path: packetJson, name: `Packet_${packetId}.json` });
     }
+    // Banking submission JSON
+    const bankingId = agent.submissions?.bankingId;
+    if (bankingId) {
+      const bankingJson = path.join(SUBMISSIONS_DIR, bankingId, 'banking.json');
+      if (await fse.pathExists(bankingJson)) files.push({ path: bankingJson, name: `Banking_${bankingId}.json` });
+    }
     // Dashboard/Intake PDF
     if (agent.submissions?.dashboardPdfPath && await fse.pathExists(agent.submissions.dashboardPdfPath)) {
       files.push({ path: agent.submissions.dashboardPdfPath, name: path.basename(agent.submissions.dashboardPdfPath) });
@@ -445,6 +558,10 @@ async function gatherAgentDocuments(agent, { includeW9 = true } = {}) {
     // Signed Intake Documents PDF
     if (agent.submissions?.intakePdfPath && await fse.pathExists(agent.submissions.intakePdfPath)) {
       files.push({ path: agent.submissions.intakePdfPath, name: path.basename(agent.submissions.intakePdfPath) });
+    }
+    // Signed Banking Documents PDF
+    if (agent.submissions?.bankingPdfPath && await fse.pathExists(agent.submissions.bankingPdfPath)) {
+      files.push({ path: agent.submissions.bankingPdfPath, name: path.basename(agent.submissions.bankingPdfPath) });
     }
     // W-9 e-sign JSON
     if (includeW9) {
@@ -1124,6 +1241,7 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
       
       // Generate comprehensive signed documents PDF
       try {
+        console.log('Generating intake PDF for agent:', agent.id);
         const { generateIntakePdf } = require('./pdf-generator');
         const pdfBuffer = await generateIntakePdf(submission, agent);
         const agentDir = path.join(AGENTS_DIR, agent.id);
@@ -1131,9 +1249,10 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
         const outPath = path.join(agentDir, `SIGNED_INTAKE_DOCUMENTS_${Date.now()}.pdf`);
         await fse.writeFile(outPath, pdfBuffer);
         agent.submissions.intakePdfPath = outPath;
-        console.log('Signed intake documents PDF saved to:', outPath);
+        console.log('✅ Signed intake documents PDF saved to:', outPath);
       } catch (e) {
-        console.error('Failed to generate intake PDF:', e);
+        console.error('❌ Failed to generate intake PDF:', e);
+        // Don't fail the entire submission if PDF generation fails
       }
       
       await writeAgent(agent);
@@ -1191,11 +1310,11 @@ app.post('/api/w9', async (req, res) => {
         
         // Generate official W-9 PDF
         try {
-          console.log('Generating official W-9 PDF for agent:', agent.id);
+          console.log('Generating W-9 PDF for agent:', agent.id);
           const agentDir = path.join(AGENTS_DIR, agent.id);
           await fse.ensureDir(agentDir);
           const outPath = path.join(agentDir, `SIGNED_W9_FORM_${Date.now()}.pdf`);
-          console.log('Signed W-9 PDF will be saved to:', outPath);
+          console.log('W-9 PDF will be saved to:', outPath);
           
           // Create official W-9 PDF
           console.log('W9 PDF Data:', JSON.stringify(submission, null, 2));
@@ -1321,9 +1440,10 @@ app.post('/api/w9', async (req, res) => {
           
           await fse.writeFile(outPath, pdfBytes);
           agent.submissions.w9PdfPath = outPath;
-          console.log('Signed W-9 PDF saved successfully to:', outPath);
+          console.log('✅ Signed W-9 PDF saved successfully to:', outPath);
         } catch (e) {
-          console.error('Failed to generate W-9 PDF:', e);
+          console.error('❌ Failed to generate W-9 PDF:', e);
+          // Don't fail the entire submission if PDF generation fails
         }
         
         await writeAgent(agent);
@@ -1417,6 +1537,7 @@ app.post('/api/banking', async (req, res) => {
 
         // Generate and save banking PDF
         try {
+          console.log('Generating banking PDF for agent:', agent.id);
           const { generateBankingPdf } = require('./pdf-generator');
           const pdfBuffer = await generateBankingPdf(submission);
           const agentDir = path.join(AGENTS_DIR, agent.id);
@@ -1424,9 +1545,10 @@ app.post('/api/banking', async (req, res) => {
           const pdfPath = path.join(agentDir, `SIGNED_BANKING_FORM_${Date.now()}.pdf`);
           await fse.writeFile(pdfPath, pdfBuffer);
           agent.submissions.bankingPdfPath = pdfPath;
-          console.log('Signed banking PDF saved to:', pdfPath);
+          console.log('✅ Signed banking PDF saved to:', pdfPath);
         } catch (e) {
-          console.error('Failed to generate banking PDF:', e);
+          console.error('❌ Failed to generate banking PDF:', e);
+          // Don't fail the entire submission if PDF generation fails
         }
 
         await writeAgent(agent);

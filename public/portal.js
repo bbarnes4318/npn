@@ -77,11 +77,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const intakeForm = document.getElementById('intakeForm');
     if (!intakeForm) return false;
 
+    // Check form validity before submitting
+    if (!intakeForm.checkValidity()) {
+      showMessage('Please complete all required fields.', 'error');
+      intakeForm.reportValidity();
+      return false;
+    }
+
+    // Check if licensed states are selected
+    const licensedStatesList = document.getElementById('licensed-states');
+    if (licensedStatesList) {
+      const licensedStates = Array.from(licensedStatesList.querySelectorAll('li')).map(li => li.dataset.value);
+      if (licensedStates.length === 0) {
+        showMessage('Please select at least one licensed state.', 'error');
+        return false;
+      }
+    }
+
     const fd = new FormData(intakeForm);
     const agentId = getAgentId();
     if (agentId) fd.append('agentId', agentId);
 
-    const licensedStatesList = document.getElementById('licensed-states');
     if (licensedStatesList) {
       const licensedStates = Array.from(licensedStatesList.querySelectorAll('li')).map(li => li.dataset.value);
       fd.delete('statesLicensed');
