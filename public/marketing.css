@@ -335,83 +335,30 @@ p {
 }
 
 .earnings-card {
-  background: linear-gradient(135deg, white 0%, #f8fffe 100%);
-  border-radius: 24px;
-  padding: 2.5rem;
-  box-shadow: 0 20px 40px rgba(0, 176, 79, 0.15), 0 8px 16px rgba(0, 0, 0, 0.1);
-  border: 2px solid rgba(0, 176, 79, 0.1);
-  max-width: 450px;
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(0, 176, 79, 0.1);
+  max-width: 400px;
   width: 100%;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.earnings-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 32px 64px rgba(0, 176, 79, 0.2), 0 16px 32px rgba(0, 0, 0, 0.15);
-}
-
-.earnings-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--brand-primary) 0%, #00D966 100%);
-}
-
-.earnings-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.earnings-icon {
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(135deg, var(--brand-primary) 0%, #00D966 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 1rem;
-  color: white;
-  box-shadow: 0 8px 16px rgba(0, 176, 79, 0.3);
 }
 
 .earnings-title {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.25rem;
+  font-weight: 600;
   color: var(--brand-dark);
-  margin-bottom: 0.5rem;
-}
-
-.earnings-subtitle {
-  font-size: 0.95rem;
-  color: var(--brand-text-light);
-  font-weight: 500;
-  margin: 0;
+  margin-bottom: 1rem;
+  text-align: center;
 }
 
 .earnings-chart {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  gap: 1rem;
 }
 
 .earnings-bar {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: rgba(0, 176, 79, 0.02);
-  border-radius: 12px;
-  border: 1px solid rgba(0, 176, 79, 0.1);
-}
-
-.earnings-bar-content {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -420,113 +367,34 @@ p {
 .earnings-label {
   font-size: 0.875rem;
   color: var(--brand-text-light);
-  min-width: 60px;
-  font-weight: 600;
+  min-width: 80px;
 }
 
 .earnings-progress {
   flex: 1;
-  height: 12px;
-  background: rgba(0, 176, 79, 0.1);
-  border-radius: 6px;
+  height: 8px;
+  background: var(--brand-muted);
+  border-radius: 4px;
   overflow: hidden;
-  position: relative;
-}
-
-.earnings-progress::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(90deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(255,255,255,0.2) 100%);
-  animation: shimmer 2s infinite;
-}
-
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
 }
 
 .earnings-fill {
   height: 100%;
   background: linear-gradient(90deg, var(--brand-primary) 0%, #00D966 100%);
-  border-radius: 6px;
+  border-radius: 4px;
   transition: width 2s ease;
-  position: relative;
-  box-shadow: 0 2px 8px rgba(0, 176, 79, 0.3);
 }
 
 .earnings-amount {
-  font-weight: 700;
+  font-weight: 600;
   color: var(--brand-primary);
-  min-width: 80px;
+  min-width: 60px;
   text-align: right;
-  font-size: 1rem;
-}
-
-.earnings-growth {
-  font-size: 0.75rem;
-  color: #059669;
-  font-weight: 600;
-  background: rgba(5, 150, 105, 0.1);
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  text-align: center;
-}
-
-.earnings-summary {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: rgba(0, 176, 79, 0.05);
-  border-radius: 12px;
-  border: 1px solid rgba(0, 176, 79, 0.1);
-}
-
-.summary-item {
-  text-align: center;
-}
-
-.summary-label {
-  display: block;
-  font-size: 0.75rem;
-  color: var(--brand-text-light);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 0.5rem;
-}
-
-.summary-value {
-  display: block;
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--brand-primary);
 }
 
 .earnings-cta {
+  margin-top: 1.5rem;
   text-align: center;
-}
-
-.earnings-cta .cta-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1rem 2rem;
-  font-size: 1rem;
-  font-weight: 600;
-  background: linear-gradient(135deg, var(--brand-primary) 0%, #00D966 100%);
-  box-shadow: 0 8px 16px rgba(0, 176, 79, 0.3);
-  transition: all 0.3s ease;
-}
-
-.earnings-cta .cta-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(0, 176, 79, 0.4);
 }
 
 @media (max-width: 768px) {
