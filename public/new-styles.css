@@ -29,7 +29,20 @@ body {
   background-color: var(--background-color);
   color: var(--dark-color);
   margin: 0;
+  padding: 0;
   line-height: 1.6;
+}
+
+/* Ensure main content starts at the very top */
+main.section {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+/* Ensure the page starts at the top */
+html {
+  margin: 0;
+  padding: 0;
 }
 
 .container {
@@ -42,6 +55,9 @@ body {
   background-color: var(--white-color);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 1rem 0;
+  margin: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .header-inner {

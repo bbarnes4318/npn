@@ -548,6 +548,9 @@ document.addEventListener('DOMContentLoaded', () => {
   prePopulateFromMarketing();
   showStep(currentStep);
   
+  // Ensure page loads at the very top
+  window.scrollTo(0, 0);
+  
   // Document download functionality
   // Get agent ID from URL or localStorage
   function getAgentIdForDownloads() {
