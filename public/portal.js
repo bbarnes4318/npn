@@ -111,6 +111,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!res.ok || !data.ok) throw new Error(data.error || 'Failed to submit intake');
       if (data.agent && data.agent.id) {
         localStorage.setItem('agentId', data.agent.id);
+        console.log('Stored agent ID from intake response:', data.agent.id);
+      } else if (data.id) {
+        // Fallback: if agent ID is in the response data
+        localStorage.setItem('agentId', data.id);
+        console.log('Stored agent ID from intake response (fallback):', data.id);
       }
       return true;
     } catch (err) {
@@ -153,6 +158,13 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Failed to submit W-9');
+      
+      // Store agent ID if we have one
+      if (agentId) {
+        localStorage.setItem('agentId', agentId);
+        console.log('Stored agent ID in localStorage:', agentId);
+      }
+      
       return true;
     } catch (err) {
       showMessage(err.message, 'error');
@@ -198,6 +210,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const result = await res.json();
       console.log('Response data:', result);
       if (!res.ok || !result.ok) throw new Error(result.error || 'Failed to save banking information');
+      
+      // Store agent ID if we have one
+      if (agentId) {
+        localStorage.setItem('agentId', agentId);
+        console.log('Stored agent ID in localStorage:', agentId);
+      }
+      
       return true;
     } catch (err) {
       console.error('Banking submit error:', err);
@@ -532,15 +551,39 @@ document.addEventListener('DOMContentLoaded', () => {
   // Document download functionality
   // Get agent ID from URL or localStorage
   function getAgentIdForDownloads() {
+    console.log('Getting agent ID for downloads...');
+    
     // Try to get from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
-    const agentId = urlParams.get('agentId');
-    if (agentId) {
-      return agentId;
+    const agentIdFromUrl = urlParams.get('agentId');
+    if (agentIdFromUrl) {
+      console.log('Found agent ID in URL:', agentIdFromUrl);
+      return agentIdFromUrl;
     }
     
     // Try to get from localStorage
-    return localStorage.getItem('agentId');
+    const agentIdFromStorage = localStorage.getItem('agentId');
+    if (agentIdFromStorage) {
+      console.log('Found agent ID in localStorage:', agentIdFromStorage);
+      return agentIdFromStorage;
+    }
+    
+    // Try to get from marketing form data
+    const marketingData = localStorage.getItem('marketingFormData');
+    if (marketingData) {
+      try {
+        const data = JSON.parse(marketingData);
+        if (data.agentId) {
+          console.log('Found agent ID in marketing data:', data.agentId);
+          return data.agentId;
+        }
+      } catch (e) {
+        console.error('Error parsing marketing data:', e);
+      }
+    }
+    
+    console.log('No agent ID found in URL, localStorage, or marketing data');
+    return null;
   }
   
   // Download intake documents
