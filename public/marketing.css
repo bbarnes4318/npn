@@ -1443,14 +1443,154 @@ p {
     gap: 0.75rem;
   }
   
-  .checkbox-option {
-    padding: 0.5rem;
+  .legal-content {
+    padding: 2rem;
+    margin: 1rem;
+  }
+  
+  .legal-header h1 {
+    font-size: 2rem;
+  }
+  
+  .legal-section h2 {
+    font-size: 1.25rem;
+  }
+  
+  .legal-section h3 {
+    font-size: 1.125rem;
   }
 }
 
-/* Utility Classes */
-.text-center {
+/* Legal Pages Styles */
+.legal-page {
+  padding: 2rem 0 4rem;
+  background: #FAFBFC;
+  min-height: 100vh;
+}
+
+.legal-content {
+  max-width: 800px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 16px;
+  padding: 3rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(0, 176, 79, 0.1);
+}
+
+.legal-header {
   text-align: center;
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 2px solid var(--brand-primary);
+}
+
+.legal-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--brand-dark);
+  margin-bottom: 1rem;
+}
+
+.legal-subtitle {
+  font-size: 1rem;
+  color: var(--brand-text-light);
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+}
+
+.legal-intro {
+  font-size: 1.125rem;
+  color: var(--brand-text);
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.legal-section {
+  margin-bottom: 2.5rem;
+}
+
+.legal-section h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--brand-dark);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #E9ECEF;
+}
+
+.legal-section h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--brand-dark);
+  margin: 1.5rem 0 0.75rem;
+}
+
+.legal-section p {
+  font-size: 1rem;
+  color: var(--brand-text);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.legal-section ul {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.legal-section li {
+  font-size: 1rem;
+  color: var(--brand-text);
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+}
+
+.legal-section strong {
+  color: var(--brand-dark);
+  font-weight: 600;
+}
+
+.contact-info {
+  background: rgba(0, 176, 79, 0.05);
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 176, 79, 0.1);
+  margin-top: 1rem;
+}
+
+.contact-info p {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.contact-info a {
+  color: var(--brand-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.contact-info a:hover {
+  text-decoration: underline;
+}
+
+.legal-footer {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid #E9ECEF;
+  text-align: center;
+}
+
+.legal-footer p {
+  font-size: 0.875rem;
+  color: var(--brand-text-light);
+  font-style: italic;
+}
+
+/* Footer Logo */
+.footer-logo {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 1rem;
 }
 
 .text-primary {
