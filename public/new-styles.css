@@ -76,6 +76,135 @@ body {
   margin: -8px;
 }
 
+/* Completion Page Styling */
+.completion-container {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 0;
+}
+
+.completion-icon {
+  margin-bottom: 2rem;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+.completion-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--success-color);
+  margin-bottom: 1.5rem;
+  font-family: var(--heading-font);
+}
+
+.completion-message {
+  margin-bottom: 3rem;
+}
+
+.completion-text {
+  font-size: 1.1rem;
+  color: var(--grey-color);
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.completion-actions h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--dark-color);
+  margin-bottom: 2rem;
+  font-family: var(--heading-font);
+}
+
+.action-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.action-card {
+  background: var(--white-color);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.action-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-color);
+}
+
+.action-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.action-content h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--dark-color);
+  margin-bottom: 0.75rem;
+  font-family: var(--heading-font);
+}
+
+.action-content p {
+  color: var(--grey-color);
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.action-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  width: 100%;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.action-button:hover {
+  transform: translateY(-1px);
+}
+
+.contact-info {
+  background: var(--neutral-color);
+  padding: 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.completion-footer {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 2rem;
+  margin-top: 2rem;
+}
+
+.footer-text {
+  font-size: 1rem;
+  color: var(--grey-color);
+  font-style: italic;
+}
+
 .field.inline {
   display: flex;
   gap: 1.5rem;
