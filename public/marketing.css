@@ -433,6 +433,40 @@ p {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
+  
+  .call-system-card {
+    padding: 2rem;
+    max-width: 100%;
+  }
+  
+  .call-steps {
+    gap: 1rem;
+  }
+  
+  .call-step {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+  
+  .step-arrow {
+    transform: rotate(90deg);
+  }
+  
+  .call-guarantee {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .stats-section .stat-number {
+    font-size: 2.5rem;
+  }
 }
 
 /* Section Styles */
@@ -1037,40 +1071,167 @@ p {
   font-weight: 500;
 }
 
-.call-flow-interactive {
-  background: linear-gradient(135deg, white 0%, #f8fffe 100%);
-  border-radius: 24px;
+.call-system-card {
+  background: white;
+  border-radius: 20px;
   padding: 2.5rem;
-  box-shadow: 0 20px 40px rgba(0, 176, 79, 0.15), 0 8px 16px rgba(0, 0, 0, 0.1);
-  border: 2px solid rgba(0, 176, 79, 0.1);
-  max-width: 600px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(0, 176, 79, 0.1);
+  max-width: 500px;
   width: 100%;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
 }
 
-.call-flow-interactive::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--brand-primary) 0%, #00D966 100%);
+.call-system-header {
+  text-align: center;
+  margin-bottom: 2rem;
 }
 
-.call-flow-interactive:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 32px 64px rgba(0, 176, 79, 0.2), 0 16px 32px rgba(0, 0, 0, 0.15);
-}
-
-.call-flow-interactive h3 {
+.call-system-header h3 {
   font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--brand-dark);
+  margin-bottom: 0.5rem;
+}
+
+.call-system-header p {
+  font-size: 1rem;
+  color: var(--brand-text-light);
+  margin: 0;
+}
+
+.call-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.call-step {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(0, 176, 79, 0.02);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 176, 79, 0.1);
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  background: var(--brand-primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.125rem;
+  flex-shrink: 0;
+}
+
+.step-content h4 {
+  font-size: 1rem;
   font-weight: 600;
   color: var(--brand-dark);
-  margin-bottom: 2rem;
+  margin-bottom: 0.25rem;
+}
+
+.step-content p {
+  font-size: 0.875rem;
+  color: var(--brand-text-light);
+  margin: 0;
+}
+
+.step-arrow {
+  display: flex;
+  justify-content: center;
+  color: var(--brand-primary);
+  margin: 0.5rem 0;
+}
+
+.call-guarantee {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: rgba(0, 176, 79, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 176, 79, 0.1);
+}
+
+.guarantee-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--brand-primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.guarantee-text h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--brand-dark);
+  margin-bottom: 0.25rem;
+}
+
+.guarantee-text p {
+  font-size: 0.875rem;
+  color: var(--brand-text-light);
+  margin: 0;
+}
+
+/* Stats Section */
+.stats-section {
+  background: var(--brand-muted);
+  padding: 3rem 0;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+.stats-section .stat-card {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
   text-align: center;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(0, 176, 79, 0.1);
+  transition: var(--transition-normal);
+}
+
+.stats-section .stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.stats-section .stat-number {
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--brand-primary);
+  display: block;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.stats-section .stat-label {
+  font-size: 1rem;
+  color: var(--brand-dark);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.stats-section .stat-description {
+  font-size: 0.875rem;
+  color: var(--brand-text-light);
+  font-weight: 500;
 }
 
 .flow-container {
