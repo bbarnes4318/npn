@@ -7,6 +7,52 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
   let currentStep = 0;
 
+  // Pre-populate form with marketing data
+  function prePopulateFromMarketing() {
+    const marketingData = localStorage.getItem('marketingFormData');
+    if (marketingData) {
+      try {
+        const data = JSON.parse(marketingData);
+        const intakeForm = document.getElementById('intakeForm');
+        
+        if (intakeForm && data) {
+          // Pre-populate basic fields if available
+          if (data.fullName) {
+            const nameParts = data.fullName.split(' ');
+            const firstNameField = intakeForm.querySelector('input[name="firstName"]');
+            const lastNameField = intakeForm.querySelector('input[name="lastName"]');
+            
+            if (firstNameField && nameParts[0]) {
+              firstNameField.value = nameParts[0];
+            }
+            if (lastNameField && nameParts.length > 1) {
+              lastNameField.value = nameParts.slice(1).join(' ');
+            }
+          }
+          
+          if (data.email) {
+            const emailField = intakeForm.querySelector('input[name="email"]');
+            if (emailField) {
+              emailField.value = data.email;
+            }
+          }
+          
+          if (data.state) {
+            const stateField = intakeForm.querySelector('select[name="state"]');
+            if (stateField) {
+              stateField.value = data.state;
+            }
+          }
+          
+          // Clear the marketing data after using it
+          localStorage.removeItem('marketingFormData');
+        }
+      } catch (error) {
+        console.error('Error parsing marketing form data:', error);
+      }
+    }
+  }
+
   const formStepContainer = document.getElementById('form-step-container');
   const prevBtn = document.getElementById('prev-btn');
   const nextBtn = document.getElementById('next-btn');
@@ -457,5 +503,6 @@ document.addEventListener('DOMContentLoaded', () => {
   setupDualListBox();
   setupFileUpload();
   setupW9SignaturePad();
+  prePopulateFromMarketing();
   showStep(currentStep);
 });
