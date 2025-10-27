@@ -4,7 +4,7 @@
     const searchInput = document.getElementById('search');
     const statusFilter = document.getElementById('status-filter');
     const modal = document.getElementById('agent-modal');
-    const modalContent = document.getElementById('modal-content');
+    const modalContent = document.getElementById('modal-content-body');
     const closeModal = document.getElementById('modal-close');
 
     let allAgents = [];
@@ -23,10 +23,13 @@
         // Load documents for each agent
         for (let agent of allAgents) {
           try {
+            console.log('Loading documents for agent:', agent.id);
             const docsRes = await fetch(`/api/admin/agents/${agent.id}/documents/list`);
             const docsData = await docsRes.json();
             agent.documents = docsData.files || [];
+            console.log('Found documents for agent', agent.id, ':', agent.documents);
           } catch (e) {
+            console.error('Error loading documents for agent', agent.id, ':', e);
             agent.documents = [];
           }
         }
@@ -97,20 +100,32 @@
     }
 
     async function openDetailsModal(agentId) {
+      console.log('Opening details modal for agent:', agentId);
       const agent = allAgents.find(a => a.id === agentId);
-      if (!agent) return;
+      if (!agent) {
+        console.log('Agent not found:', agentId);
+        return;
+      }
+
+      console.log('Agent data:', agent);
 
       let documentsHtml = '<h4>No documents available.</h4>';
       if (agent.documents && agent.documents.length > 0) {
         documentsHtml = '<ul>' + agent.documents.map(doc => `
-          <li><a href="/api/admin/agents/${encodeURIComponent(agentId)}/documents/${encodeURIComponent(doc)}" target="_blank">${doc}</a></li>
+          <li><a href="/api/admin/agents/${encodeURIComponent(agentId)}/documents/download/${encodeURIComponent(doc)}" target="_blank">${doc}</a></li>
         `).join('') + '</ul>';
       }
 
+      if (!modalContent) {
+        console.error('Modal content element not found');
+        return;
+      }
+
       modalContent.innerHTML = `
-        <h2>${agent.profile.firstName} ${agent.profile.lastName}</h2>
-        <p><strong>Email:</strong> ${agent.profile.email}</p>
-        <p><strong>NPN:</strong> ${agent.profile.npn}</p>
+        <h2>${agent.profile?.firstName || 'N/A'} ${agent.profile?.lastName || 'N/A'}</h2>
+        <p><strong>Email:</strong> ${agent.profile?.email || 'N/A'}</p>
+        <p><strong>NPN:</strong> ${agent.profile?.npn || 'N/A'}</p>
+        <p><strong>Agent ID:</strong> ${agent.id}</p>
         <hr>
         <h3>Generated Documents</h3>
         ${documentsHtml}

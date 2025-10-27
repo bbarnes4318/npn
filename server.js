@@ -1340,100 +1340,189 @@ app.post('/api/w9', async (req, res) => {
               reject(err);
             });
             
-            // W-9 Header
-            doc.fontSize(20).text('FORM W-9', { align: 'center' });
-            doc.moveDown(1);
-            doc.fontSize(14).text('Request for Taxpayer Identification Number and Certification', { align: 'center' });
-            doc.moveDown(2);
+            // Official W-9 Form Layout - Looks like real IRS form
+            const pageWidth = doc.page.width;
+            const pageHeight = doc.page.height;
+            const margin = 36; // Standard 0.5 inch margins
+            const contentWidth = pageWidth - (margin * 2);
             
-            // Part I - Taxpayer Information
-            doc.fontSize(16).text('PART I — TAXPAYER INFORMATION');
-            doc.moveDown(1);
+            // Header - IRS Logo Area (simulated)
+            doc.rect(margin, margin, contentWidth, 40)
+               .stroke('#000000');
             
-            // Name
-            doc.fontSize(12).text('1 Name (as shown on your income tax return):');
-            doc.moveDown(0.5);
-            doc.fontSize(14).text(submission.name || '_________________________________');
-            doc.moveDown(1);
+            doc.fontSize(16).font('Helvetica-Bold')
+               .text('Department of the Treasury', margin + 10, margin + 10)
+               .text('Internal Revenue Service', margin + 10, margin + 25);
             
-            // Business Name
-            doc.fontSize(12).text('2 Business name/disregarded entity name, if different from above:');
-            doc.moveDown(0.5);
-            doc.fontSize(14).text(submission.businessName || '_________________________________');
-            doc.moveDown(1);
+            doc.fontSize(20).font('Helvetica-Bold')
+               .text('Request for Taxpayer', pageWidth - 200, margin + 10)
+               .text('Identification Number', pageWidth - 200, margin + 25)
+               .text('and Certification', pageWidth - 200, margin + 40);
             
-            // Tax Classification
-            doc.fontSize(12).text('3 Check appropriate box for federal tax classification:');
-            doc.moveDown(0.5);
+            // Form Title
+            doc.fontSize(24).font('Helvetica-Bold')
+               .text('Form W-9', margin, margin + 60, { align: 'center' });
             
-            const classifications = [
-              { key: 'individual', text: 'Individual/sole proprietor or single-member LLC' },
-              { key: 'c_corporation', text: 'C Corporation' },
-              { key: 's_corporation', text: 'S Corporation' },
-              { key: 'partnership', text: 'Partnership' },
-              { key: 'trust', text: 'Trust/estate' },
-              { key: 'llc', text: 'LLC' },
-              { key: 'other', text: 'Other' }
-            ];
+            doc.fontSize(12).font('Helvetica')
+               .text('(Rev. December 2023)', margin, margin + 85, { align: 'center' });
             
-            classifications.forEach((cls, i) => {
-              const isChecked = submission.taxClassification === cls.key;
-              doc.text(`${isChecked ? '☑' : '☐'} ${cls.text}`);
-            });
+            // Part I - Taxpayer Identification Number (TIN)
+            doc.fontSize(14).font('Helvetica-Bold')
+               .text('Part I', margin, margin + 110)
+               .text('Taxpayer Identification Number (TIN)', margin + 50, margin + 110);
             
-            if (submission.taxClassification === 'llc' && submission.llcClassification) {
-              doc.moveDown(0.5);
-              doc.text(`LLC Classification: ${submission.llcClassification}`);
+            // TIN Section
+            doc.rect(margin, margin + 130, contentWidth, 60)
+               .stroke('#000000');
+            
+            doc.fontSize(12).font('Helvetica-Bold')
+               .text('Enter your TIN in the appropriate box. The TIN provided must match the name given on Line 1 to avoid', margin + 5, margin + 135)
+               .text('backup withholding. For individuals, this is your social security number (SSN). However, for a resident alien,', margin + 5, margin + 150)
+               .text('sole proprietor, or disregarded entity, see the Part I instructions on page 3. For other entities, it is your employer', margin + 5, margin + 165)
+               .text('identification number (EIN). If you do not have a number, see How to get a TIN on page 3.', margin + 5, margin + 180);
+            
+            // TIN Input Boxes
+            const tinY = margin + 200;
+            doc.fontSize(12).font('Helvetica-Bold')
+               .text('Social Security Number', margin + 5, tinY);
+            
+            // SSN Boxes
+            const ssnValue = submission.tin?.ssn || '';
+            const ssnParts = ssnValue.match(/(\d{3})(\d{2})(\d{4})/) || ['', '', '', ''];
+            
+            for (let i = 0; i < 3; i++) {
+              const boxX = margin + 5 + (i * 35);
+              doc.rect(boxX, tinY + 15, 30, 20).stroke('#000000');
+              doc.fontSize(12).font('Helvetica')
+                 .text(ssnParts[i + 1] || '', boxX + 2, tinY + 20);
             }
             
-            doc.moveDown(1);
+            doc.fontSize(12).font('Helvetica-Bold')
+               .text('OR', margin + 120, tinY + 20);
             
-            // Address
-            doc.fontSize(12).text('4 Address (number, street, and apt. or suite no.):');
-            doc.moveDown(0.5);
-            doc.fontSize(14).text(submission.address?.address1 || '_________________________________');
-            doc.moveDown(0.5);
-            doc.fontSize(12).text('City, state, and ZIP code:');
-            doc.fontSize(14).text(`${submission.address?.city || ''}, ${submission.address?.state || ''} ${submission.address?.zip || ''}`);
-            doc.moveDown(2);
+            doc.fontSize(12).font('Helvetica-Bold')
+               .text('Employer Identification Number', margin + 150, tinY);
+            
+            // EIN Boxes
+            const einValue = submission.tin?.ein || '';
+            const einParts = einValue.match(/(\d{2})(\d{7})/) || ['', '', ''];
+            
+            for (let i = 0; i < 2; i++) {
+              const boxX = margin + 150 + (i * 35);
+              doc.rect(boxX, tinY + 15, 30, 20).stroke('#000000');
+              doc.fontSize(12).font('Helvetica')
+                 .text(einParts[i + 1] || '', boxX + 2, tinY + 20);
+            }
             
             // Part II - Certification
-            doc.fontSize(16).text('PART II — CERTIFICATION');
-            doc.moveDown(1);
+            doc.fontSize(14).font('Helvetica-Bold')
+               .text('Part II', margin, margin + 250)
+               .text('Certification', margin + 50, margin + 250);
             
-            // TIN
-            doc.fontSize(12).text('5 Requesting taxpayer\'s identification number (TIN):');
-            doc.moveDown(0.5);
-            
-            if (submission.tin?.ssn) {
-              doc.fontSize(14).text(`☑ SSN: ${submission.tin.ssn}`);
-            } else if (submission.tin?.ein) {
-              doc.fontSize(14).text(`☑ EIN: ${submission.tin.ein}`);
-            } else {
-              doc.text('☐ SSN: _________________  ☐ EIN: _________________');
-            }
-            
-            doc.moveDown(1);
-            
-            // Certification text
-            doc.fontSize(12).text('6 Under penalties of perjury, I certify that:');
-            doc.moveDown(0.5);
-            doc.text('1. The number shown on this form is my correct taxpayer identification number (or I am waiting for a number to be issued to me), and');
-            doc.text('2. I am not subject to backup withholding because: (a) I am exempt from backup withholding, or (b) I have not been notified by the Internal Revenue Service (IRS) that I am subject to backup withholding as a result of a failure to report all interest or dividends, or (c) the IRS has notified me that I are no longer subject to backup withholding, and');
-            doc.text('3. I am a U.S. person (including a U.S. resident alien), and');
-            doc.text('4. The FATCA code(s) entered on this form (if any) indicating that I am exempt from FATCA reporting is correct.');
-            doc.moveDown(2);
+            doc.fontSize(12).font('Helvetica')
+               .text('Under penalties of perjury, I certify that:', margin + 5, margin + 270)
+               .text('1. The number shown on this form is my correct taxpayer identification number (or I am waiting for a number to be issued to me), and', margin + 5, margin + 285)
+               .text('2. I am not subject to backup withholding because: (a) I am exempt from backup withholding, or (b) I have not been notified by the', margin + 5, margin + 300)
+               .text('Internal Revenue Service (IRS) that I am subject to backup withholding as a result of a failure to report all interest or dividends, or (c) the IRS', margin + 5, margin + 315)
+               .text('has notified me that I am no longer subject to backup withholding, and', margin + 5, margin + 330)
+               .text('3. I am a U.S. person (including a U.S. resident alien), and', margin + 5, margin + 345)
+               .text('4. The FATCA code(s) entered on this form (if any) indicating that I am exempt from FATCA reporting is correct.', margin + 5, margin + 360);
             
             // Signature Section
-            doc.fontSize(16).text('SIGNATURE SECTION');
-            doc.moveDown(1);
-            doc.fontSize(14).text(`Digital Signature: ${submission.certification?.signature || 'NOT PROVIDED'}`);
-            doc.fontSize(14).text(`Signature Date: ${submission.certification?.signatureDate || 'NOT PROVIDED'}`);
-            doc.moveDown(2);
+            doc.fontSize(14).font('Helvetica-Bold')
+               .text('Signature of U.S. person', margin + 5, margin + 390);
             
-            // Legal Notice
-            doc.fontSize(12).text('This document contains the signed W-9 form with digital signature as of the date of generation.');
-            doc.text('The digital signature is legally binding and represents the taxpayer\'s certification under penalties of perjury.');
+            doc.rect(margin + 5, margin + 410, 200, 30).stroke('#000000');
+            doc.fontSize(12).font('Helvetica')
+               .text(submission.certification?.signature || '', margin + 10, margin + 420);
+            
+            doc.fontSize(14).font('Helvetica-Bold')
+               .text('Date', margin + 220, margin + 390);
+            
+            doc.rect(margin + 220, margin + 410, 100, 30).stroke('#000000');
+            doc.fontSize(12).font('Helvetica')
+               .text(submission.certification?.signatureDate || '', margin + 225, margin + 420);
+            
+            // Part I - Name and Address
+            doc.fontSize(14).font('Helvetica-Bold')
+               .text('Part I', margin, margin + 460)
+               .text('Name and Address', margin + 50, margin + 460);
+            
+            // Name Line
+            doc.fontSize(12).font('Helvetica-Bold')
+               .text('Name (as shown on your income tax return)', margin + 5, margin + 480);
+            
+            doc.rect(margin + 5, margin + 495, contentWidth - 10, 25).stroke('#000000');
+            doc.fontSize(12).font('Helvetica')
+               .text(submission.name || '', margin + 10, margin + 500);
+            
+            // Business Name Line
+            doc.fontSize(12).font('Helvetica-Bold')
+               .text('Business name/disregarded entity name, if different from above', margin + 5, margin + 530);
+            
+            doc.rect(margin + 5, margin + 545, contentWidth - 10, 25).stroke('#000000');
+            doc.fontSize(12).font('Helvetica')
+               .text(submission.businessName || '', margin + 10, margin + 550);
+            
+            // Address Lines
+            doc.fontSize(12).font('Helvetica-Bold')
+               .text('Address (number, street, and apt. or suite no.)', margin + 5, margin + 580);
+            
+            doc.rect(margin + 5, margin + 595, contentWidth - 10, 25).stroke('#000000');
+            doc.fontSize(12).font('Helvetica')
+               .text(submission.address?.address1 || '', margin + 10, margin + 600);
+            
+            doc.fontSize(12).font('Helvetica-Bold')
+               .text('City, state, and ZIP code', margin + 5, margin + 630);
+            
+            doc.rect(margin + 5, margin + 645, contentWidth - 10, 25).stroke('#000000');
+            doc.fontSize(12).font('Helvetica')
+               .text(`${submission.address?.city || ''}, ${submission.address?.state || ''} ${submission.address?.zip || ''}`, margin + 10, margin + 650);
+            
+            // Tax Classification
+            doc.fontSize(14).font('Helvetica-Bold')
+               .text('Part I', margin, margin + 690)
+               .text('Tax Classification', margin + 50, margin + 690);
+            
+            doc.fontSize(12).font('Helvetica-Bold')
+               .text('Check the appropriate box for the federal tax classification of the person whose name is entered on Line 1:', margin + 5, margin + 710);
+            
+            const classifications = [
+              'Individual/sole proprietor or single-member LLC',
+              'C Corporation',
+              'S Corporation', 
+              'Partnership',
+              'Trust/estate',
+              'LLC',
+              'Other'
+            ];
+            
+            const selectedClassification = submission.taxClassification || '';
+            let yPos = margin + 730;
+            
+            classifications.forEach((classification, index) => {
+              const checkboxX = margin + 5;
+              const checkboxY = yPos;
+              
+              // Draw checkbox
+              doc.rect(checkboxX, checkboxY, 12, 12).stroke('#000000');
+              
+              // Check if this classification is selected
+              if (selectedClassification.toLowerCase().includes(classification.toLowerCase().split('/')[0])) {
+                doc.fontSize(10).font('Helvetica-Bold')
+                   .text('X', checkboxX + 2, checkboxY + 1);
+              }
+              
+              doc.fontSize(11).font('Helvetica')
+                 .text(classification, checkboxX + 20, checkboxY + 2);
+              
+              yPos += 18;
+            });
+            
+            // Footer
+            doc.fontSize(10).font('Helvetica')
+               .text('For Privacy Act and Paperwork Reduction Act Notice, see page 3.', margin, pageHeight - 30)
+               .text('Cat. No. 10231X', pageWidth - 100, pageHeight - 30);
             
             doc.end();
           });
