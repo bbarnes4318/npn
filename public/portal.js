@@ -369,17 +369,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileUploadPreview = document.getElementById('certProof-preview');
     const fileUploadText = document.querySelector('.file-upload-text');
 
+    if (!fileUploadInput) {
+      console.log('File upload input not found, skipping setup');
+      return;
+    }
+
     fileUploadInput.addEventListener('change', () => {
       const file = fileUploadInput.files[0];
       if (file) {
-        fileUploadText.textContent = file.name;
-        if (file.type.startsWith('image/')) {
+        if (fileUploadText) {
+          fileUploadText.textContent = file.name;
+        }
+        if (fileUploadPreview && file.type.startsWith('image/')) {
           const reader = new FileReader();
           reader.onload = (e) => {
             fileUploadPreview.innerHTML = `<img src="${e.target.result}" alt="Image preview" style="max-width: 100%; height: auto;" />`;
           };
           reader.readAsDataURL(file);
-        } else {
+        } else if (fileUploadPreview) {
           fileUploadPreview.innerHTML = '';
         }
       }
@@ -523,40 +530,22 @@ document.addEventListener('DOMContentLoaded', () => {
   showStep(currentStep);
   
   // Document download functionality
-  let currentAgentId = null;
-  
   // Get agent ID from URL or localStorage
-  function getAgentId() {
-    if (currentAgentId) return currentAgentId;
-    
+  function getAgentIdForDownloads() {
     // Try to get from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const agentId = urlParams.get('agentId');
     if (agentId) {
-      currentAgentId = agentId;
       return agentId;
     }
     
-    // Try to get from localStorage (if user came from marketing form)
-    const marketingData = localStorage.getItem('marketingFormData');
-    if (marketingData) {
-      try {
-        const data = JSON.parse(marketingData);
-        if (data.agentId) {
-          currentAgentId = data.agentId;
-          return data.agentId;
-        }
-      } catch (e) {
-        console.error('Error parsing marketing data:', e);
-      }
-    }
-    
-    return null;
+    // Try to get from localStorage
+    return localStorage.getItem('agentId');
   }
   
   // Download intake documents
   document.getElementById('downloadIntakeBtn')?.addEventListener('click', async () => {
-    const agentId = getAgentId();
+    const agentId = getAgentIdForDownloads();
     if (!agentId) {
       alert('Unable to find your agent ID. Please contact support.');
       return;
@@ -585,7 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Download W-9 form
   document.getElementById('downloadW9Btn')?.addEventListener('click', async () => {
-    const agentId = getAgentId();
+    const agentId = getAgentIdForDownloads();
     if (!agentId) {
       alert('Unable to find your agent ID. Please contact support.');
       return;
