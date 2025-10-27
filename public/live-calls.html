@@ -55,7 +55,7 @@
                 <div class="hero-text">
                     <div class="hero-badge">No-Risk Model</div>
                     <h1>Stop Buying Leads. Start Taking Qualified Calls.</h1>
-                    <p>ACA. Medicare. Final Expense. We send you live conversations with real shoppers who asked to speak to a licensed agent. If you don't sell it, you don't pay.</p>
+                    <p>ACA. Medicare. Final Expense. We send you live conversations with real shoppers who asked to speak to a licensed agent. Choose CPA (pay when you close) or Pay Per Call (immediate delivery) pricing.</p>
                     
                     <div class="hero-actions">
                         <a href="/portal.html" class="cta-button">Start Getting Calls</a>
@@ -423,6 +423,112 @@
         </div>
     </section>
 
+    <!-- Pricing Options -->
+    <section class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Choose Your Pricing Model</h2>
+                <p>Two ways to work with us - CPA (Cost Per Acquisition) or Pay Per Call. Pick what works for your business.</p>
+            </div>
+            
+            <div class="pricing-options">
+                <!-- CPA Option -->
+                <div class="pricing-card cpa-option">
+                    <div class="pricing-header">
+                        <h3>CPA Model</h3>
+                        <div class="pricing-badge">No-Risk</div>
+                        <p class="pricing-subtitle">You only pay when you close</p>
+                    </div>
+                    
+                    <div class="pricing-details">
+                        <div class="pricing-item">
+                            <div class="pricing-line">
+                                <span class="line-name">Final Expense</span>
+                                <span class="line-price">32.5% of annual premium</span>
+                            </div>
+                            <p class="line-description">If customer doesn't get approved and make first payment, we replace the policy</p>
+                        </div>
+                        
+                        <div class="pricing-item">
+                            <div class="pricing-line">
+                                <span class="line-name">ACA</span>
+                                <span class="line-price">$80</span>
+                            </div>
+                            <p class="line-description">If customer doesn't get approved and make first payment, we replace the policy</p>
+                        </div>
+                        
+                        <div class="pricing-item">
+                            <div class="pricing-line">
+                                <span class="line-name">Medicare</span>
+                                <span class="line-price">$180</span>
+                            </div>
+                            <p class="line-description">If customer's policy doesn't get paid to agency, we replace the policy</p>
+                        </div>
+                    </div>
+                    
+                    <div class="pricing-benefits">
+                        <h4>CPA Benefits:</h4>
+                        <ul>
+                            <li>✓ Zero upfront cost</li>
+                            <li>✓ Only pay when you close</li>
+                            <li>✓ Policy replacement guarantee</li>
+                            <li>✓ Perfect for established agents</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Pay Per Call Option -->
+                <div class="pricing-card pay-per-call-option">
+                    <div class="pricing-header">
+                        <h3>Pay Per Call</h3>
+                        <div class="pricing-badge">Immediate</div>
+                        <p class="pricing-subtitle">Pay upfront, get qualified calls instantly</p>
+                    </div>
+                    
+                    <div class="pricing-details">
+                        <div class="pricing-item">
+                            <div class="pricing-line">
+                                <span class="line-name">120-Second Buffer</span>
+                                <span class="line-price">$35 per call</span>
+                            </div>
+                            <p class="line-description">Extended-buffer live call. Agent has up to 120 seconds to engage and verify interest before accepting.</p>
+                        </div>
+                        
+                        <div class="pricing-item">
+                            <div class="pricing-line">
+                                <span class="line-name">180-Second Buffer</span>
+                                <span class="line-price">$40 per call</span>
+                            </div>
+                            <p class="line-description">Extended-buffer live call. Agent has up to 180 seconds to engage and verify interest before accepting.</p>
+                        </div>
+                        
+                        <div class="pricing-item">
+                            <div class="pricing-line">
+                                <span class="line-name">AI-Qualified "Ready to Quote"</span>
+                                <span class="line-price">$45 per call</span>
+                            </div>
+                            <p class="line-description">AI-verified prospect that passes qualification check. No buffer time - prospect is ready to quote.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="pricing-benefits">
+                        <h4>Pay Per Call Benefits:</h4>
+                        <ul>
+                            <li>✓ Immediate call delivery</li>
+                            <li>✓ Multiple buffer options</li>
+                            <li>✓ AI pre-qualification available</li>
+                            <li>✓ Perfect for testing markets</li>
+                        </ul>
+                    </div>
+                    
+                    <button class="pricing-cta" onclick="openPricingModal()">
+                        Choose Pay Per Call Option
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Final CTA -->
     <section class="section cta-section">
         <div class="container">
@@ -547,6 +653,54 @@
             </div>
         </div>
     </section>
+
+    <!-- Pricing Modal -->
+    <div id="pricingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Choose Your Pay Per Call Option</h3>
+                <button class="modal-close" onclick="closePricingModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Select the pay-per-call option that works best for your business:</p>
+                
+                <div class="modal-options">
+                    <div class="modal-option">
+                        <div class="option-header">
+                            <h4>120-Second Buffer</h4>
+                            <span class="option-price">$35 per call</span>
+                        </div>
+                        <p>Extended-buffer live call from a high-intent insurance prospect. Agent has up to 120 seconds to engage and verify interest before accepting the lead.</p>
+                        <a href="https://buy.stripe.com/3cI4gyayz5RA12fdkR63K1e" target="_blank" class="option-button">
+                            Purchase 120-Second Buffer Calls
+                        </a>
+                    </div>
+                    
+                    <div class="modal-option">
+                        <div class="option-header">
+                            <h4>180-Second Buffer</h4>
+                            <span class="option-price">$40 per call</span>
+                        </div>
+                        <p>Extended-buffer live call from a high-intent insurance prospect. Agent has up to 180 seconds to engage and verify interest before accepting the lead.</p>
+                        <a href="https://buy.stripe.com/6oU9AS0XZa7QcKX1C963K1f" target="_blank" class="option-button">
+                            Purchase 180-Second Buffer Calls
+                        </a>
+                    </div>
+                    
+                    <div class="modal-option">
+                        <div class="option-header">
+                            <h4>AI-Qualified "Ready to Quote"</h4>
+                            <span class="option-price">$45 per call</span>
+                        </div>
+                        <p>AI-verified prospect call that passes a live qualification check. Only calls answering "Yes" are delivered. No buffer time — prospect is fully qualified and ready to quote.</p>
+                        <a href="https://buy.stripe.com/cNi00ifSTeo612f5Sp63K1g" target="_blank" class="option-button">
+                            Purchase AI-Qualified Calls
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">
@@ -690,6 +844,25 @@
         
         // Initialize animations when page loads
         setTimeout(animateStatsSection, 500);
+        
+        // Pricing Modal Functions
+        function openPricingModal() {
+            document.getElementById('pricingModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closePricingModal() {
+            document.getElementById('pricingModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('pricingModal');
+            if (event.target === modal) {
+                closePricingModal();
+            }
+        }
     </script>
 </body>
 </html>
