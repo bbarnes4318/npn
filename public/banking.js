@@ -102,56 +102,6 @@
     const today = new Date().toISOString().split('T')[0];
     form.signatureDate.value = today;
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      if (!validateForm()) {
-        return;
-      }
-
-      setMsg('Submitting your information...', 'info');
-      submitBtn.disabled = true;
-
-      try {
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
-
-        // Get agent ID from URL or localStorage
-        const urlParams = new URLSearchParams(window.location.search);
-        const agentId = urlParams.get('agentId') || localStorage.getItem('agentId');
-        if (agentId) {
-          data.agentId = agentId;
-        }
-
-        const res = await fetch('/api/banking', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        });
-
-        const result = await res.json();
-
-        if (res.ok && result.ok) {
-          setMsg('Employee information and banking details saved successfully!', 'success');
-          form.reset();
-          
-          // Redirect to success page or next step
-          setTimeout(() => {
-            window.location.href = '/portal.html';
-          }, 2000);
-        } else {
-          throw new Error(result.error || 'Failed to save information');
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        setMsg(`Error: ${error.message}`, 'error');
-      } finally {
-        submitBtn.disabled = false;
-      }
-    });
-
     // Step validation
     function validateCurrentStep() {
       const currentStep = document.querySelector('.step.active');

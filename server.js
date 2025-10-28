@@ -1561,8 +1561,8 @@ app.post('/api/banking', async (req, res) => {
     }
 
     // Validate SSN format if provided
-    if (body.ssn && !/^\d{9}$/.test(body.ssn)) {
-      return res.status(400).json({ ok: false, error: 'SSN must be exactly 9 digits' });
+    if (body.ssn && !/^\d{3}-\d{2}-\d{4}$/.test(body.ssn)) {
+      return res.status(400).json({ ok: false, error: 'SSN must be in format XXX-XX-XXXX' });
     }
 
     // Validate routing number format
