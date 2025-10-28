@@ -1,6 +1,22 @@
-# NPN Onboarding
+# perEnroll.com - ACA Agent Onboarding Platform
 
-ACA Agent onboarding portal with digital Producer Agreement, Intake, W-9 (e-sign or upload), and downloadable documents.
+A production-quality marketing/landing experience integrated with ACA agent onboarding portal featuring digital Producer Agreement, Intake, W-9 (e-sign or upload), and downloadable documents.
+
+## Features
+
+### Marketing Landing Page (`/marketing.html`)
+- **Modern SaaS Design**: Clean, trust-heavy landing page with perEnroll branding
+- **Residual Income Focus**: Emphasizes recurring revenue vs one-time bounties
+- **Lead Generation**: Integrated form that pre-populates the onboarding flow
+- **Responsive Design**: Optimized for desktop, tablet, and mobile
+- **Smooth Animations**: Tasteful micro-interactions and scroll effects
+
+### Onboarding Portal (`/portal.html`)
+- **Multi-Step Process**: Intake → W-9 → Banking → Completion
+- **Digital Signatures**: Canvas-based signature pad with fallback text input
+- **File Uploads**: CMS/FFM certification proof and completed W-9 documents
+- **Progress Tracking**: Visual progress indicators and step validation
+- **Data Persistence**: Form data carries between marketing and onboarding
 
 ## Local Development
 
@@ -13,14 +29,23 @@ ACA Agent onboarding portal with digital Producer Agreement, Intake, W-9 (e-sign
 - App runs at http://localhost:3000
 
 ### Key URLs
-- Dashboard (requires `agentId`): `/dashboard.html?agentId=<ID>`
-- Standalone Intake: `/intake.html` (optionally `?agentId=<ID>`)
-- W‑9 page (e‑sign + upload): `/w9.html` (optionally `?agentId=<ID>`)
-- Admin tools: `/admin.html`
+- **Marketing Landing**: `/marketing.html` (main entry point)
+- **Onboarding Portal**: `/portal.html` (requires `agentId` or form data)
+- **Dashboard**: `/dashboard.html?agentId=<ID>`
+- **Standalone Intake**: `/intake.html` (optionally `?agentId=<ID>`)
+- **W‑9 page**: `/w9.html` (optionally `?agentId=<ID>`)
+- **Admin tools**: `/admin.html`
+
+### Marketing → Onboarding Flow
+1. User visits `/marketing.html` (redirected from root `/`)
+2. Fills out lead generation form with name, email, state, ACA experience
+3. Form data is stored in localStorage and user is redirected to `/portal.html`
+4. Onboarding portal pre-populates intake form with marketing data
+5. User completes multi-step onboarding process
 
 ### Admin Tools
-- Find Agent ID by email using `/admin.html` → “Find by Email”.
-- List documents and download ZIP of all artifacts from `/admin.html`.
+- Find Agent ID by email using `/admin.html` → "Find by Email"
+- List documents and download ZIP of all artifacts from `/admin.html`
 - Per-document downloads (server endpoints):
   - W‑9 PDF: `GET /api/agents/:id/documents/w9.pdf`
   - CMS/FFM Certification Proof: `GET /api/agents/:id/documents/cert`
@@ -59,11 +84,11 @@ If you want, we can wire a simple token check in the server.
 This repo contains an App Spec at `.do/app.yaml` to streamline deployment with persistent volumes.
 
 ### Steps
-1. Push this repo to GitHub (see “Push to GitHub” below).
+1. Push this repo to GitHub (see "Push to GitHub" below).
 2. In DigitalOcean → Apps → Create App → Connect to GitHub → select this repo.
 3. Choose the `main` branch and the root directory.
 4. App Platform will auto-detect Node and use `npm start`.
-5. Under “Resources”, ensure the `Service` defined in `.do/app.yaml` is detected.
+5. Under "Resources", ensure the `Service` defined in `.do/app.yaml` is detected.
 6. Persistent Storage:
    - The spec defines three volumes mounted at `/data/agents`, `/data/submissions`, `/data/uploads`.
    - The service sets env vars to point the app there: `AGENTS_DIR`, `SUBMISSIONS_DIR`, `UPLOADS_DIR`.
@@ -80,7 +105,7 @@ Replace the remote URL with your repo `https://github.com/bbarnes4318/npn.git`.
 git init
 git branch -M main
 git add .
-git commit -m "Initial import: NPN onboarding portal"
+git commit -m "Initial import: perEnroll marketing site and onboarding portal"
 git remote add origin https://github.com/bbarnes4318/npn.git
 git push -u origin main
 ```

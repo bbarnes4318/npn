@@ -3,55 +3,561 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Agent Portal — ACA Onboarding</title>
-  <link rel="stylesheet" href="/styles.css" />
+  <title>Agent Onboarding Portal</title>
+  <link rel="stylesheet" href="/new-styles.css" />
 </head>
-<body class="auth-page">
+<body>
   <header class="header">
     <div class="container header-inner">
       <a class="logo" href="/">
-        <img class="logo-img" src="/amben.png" alt="Company logo" />
-        <span>ACA Agent Onboarding</span>
+        <img src="/perenroll.png" alt="PerEnroll Logo" class="logo-image" />
       </a>
-      <nav class="nav">
-        <a href="/">Quick-start</a>
-        <a href="#">Portal</a>
-        <a href="/completed.html">Complete</a>
-        <a href="#contact">Contact</a>
-      </nav>
     </div>
   </header>
 
   <main class="section">
-    <div class="container auth">
-      <h1 class="headline">Agent Portal</h1>
-      <p class="sub">Complete the 5 steps, upload your cert proof, sign agreements, and submit Intake & W‑9 — all in one place.</p>
+    <div class="container">
+      <div class="progress-tracker">
+        <div class="progress-step active">
+          <div class="progress-dot"></div>
+          <div class="progress-label">Intake</div>
+        </div>
+        <div class="progress-step">
+          <div class="progress-dot"></div>
+          <div class="progress-label">W-9</div>
+        </div>
+        <div class="progress-step">
+          <div class="progress-dot"></div>
+          <div class="progress-label">Banking</div>
+        </div>
+        <div class="progress-step">
+          <div class="progress-dot"></div>
+          <div class="progress-label">Complete</div>
+        </div>
+      </div>
 
-      <div class="auth-card" style="max-width:520px;margin:0 auto;">
-        <form id="emailForm" class="form">
-          <div class="field">
-            <label class="label">Work email <span class="required">*</span></label>
-            <input class="input" type="email" name="email" placeholder="you@agency.com" required />
-            <div class="help">We’ll find your portal or create one. No password needed.</div>
+      <div id="portal-msg" class="notice" style="display:none;"></div>
+
+      <div class="card">
+        <div id="form-step-container">
+          <!-- Intake Form -->
+          <div id="intake-form-step" class="form-step active">
+            <h2>Agent Intake</h2>
+            <p class="sub">Provide your contact details, NPN, licensed states, and upload your CMS/FFM certification proof.</p>
+            <form id="intakeForm" class="form" enctype="multipart/form-data">
+              <h3>Contact Information</h3>
+              <div class="field inline">
+                <div class="field">
+                  <label class="label">First name <span class="required">*</span></label>
+                  <input class="input" type="text" name="firstName" required />
+                </div>
+                <div class="field">
+                  <label class="label">Last name <span class="required">*</span></label>
+                  <input class="input" type="text" name="lastName" required />
+                </div>
+              </div>
+              <div class="field inline">
+                <div class="field">
+                  <label class="label">Email <span class="required">*</span></label>
+                  <input class="input" type="email" name="email" required />
+                </div>
+                <div class="field">
+                  <label class="label">Phone</label>
+                  <input class="input" type="tel" name="phone" placeholder="(555) 555-5555" />
+                </div>
+              </div>
+
+              <h3 style="margin-top: 24px;">Business Details</h3>
+              <div class="field">
+                <label class="label">Address line 1</label>
+                <input class="input" type="text" name="address1" />
+              </div>
+              <div class="field">
+                <label class="label">Address line 2</label>
+                <input class="input" type="text" name="address2" />
+              </div>
+              <div class="field inline">
+                <div class="field">
+                  <label class="label">City</label>
+                  <input class="input" type="text" name="city" />
+                </div>
+                <div class="field">
+                  <label class="label">State</label>
+                  <select name="state" class="input state-select"></select>
+                </div>
+              </div>
+              <div class="field" style="max-width: 240px;">
+                <label class="label">ZIP</label>
+                <input class="input" type="text" name="zip" pattern="[0-9]{5}(-[0-9]{4})?" />
+              </div>
+
+              <h3 style="margin-top: 24px;">NPN and Licensing</h3>
+              <div class="field" style="max-width: 320px;">
+                <label class="label">National Producer Number (NPN) <span class="required">*</span></label>
+                <input class="input" type="text" name="npn" required />
+              </div>
+              <div class="field">
+                <label class="label">State(s) where you're licensed <span class="required">*</span></label>
+                <div class="dual-list-box">
+                  <div class="list-box">
+                    <div class="list-box-header">Available States</div>
+                    <ul id="available-states" class="state-list"></ul>
+                  </div>
+                  <div class="list-box-actions">
+                    <button type="button" class="button ghost" id="add-state-btn">&gt;</button>
+                    <button type="button" class="button ghost" id="remove-state-btn">&lt;</button>
+                  </div>
+                  <div class="list-box">
+                    <div class="list-box-header">Licensed States</div>
+                    <ul id="licensed-states" class="state-list"></ul>
+                  </div>
+                </div>
+              </div>
+              <div class="field">
+                <label class="label">Upload proof of CMS/FFM certification (PDF or image)</label>
+                <input class="input" type="file" name="certProof" accept="application/pdf,image/*" />
+                <div class="help">From MLMS → Completed Learning, save the course completion record as PDF or screenshot.</div>
+                <div class="help">You can come back and upload this later from your Dashboard. It isn't required to submit today.</div>
+                <div class="cta-row" style="margin-top:8px;">
+                  <button class="button ghost" type="button" id="deferCertBtn">Save for later</button>
+                </div>
+              </div>
+
+              <h3 style="margin-top: 24px;">Background Questions</h3>
+              <div class="help" style="margin-bottom:8px;">Please answer the following background questions. If you answer "Yes" to any question, please provide a detailed explanation.</div>
+
+              <div class="field">
+                <label class="label">1A. Have you ever been convicted of a crime? <span class="required">*</span></label>
+                <div>
+                  <label><input type="radio" name="crimeConvicted" value="no" checked required /> No</label>
+                  <label style="margin-left:12px;"><input type="radio" name="crimeConvicted" value="yes" required /> Yes</label>
+                </div>
+                <textarea class="input" name="crimeConvictedExplain" placeholder="If yes, please explain" style="display:none"></textarea>
+              </div>
+              <div class="field">
+                <label class="label">1B. Are you currently charged with committing a crime? <span class="required">*</span></label>
+                <div>
+                  <label><input type="radio" name="crimeCharged" value="no" checked required /> No</label>
+                  <label style="margin-left:12px;"><input type="radio" name="crimeCharged" value="yes" required /> Yes</label>
+                </div>
+                <textarea class="input" name="crimeChargedExplain" placeholder="If yes, please explain" style="display:none"></textarea>
+              </div>
+              <div class="field">
+                <label class="label">1C. Have you ever been a party to a lawsuit? <span class="required">*</span></label>
+                <div>
+                  <label><input type="radio" name="lawsuitParty" value="no" checked required /> No</label>
+                  <label style="margin-left:12px;"><input type="radio" name="lawsuitParty" value="yes" required /> Yes</label>
+                </div>
+                <textarea class="input" name="lawsuitPartyExplain" placeholder="If yes, please explain" style="display:none"></textarea>
+              </div>
+              <div class="field">
+                <label class="label">2. Have you ever had a judgment lien or otherwise had a judgment entered against you? <span class="required">*</span></label>
+                <div>
+                  <label><input type="radio" name="judgmentLien" value="no" checked required /> No</label>
+                  <label style="margin-left:12px;"><input type="radio" name="judgmentLien" value="yes" required /> Yes</label>
+                </div>
+                <textarea class="input" name="judgmentLienExplain" placeholder="If yes, please explain" style="display:none"></textarea>
+              </div>
+              <div class="field">
+                <label class="label">3. Have you ever had a lawsuit filed against you for failure to pay your debts in any capacity? <span class="required">*</span></label>
+                <div>
+                  <label><input type="radio" name="debtLawsuit" value="no" checked required /> No</label>
+                  <label style="margin-left:12px;"><input type="radio" name="debtLawsuit" value="yes" required /> Yes</label>
+                </div>
+                <textarea class="input" name="debtLawsuitExplain" placeholder="If yes, please explain" style="display:none"></textarea>
+              </div>
+              <div class="field">
+                <label class="label">4. Have you ever been notified by any jurisdiction to which you are applying of any delinquent tax obligation that is not the subject of a repayment agreement? <span class="required">*</span></label>
+                <div>
+                  <label><input type="radio" name="delinquentTax" value="no" checked required /> No</label>
+                  <label style="margin-left:12px;"><input type="radio" name="delinquentTax" value="yes" required /> Yes</label>
+                </div>
+                <textarea class="input" name="delinquentTaxExplain" placeholder="If yes, please explain" style="display:none"></textarea>
+              </div>
+              <div class="field">
+                <label class="label">5. Have you ever been terminated for cause or are you currently under investigation for cause? <span class="required">*</span></label>
+                <div>
+                  <label><input type="radio" name="terminatedForCause" value="no" checked required /> No</label>
+                  <label style="margin-left:12px;"><input type="radio" name="terminatedForCause" value="yes" required /> Yes</label>
+                </div>
+                <textarea class="input" name="terminatedForCauseExplain" placeholder="If yes, please explain" style="display:none"></textarea>
+              </div>
+              <div class="field">
+                <label class="label">6. Have you ever had an insurance license, financial services license, or other professional license denied, suspended or revoked in this or any other state? <span class="required">*</span></label>
+                <div>
+                  <label><input type="radio" name="licenseRevoked" value="no" checked required /> No</label>
+                  <label style="margin-left:12px;"><input type="radio" name="licenseRevoked" value="yes" required /> Yes</label>
+                </div>
+                <textarea class="input" name="licenseRevokedExplain" placeholder="If yes, please explain" style="display:none"></textarea>
+              </div>
+              <div class="field">
+                <label class="label">7. Have you ever been indebted to any insurance company, agency, or FMO? <span class="required">*</span></label>
+                <div>
+                  <label><input type="radio" name="indebted" value="no" checked required /> No</label>
+                  <label style="margin-left:12px;"><input type="radio" name="indebted" value="yes" required /> Yes</label>
+                </div>
+                <textarea class="input" name="indebtedExplain" placeholder="If yes, please explain" style="display:none"></textarea>
+              </div>
+              <div class="field">
+                <label class="label">8. Do you have any outstanding child support obligations? <span class="required">*</span></label>
+                <div>
+                  <label><input type="radio" name="childSupport" value="no" checked required /> No</label>
+                  <label style="margin-left:12px;"><input type="radio" name="childSupport" value="yes" required /> Yes</label>
+                </div>
+                <textarea class="input" name="childSupportExplain" placeholder="If yes, please explain" style="display:none"></textarea>
+              </div>
+
+              <h3 style="margin-top: 24px;">Acknowledgments</h3>
+              <div class="field">
+                <label><input type="checkbox" name="producerAgreementAccepted" required /> I have read and agree to the <a href="/docs/producerAgreement" target="_blank">Producer Agreement</a>.</label>
+              </div>
+              <div class="field">
+                <label><input type="checkbox" name="privacyNoticeAccepted" required /> I acknowledge the privacy notice and consent to processing.</label>
+              </div>
+              <div class="field inline">
+                <div class="field">
+                  <label class="label">Type your full name as signature <span class="required">*</span></label>
+                  <input class="input" type="text" name="signature" required />
+                </div>
+                <div class="field">
+                  <label class="label">Date <span class="required">*</span></label>
+                  <input class="input" type="date" name="signatureDate" required />
+                </div>
+              </div>
+            </form>
           </div>
-          <div class="auth-actions">
-            <button class="button primary" type="submit">Continue</button>
-            <div id="emailMsg" class="help"></div>
+
+          <!-- W-9 Form -->
+          <div id="w9-form-step" class="form-step">
+            <h2>W-9 Form</h2>
+            <p class="sub">Complete the W-9 form to set up your tax information.</p>
+            <form id="w9Form" class="form">
+              <div class="grid columns-2">
+                <div class="field">
+                  <label class="label">Name (as shown on your income tax return) <span class="required">*</span></label>
+                  <input class="input" type="text" name="name" id="w9_name" required />
+                </div>
+                <div class="field">
+                  <label class="label">Business name/disregarded entity name</label>
+                  <input class="input" type="text" name="businessName" id="w9_businessName" />
+                </div>
+
+                <div class="field" style="grid-column: span 2;">
+                  <label class="label">Federal tax classification <span class="required">*</span></label>
+                  <div class="radio-group">
+                    <label class="radio-option"><input type="radio" name="taxClassification" value="individual" required /> Individual/sole proprietor or single-member LLC</label>
+                    <label class="radio-option"><input type="radio" name="taxClassification" value="c_corporation" required /> C Corporation</label>
+                    <label class="radio-option"><input type="radio" name="taxClassification" value="s_corporation" required /> S Corporation</label>
+                    <label class="radio-option"><input type="radio" name="taxClassification" value="partnership" required /> Partnership</label>
+                    <label class="radio-option"><input type="radio" name="taxClassification" value="trust" required /> Trust/estate</label>
+                    <label class="radio-option"><input type="radio" name="taxClassification" value="llc" required /> LLC</label>
+                    <label class="radio-option"><input type="radio" name="taxClassification" value="other" required /> Other</label>
+                  </div>
+                </div>
+
+                <div class="field" id="llcClassificationField" style="display:none; grid-column: span 2;">
+                  <label class="label">LLC Classification</label>
+                  <div class="radio-group">
+                    <label class="radio-option"><input type="radio" name="llcClassification" value="c_corporation" /> C Corporation</label>
+                    <label class="radio-option"><input type="radio" name="llcClassification" value="s_corporation" /> S Corporation</label>
+                    <label class="radio-option"><input type="radio" name="llcClassification" value="partnership" /> Partnership</label>
+                  </div>
+                </div>
+
+                <div class="field" style="grid-column: span 2;">
+                  <label class="label">Address (number, street, and apt. or suite no.) <span class="required">*</span></label>
+                  <input class="input" type="text" name="address1" id="w9_address1" required />
+                </div>
+                <div class="field">
+                  <label class="label">City <span class="required">*</span></label>
+                  <input class="input" type="text" name="city" id="w9_city" required />
+                </div>
+                <div class="field">
+                  <label class="label">State <span class="required">*</span></label>
+                  <input class="input" type="text" name="state" id="w9_state" maxlength="2" placeholder="FL" required />
+                </div>
+                <div class="field">
+                  <label class="label">ZIP code <span class="required">*</span></label>
+                  <input class="input" type="text" name="zip" id="w9_zip" pattern="[0-9]{5}(-[0-9]{4})?" placeholder="12345" required />
+                </div>
+
+                <div class="field" style="grid-column: span 2;">
+                  <label class="label">Taxpayer Identification Number <span class="required">*</span></label>
+                  <div class="inline" style="gap: 20px;">
+                    <div>
+                      <label><input type="radio" name="tinType" value="ssn" required /> SSN</label>
+                      <input class="input" type="text" name="ssn" id="w9_ssn" placeholder="XXX-XX-XXXX" pattern="[0-9]{3}-[0-9]{2}-[0-9]{4}" />
+                    </div>
+                    <div>
+                      <label><input type="radio" name="tinType" value="ein" required /> EIN</label>
+                      <input class="input" type="text" name="ein" id="w9_ein" placeholder="XX-XXXXXXX" pattern="[0-9]{2}-[0-9]{7}" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="field" style="grid-column: span 2;">
+                  <label class="label">Exempt payee code (if any)</label>
+                  <input class="input" type="text" name="exemptPayeeCode" id="w9_exemptPayeeCode" />
+                </div>
+
+                <div class="field" style="grid-column: span 2;">
+                  <label class="label">Exemption from FATCA reporting code (if any)</label>
+                  <input class="input" type="text" name="fatcaCode" id="w9_fatcaCode" />
+                </div>
+              </div>
+
+              <h3 style="margin-top: 24px;">Certification</h3>
+              <div class="text-block">
+                <p>Under penalties of perjury, I certify that:</p>
+                <ol>
+                  <li>The number shown on this form is my correct taxpayer identification number (or I am waiting for a number to be issued to me), and</li>
+                  <li>I am not subject to backup withholding because: (a) I am exempt from backup withholding, or (b) I have not been notified by the Internal Revenue Service (IRS) that I am subject to backup withholding as a result of a failure to report all interest or dividends, or (c) the IRS has notified me that I am no longer subject to backup withholding, and</li>
+                  <li>I am a U.S. person (including a U.S. resident alien), and</li>
+                  <li>The FATCA code(s) entered on this form (if any) indicating that I am exempt from FATCA reporting is correct.</li>
+                </ol>
+              </div>
+
+              <div class="field">
+                <label class="label">Digital Signature <span class="required">*</span></label>
+                <canvas id="w9SigPad" width="400" height="120" style="border:1px dashed var(--border); border-radius:8px; background:#fff; width:100%; max-width:400px; cursor:crosshair;"></canvas>
+                <div class="cta-row" style="margin-top:8px;">
+                  <button class="button ghost" id="clearW9SigBtn" type="button">Clear</button>
+                  <button class="button secondary" id="saveW9SigBtn" type="button">Save Signature</button>
+                  <div id="w9SigMsg" class="help"></div>
+                </div>
+                <div class="help" style="margin-top:8px;">
+                  <strong>Alternative:</strong> If the drawing pad doesn't work, you can type your full name below:
+                </div>
+                <input class="input" type="text" name="signatureText" id="w9_signatureText" placeholder="Type your full name as signature (fallback)" style="margin-top:8px;" />
+                <input type="hidden" name="signature" id="w9_signature" />
+              </div>
+
+              <div class="field">
+                <label class="label">Date <span class="required">*</span></label>
+                <input class="input" type="date" name="signatureDate" id="w9_signatureDate" required />
+              </div>
+            </form>
           </div>
-        </form>
+
+          <!-- Banking Form -->
+          <div id="banking-form-step" class="form-step">
+            <h2>Banking Information</h2>
+            <p class="sub">Provide your banking details for commission payments.</p>
+            <form id="bankingForm" class="form">
+              <div class="grid columns-2">
+                <div class="field">
+                  <label class="label">First Name <span class="required">*</span></label>
+                  <input class="input" type="text" name="firstName" required />
+                </div>
+                <div class="field">
+                  <label class="label">Last Name <span class="required">*</span></label>
+                  <input class="input" type="text" name="lastName" required />
+                </div>
+                <div class="field">
+                  <label class="label">Street Address <span class="required">*</span></label>
+                  <input class="input" type="text" name="streetAddress" required />
+                </div>
+                <div class="field">
+                  <label class="label">City <span class="required">*</span></label>
+                  <input class="input" type="text" name="city" required />
+                </div>
+                <div class="field">
+                  <label class="label">State <span class="required">*</span></label>
+                  <input class="input" type="text" name="state" maxlength="2" required />
+                </div>
+                <div class="field">
+                  <label class="label">ZIP Code <span class="required">*</span></label>
+                  <input class="input" type="text" name="zipCode" pattern="[0-9]{5}(-[0-9]{4})?" required />
+                </div>
+                <div class="field">
+                  <label class="label">SSN <span class="required">*</span></label>
+                  <input class="input" type="text" name="ssn" pattern="[0-9]{3}-[0-9]{2}-[0-9]{4}" maxlength="11" required />
+                  <div class="help">9-digit Social Security Number</div>
+                </div>
+                <div class="field">
+                  <label class="label">Date of Birth <span class="required">*</span></label>
+                  <input class="input" type="date" name="dateOfBirth" required />
+                </div>
+                <div class="field">
+                  <label class="label">Date of Hire</label>
+                  <input class="input" type="date" name="dateOfHire" />
+                </div>
+              </div>
+
+              <h3 style="margin-top: 24px;">Banking Information for Commission Payments</h3>
+              <div class="field">
+                <label class="label">Bank Name <span class="required">*</span></label>
+                <input class="input" type="text" name="bankName" placeholder="e.g., Chase Bank, Bank of America, Wells Fargo" required />
+                <div class="help">Enter the full name of your bank or financial institution</div>
+              </div>
+
+              <div class="field inline">
+                <div class="field">
+                  <label class="label">Routing Number <span class="required">*</span></label>
+                  <input class="input" type="text" name="routingNumber" placeholder="123456789" pattern="[0-9]{9}" maxlength="9" required />
+                  <div class="help">9-digit routing number (ABA number)</div>
+                </div>
+                <div class="field">
+                  <label class="label">Account Number <span class="required">*</span></label>
+                  <input class="input" type="text" name="accountNumber" placeholder="1234567890" required />
+                  <div class="help">Your account number (no spaces or dashes)</div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="label">Account Type <span class="required">*</span></label>
+                <select name="accountType" class="input" required>
+                  <option value="">Select account type</option>
+                  <option value="checking">Checking</option>
+                  <option value="savings">Savings</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label class="label">Account Holder Name <span class="required">*</span></label>
+                <input class="input" type="text" name="accountHolderName" placeholder="Name as it appears on the account" required />
+                <div class="help">Must match the name on your bank account</div>
+              </div>
+
+
+              <div class="field">
+                <label class="label">Payment Method <span class="required">*</span></label>
+                <select name="paymentMethod" class="input" required>
+                  <option value="direct_deposit">Direct Deposit (Recommended)</option>
+                  <option value="check">Paper Check</option>
+                </select>
+              </div>
+
+              <h3 style="margin-top: 24px;">Authorization & Digital Signature</h3>
+              <div class="field">
+                <label class="checkbox">
+                  <input type="checkbox" name="authorizeDirectDeposit" required />
+                  <span class="checkmark"></span>
+                  I authorize direct deposit of commission payments to the bank account specified above
+                </label>
+              </div>
+
+              <div class="field">
+                <label class="checkbox">
+                  <input type="checkbox" name="verifyBankingInfo" required />
+                  <span class="checkmark"></span>
+                  I verify that all banking information provided is accurate and complete
+                </label>
+              </div>
+
+              <div class="field">
+                <label class="checkbox">
+                  <input type="checkbox" name="privacyConsent" required />
+                  <span class="checkmark"></span>
+                  I consent to the collection and processing of my personal and banking information for payment purposes
+                </label>
+              </div>
+
+              <div class="field">
+                <label class="label">Digital Signature <span class="required">*</span></label>
+                <input class="input" type="text" name="digitalSignature" placeholder="Type your full name as signature" required />
+                <div class="help">This serves as your digital signature and is legally binding</div>
+              </div>
+
+              <div class="field">
+                <label class="label">Signature Date <span class="required">*</span></label>
+                <input class="input" type="date" name="signatureDate" required />
+              </div>
+
+              <div class="callout important">
+                <strong>Security Notice:</strong> Your personal and banking information is encrypted and stored securely. We use industry-standard encryption to protect your financial data.
+              </div>
+            </form>
+          </div>
+
+          <!-- Completion Step -->
+          <div id="completion-step" class="form-step">
+            <div class="completion-container">
+              <div class="completion-icon">
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="10" fill="#059669" opacity="0.1"/>
+                  <path d="M9 12l2 2 4-4" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              
+              <h2 class="completion-title">🎉 Onboarding Complete!</h2>
+              
+              <div class="completion-message">
+                <p class="completion-text">Congratulations! You've successfully completed your agent onboarding process.</p>
+                <p class="completion-text">Our team will review your information and be in touch within 1-2 business days.</p>
+              </div>
+
+              <div class="completion-actions">
+                <h3>What's Next?</h3>
+                <div class="action-cards">
+                  <div class="action-card">
+                    <div class="action-icon">💰</div>
+                    <div class="action-content">
+                      <h4>Calculate Your Earnings</h4>
+                      <p>Use our compensation calculator to see potential commission earnings</p>
+                      <a href="https://seashell-app-zxh3e.ondigitalocean.app" target="_blank" class="button primary action-button">
+                        Open Calculator
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M7 17L17 7M17 7H7M17 7V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </a>
+                    </div>
+                  </div>
+                  
+                  
+                  <div class="action-card">
+                    <div class="action-icon">🏠</div>
+                    <div class="action-content">
+                      <h4>Visit Our Landing Page</h4>
+                      <p>Learn more about perEnroll's services and opportunities</p>
+                      <a href="/marketing.html" class="button secondary action-button">
+                        Go to Landing Page
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M7 17L17 7M17 7H7M17 7V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </a>
+                    </div>
+                  </div>
+                  
+                  <div class="action-card">
+                    <div class="action-icon">📞</div>
+                    <div class="action-content">
+                      <h4>Need Help?</h4>
+                      <p>Our support team is here to assist you with any questions</p>
+                      <div class="contact-info">
+                        <strong>Phone:</strong> (551) 212‑9263<br>
+                        <strong>Email:</strong> admin@getlifeassurance.com
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="completion-footer">
+                <p class="footer-text">Thank you for choosing PerEnroll. We're excited to work with you!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cta-row">
+          <button class="button secondary" id="prev-btn" style="display: none;">Previous</button>
+          <button class="button primary" id="next-btn">Next</button>
+          <button class="button primary" id="submit-btn" style="display: none;">Submit</button>
+        </div>
       </div>
     </div>
   </main>
 
-  <footer id="contact" class="footer">
+  <footer class="footer">
     <div class="container footer-inner">
       <div>
         <strong>Need help?</strong>
-        <div>Phone: (860) 351‑8270</div>
+        <div>Phone: (551) 212‑9263</div>
+        <div>Email: admin@getlifeassurance.com</div>
       </div>
     </div>
   </footer>
-
   <script src="/portal.js" defer></script>
 </body>
 </html>

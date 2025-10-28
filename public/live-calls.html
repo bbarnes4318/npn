@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Calls Program - perEnroll.com</title>
+    <meta name="description" content="Stop buying leads. Start taking qualified calls. ACA, Medicare, and Final Expense live transfers with no upfront cost - you only pay when you close.">
+    <link rel="stylesheet" href="/marketing.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-inner">
+                <a href="/" class="logo">
+                    <img src="/perenroll.png" alt="perEnroll Logo" class="logo-image">
+                </a>
+                
+                <nav class="nav">
+                    <ul class="nav-links">
+                        <li><a href="/marketing.html#how-it-works">How It Works</a></li>
+                        <li><a href="/live-calls.html" class="nav-active">Live Calls</a></li>
+                        <li><a href="/marketing.html#why-perenroll">Why perEnroll</a></li>
+                        <li><a href="/marketing.html#about">About</a></li>
+                    </ul>
+                    <a href="/portal.html" class="cta-button">Start Onboarding</a>
+                    
+                    <button class="mobile-menu-toggle" id="mobile-menu-toggle">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </nav>
+            </div>
+            
+            <div class="mobile-menu" id="mobile-menu">
+                <ul class="mobile-menu-links">
+                    <li><a href="/marketing.html#how-it-works">How It Works</a></li>
+                    <li><a href="/live-calls.html" class="nav-active">Live Calls</a></li>
+                    <li><a href="/marketing.html#why-perenroll">Why perEnroll</a></li>
+                    <li><a href="/marketing.html#about">About</a></li>
+                    <li><a href="/portal.html" class="cta-button">Start Onboarding</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero live-calls-hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <div class="hero-badge">No-Risk Model</div>
+                    <h1>Stop Buying Leads. Start Taking Qualified Calls.</h1>
+                    <p>ACA. Medicare. Final Expense. We send you live conversations with real shoppers who asked to speak to a licensed agent. Choose CPA (pay when you close) or Pay Per Call (immediate delivery) pricing.</p>
+                    
+                    <div class="hero-actions">
+                        <button onclick="openPricingModal()" class="cta-button">Start Getting Calls</button>
+                        <a href="#call-program-steps" class="cta-button cta-button-secondary">See How It Works</a>
+                    </div>
+                    
+                </div>
+                
+                <div class="hero-visual">
+                    <div class="call-metrics-card">
+                        <div class="metrics-header">
+                            <h3>Call Feed Highlights</h3>
+                            <p>Fast. Qualified. No upfront cost.</p>
+                        </div>
+                        <div class="metrics-grid">
+                            <div class="metric">
+                                <div class="metric-number">95%</div>
+                                <div class="metric-label">Qualified Calls</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-number">24hrs</div>
+                                <div class="metric-label">Avg To First Sale</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-number">$0</div>
+                                <div class="metric-label">Upfront Cost</div>
+                            </div>
+                        </div>
+                        <div class="metrics-footer">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span>Only pay when you close.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Key Stats Section -->
+    <section class="section stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" data-target="95">0</div>
+                    <div class="stat-label">Qualified Calls</div>
+                    <div class="stat-description">Per month on average</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" data-target="24">0</div>
+                    <div class="stat-label">Hours to First Sale</div>
+                    <div class="stat-description">Average time to close</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" data-target="0">$0</div>
+                    <div class="stat-label">Upfront Cost</div>
+                    <div class="stat-description">Pay only when you close</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How Call Program Works -->
+    <section class="section" id="call-program-steps">
+        <div class="container">
+            <div class="section-header">
+                <h2>How the Call Program Works</h2>
+                <p>Four simple steps from consumer request to your commission check.</p>
+            </div>
+            
+            <div class="call-program-steps">
+                <div class="program-step">
+                    <div class="step-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M16 21V19C16 17.9391 15.5786 16.9217 14.8284 16.1716C14.0783 15.4214 13.0609 15 12 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21M12.5 7C12.5 9.48528 10.4853 11.5 8 11.5C5.51472 11.5 3.5 9.48528 3.5 7C3.5 4.51472 5.51472 2.5 8 2.5C10.4853 2.5 12.5 4.51472 12.5 7ZM23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89317 18.7122 8.75608 18.1676 9.45768C17.623 10.1593 16.8604 10.6597 16 10.88" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>Consumer Requests Help</h3>
+                    <p>The consumer actively requests ACA / Medicare / Final Expense help. They want coverage now — not a newsletter, not a quote 'someday.'</p>
+                </div>
+                
+                <div class="program-step">
+                    <div class="step-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>We Qualify the Call First</h3>
+                    <p>We verify they're eligible and actually shopping. You're not babysitting people who 'just want to think about it.'</p>
+                </div>
+                
+                <div class="program-step">
+                    <div class="step-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22 16.92V19.92C22.0011 20.1985 21.9441 20.4742 21.8325 20.7293C21.7209 20.9845 21.5573 21.2136 21.3521 21.4019C21.1468 21.5901 20.9046 21.7335 20.6407 21.8227C20.3769 21.9119 20.0974 21.9451 19.82 21.92H4.18C3.90257 21.9451 3.62306 21.9119 3.35925 21.8227C3.09544 21.7335 2.85319 21.5901 2.64796 21.4019C2.44273 21.2136 2.27909 20.9845 2.16747 20.7293C2.05585 20.4742 1.9989 20.1985 2 19.92V16.92L12 9L22 16.92Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>We Live-Transfer to You</h3>
+                    <p>You're instantly talking to someone who is ready to enroll.</p>
+                </div>
+                
+                <div class="program-step">
+                    <div class="step-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 1V23M17 5H9.5C8.11929 5 7 6.11929 7 7.5S8.11929 10 9.5 10H14.5C15.8807 10 17 11.1193 17 12.5S15.8807 15 14.5 15H7M7 5V3C7 1.89543 7.89543 1 9 1H15C16.1046 1 17 1.89543 17 3V5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>You Close, Then You Pay</h3>
+                    <p>If they enroll, congrats — you made money and we invoice the call. If they didn't enroll, you owe $0 for that call.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pain Relief Section -->
+    <section class="section section-alt">
+        <div class="container">
+            <div class="section-header">
+                <h2>Why Agents Burn Out — And How We Fix It.</h2>
+                <p>Stop wasting time and money on garbage leads. Here's the difference.</p>
+            </div>
+            
+            <div class="pain-relief-comparison">
+                <div class="comparison-card typical">
+                    <div class="comparison-header">
+                        <div class="comparison-icon warning">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 9V13M12 17H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <h3>The Usual 'Lead Vendor' Experience</h3>
+                    </div>
+                    <ul class="comparison-list">
+                        <li>
+                            <svg class="comparison-icon x" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            You prepay for 'exclusive leads' that aren't exclusive
+                        </li>
+                        <li>
+                            <svg class="comparison-icon x" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Half the numbers are dead
+                        </li>
+                        <li>
+                            <svg class="comparison-icon x" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            They ghost you the second you say 'licensed agent'
+                        </li>
+                        <li>
+                            <svg class="comparison-icon x" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            No refunds. 'That's just marketing.'
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="comparison-card perenroll">
+                    <div class="comparison-header">
+                        <div class="comparison-icon success">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <h3>The perEnroll Call Model</h3>
+                    </div>
+                    <ul class="comparison-list">
+                        <li>
+                            <svg class="comparison-icon check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Live human on the phone, in real time
+                        </li>
+                        <li>
+                            <svg class="comparison-icon check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            They asked for ACA / Medicare / Final Expense help today
+                        </li>
+                        <li>
+                            <svg class="comparison-icon check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            You control the close
+                        </li>
+                        <li>
+                            <svg class="comparison-icon check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            You're only billed if you actually wrote business
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Agent Success Stories -->
+    <section class="section section-alt">
+        <div class="container">
+            <div class="section-header">
+                <h2>Real Agents. Real Results.</h2>
+                <p>See how licensed agents are scaling their income with our live call program.</p>
+            </div>
+            
+            <div class="success-stories">
+                <div class="story-card">
+                    <div class="story-header">
+                        <div class="agent-avatar">
+                            <span>SM</span>
+                        </div>
+                        <div class="agent-info">
+                            <h4>Sarah Martinez</h4>
+                            <p>Licensed Agent, Texas</p>
+                        </div>
+                        <div class="story-stats">
+                            <div class="stat">
+                                <span class="stat-number">$8,400</span>
+                                <span class="stat-label">First Month</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="story-content">
+                        <p>"I was skeptical about live calls, but these are real buyers. I closed 3 FE policies my first day. The qualification process is solid - no tire kickers."</p>
+                    </div>
+                    <div class="story-tags">
+                        <span class="tag">ACA</span>
+                        <span class="tag">Medicare</span>
+                    </div>
+                </div>
+                
+                <div class="story-card">
+                    <div class="story-header">
+                        <div class="agent-avatar">
+                            <span>MJ</span>
+                        </div>
+                        <div class="agent-info">
+                            <h4>Mike Johnson</h4>
+                            <p>Licensed Agent, Florida</p>
+                        </div>
+                        <div class="story-stats">
+                            <div class="stat">
+                                <span class="stat-number">$12,600</span>
+                                <span class="stat-label">Month 2</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="story-content">
+                        <p>"Finally, a lead source that makes sense. I only pay when I close, and these people actually want coverage. My close rate is 40% higher than cold leads."</p>
+                    </div>
+                    <div class="story-tags">
+                        <span class="tag">Final Expense</span>
+                        <span class="tag">Medicare</span>
+                    </div>
+                </div>
+                
+                <div class="story-card">
+                    <div class="story-header">
+                        <div class="agent-avatar">
+                            <span>LC</span>
+                        </div>
+                        <div class="agent-info">
+                            <h4>Lisa Chen</h4>
+                            <p>Licensed Agent, California</p>
+                        </div>
+                        <div class="story-stats">
+                            <div class="stat">
+                                <span class="stat-number">$18,200</span>
+                                <span class="stat-label">Month 3</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="story-content">
+                        <p>"I've been burned by lead vendors before. This is different. Real people, real urgency, real sales. I'm building a book of business that actually pays residuals."</p>
+                    </div>
+                    <div class="story-tags">
+                        <span class="tag">ACA</span>
+                        <span class="tag">Final Expense</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Agent Money Math -->
+    <section class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2>If You Can Close, You Can Scale.</h2>
+                <p>Most agents don't have a lead problem. They have a time-waster problem. We remove the waste. You stay on the phone with real buyers.</p>
+            </div>
+            
+            <div class="money-math-stats">
+                <div class="stat-card">
+                    <div class="stat-number">95%</div>
+                    <div class="stat-label">of calls that are qualified before you ever say hello</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">24hrs</div>
+                    <div class="stat-label">Average time to first sale</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">$2,400</div>
+                    <div class="stat-label">Residual potential per enroll</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call Availability -->
+    <section class="section section-alt">
+        <div class="container">
+            <div class="section-header">
+                <h2>What Lines Are Available Right Now</h2>
+                <p>Three proven markets with high-intent consumers ready to buy.</p>
+            </div>
+            
+            <div class="call-availability">
+                <div class="availability-card">
+                    <div class="card-header">
+                        <h3>ACA Calls</h3>
+                        <div class="availability-badge">High Demand</div>
+                    </div>
+                    <p>Open-enrollment and SEP demand is nonstop. High intent. Fast close.</p>
+                    <div class="card-details">
+                        <h4>Perfect for:</h4>
+                        <p>If you're licensed in ACA states and comfortable selling over the phone with simple scripts and emotional buying triggers.</p>
+                        <h4>Agent Benefit:</h4>
+                        <p>One-call close potential with immediate commission and residual income.</p>
+                    </div>
+                </div>
+                
+                <div class="availability-card">
+                    <div class="card-header">
+                        <h3>Medicare Calls</h3>
+                        <div class="availability-badge">Year-Round</div>
+                    </div>
+                    <p>Turning-65 and plan-switch conversations with real urgency.</p>
+                    <div class="card-details">
+                        <h4>Perfect for:</h4>
+                        <p>If you're Medicare licensed and can handle seniors who need coverage immediately.</p>
+                        <h4>Agent Benefit:</h4>
+                        <p>High-value policies with recurring commissions and strong renewal rates.</p>
+                    </div>
+                </div>
+                
+                <div class="availability-card">
+                    <div class="card-header">
+                        <h3>Final Expense Calls</h3>
+                        <div class="availability-badge">Consistent</div>
+                    </div>
+                    <p>Seniors actively asking about burial / legacy protection, ready to bind in one call.</p>
+                    <div class="card-details">
+                        <h4>Perfect for:</h4>
+                        <p>If you're comfortable with emotional sales and seniors who want to protect their families.</p>
+                        <h4>Agent Benefit:</h4>
+                        <p>Simple scripts, emotional buying trigger, one-call close with immediate payout.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Options -->
+    <section class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Choose Your Pricing Model</h2>
+                <p>Two ways to work with us - CPA (Cost Per Acquisition) or Pay Per Call. Pick what works for your business.</p>
+            </div>
+            
+            <div class="pricing-options">
+                <!-- CPA Option -->
+                <div class="pricing-card cpa-option">
+                    <div class="pricing-header">
+                        <h3>CPA Model</h3>
+                        <div class="pricing-badge">No-Risk</div>
+                        <p class="pricing-subtitle">You only pay when you close</p>
+                    </div>
+                    
+                    <div class="pricing-details">
+                        <div class="pricing-item">
+                            <div class="pricing-line">
+                                <span class="line-name">Final Expense</span>
+                                <span class="line-price">32.5% of annual premium</span>
+                            </div>
+                            <p class="line-description">If customer doesn't get approved and make first payment, we replace the policy</p>
+                        </div>
+                        
+                        <div class="pricing-item">
+                            <div class="pricing-line">
+                                <span class="line-name">ACA</span>
+                                <span class="line-price">$80</span>
+                            </div>
+                            <p class="line-description">If customer doesn't get approved and make first payment, we replace the policy</p>
+                        </div>
+                        
+                        <div class="pricing-item">
+                            <div class="pricing-line">
+                                <span class="line-name">Medicare</span>
+                                <span class="line-price">$180</span>
+                            </div>
+                            <p class="line-description">If customer's policy doesn't get paid to agency, we replace the policy</p>
+                        </div>
+                    </div>
+                    
+                    <div class="pricing-benefits">
+                        <h4>CPA Benefits:</h4>
+                        <ul>
+                            <li>✓ Zero upfront cost</li>
+                            <li>✓ Only pay when you close</li>
+                            <li>✓ Policy replacement guarantee</li>
+                            <li>✓ Perfect for established agents</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Pay Per Call Option -->
+                <div class="pricing-card pay-per-call-option">
+                    <div class="pricing-header">
+                        <h3>Pay Per Call</h3>
+                        <div class="pricing-badge">Immediate</div>
+                        <p class="pricing-subtitle">Pay upfront, get qualified calls instantly</p>
+                    </div>
+                    
+                    <div class="pricing-details">
+                        <div class="pricing-item">
+                            <div class="pricing-line">
+                                <span class="line-name">120-Second Buffer</span>
+                                <span class="line-price">$35 per call</span>
+                            </div>
+                            <p class="line-description">Extended-buffer live call. Agent has up to 120 seconds to engage and verify interest before accepting.</p>
+                        </div>
+                        
+                        <div class="pricing-item">
+                            <div class="pricing-line">
+                                <span class="line-name">180-Second Buffer</span>
+                                <span class="line-price">$40 per call</span>
+                            </div>
+                            <p class="line-description">Extended-buffer live call. Agent has up to 180 seconds to engage and verify interest before accepting.</p>
+                        </div>
+                        
+                        <div class="pricing-item">
+                            <div class="pricing-line">
+                                <span class="line-name">AI-Qualified "Ready to Quote"</span>
+                                <span class="line-price">$45 per call</span>
+                            </div>
+                            <p class="line-description">AI-verified prospect that passes qualification check. No buffer time - prospect is ready to quote.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="pricing-benefits">
+                        <h4>Pay Per Call Benefits:</h4>
+                        <ul>
+                            <li>✓ Immediate call delivery</li>
+                            <li>✓ Multiple buffer options</li>
+                            <li>✓ AI pre-qualification available</li>
+                            <li>✓ Perfect for testing markets</li>
+                        </ul>
+                    </div>
+                    
+                    <button class="pricing-cta" onclick="openPricingModal()">
+                        Choose Pay Per Call Option
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="section cta-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Want Calls Sent To You?</h2>
+                <p>Tell us where you're licensed. We'll tell you where we can feed you live buyers.</p>
+            </div>
+            
+            <div class="cta-form-container">
+                <div class="cta-form">
+                    <div class="form-header">
+                        <h3>Get Started Today</h3>
+                        <p>Tell us about yourself and we'll get you matched with live calls.</p>
+                    </div>
+                    
+                    <form id="call-interest-form" class="modern-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="callName">Full Name *</label>
+                                <input type="text" id="callName" name="fullName" required placeholder="Enter your full name">
+                            </div>
+                            <div class="form-group">
+                                <label for="callEmail">Email Address *</label>
+                                <input type="email" id="callEmail" name="email" required placeholder="your.email@example.com">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="callState">License State(s) *</label>
+                                <select id="callState" name="state" required>
+                                    <option value="">Select your state</option>
+                                    <option value="AL">Alabama</option>
+                                    <option value="AK">Alaska</option>
+                                    <option value="AZ">Arizona</option>
+                                    <option value="AR">Arkansas</option>
+                                    <option value="CA">California</option>
+                                    <option value="CO">Colorado</option>
+                                    <option value="CT">Connecticut</option>
+                                    <option value="DE">Delaware</option>
+                                    <option value="DC">District of Columbia</option>
+                                    <option value="FL">Florida</option>
+                                    <option value="GA">Georgia</option>
+                                    <option value="HI">Hawaii</option>
+                                    <option value="ID">Idaho</option>
+                                    <option value="IL">Illinois</option>
+                                    <option value="IN">Indiana</option>
+                                    <option value="IA">Iowa</option>
+                                    <option value="KS">Kansas</option>
+                                    <option value="KY">Kentucky</option>
+                                    <option value="LA">Louisiana</option>
+                                    <option value="ME">Maine</option>
+                                    <option value="MD">Maryland</option>
+                                    <option value="MA">Massachusetts</option>
+                                    <option value="MI">Michigan</option>
+                                    <option value="MN">Minnesota</option>
+                                    <option value="MS">Mississippi</option>
+                                    <option value="MO">Missouri</option>
+                                    <option value="MT">Montana</option>
+                                    <option value="NE">Nebraska</option>
+                                    <option value="NV">Nevada</option>
+                                    <option value="NH">New Hampshire</option>
+                                    <option value="NJ">New Jersey</option>
+                                    <option value="NM">New Mexico</option>
+                                    <option value="NY">New York</option>
+                                    <option value="NC">North Carolina</option>
+                                    <option value="ND">North Dakota</option>
+                                    <option value="OH">Ohio</option>
+                                    <option value="OK">Oklahoma</option>
+                                    <option value="OR">Oregon</option>
+                                    <option value="PA">Pennsylvania</option>
+                                    <option value="RI">Rhode Island</option>
+                                    <option value="SC">South Carolina</option>
+                                    <option value="SD">South Dakota</option>
+                                    <option value="TN">Tennessee</option>
+                                    <option value="TX">Texas</option>
+                                    <option value="UT">Utah</option>
+                                    <option value="VT">Vermont</option>
+                                    <option value="VA">Virginia</option>
+                                    <option value="WA">Washington</option>
+                                    <option value="WV">West Virginia</option>
+                                    <option value="WI">Wisconsin</option>
+                                    <option value="WY">Wyoming</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Which calls do you want? *</label>
+                                <div class="checkbox-group">
+                                    <label class="checkbox-option">
+                                        <input type="checkbox" name="callTypes" value="aca">
+                                        <span class="checkmark"></span>
+                                        ACA Calls
+                                    </label>
+                                    <label class="checkbox-option">
+                                        <input type="checkbox" name="callTypes" value="medicare">
+                                        <span class="checkmark"></span>
+                                        Medicare Calls
+                                    </label>
+                                    <label class="checkbox-option">
+                                        <input type="checkbox" name="callTypes" value="final-expense">
+                                        <span class="checkmark"></span>
+                                        Final Expense Calls
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-submit-container">
+                            <button type="submit" class="form-submit">
+                                <span>Start My Call Feed</span>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="form-note">
+                            <p>✓ No commitment required • ✓ Free consultation • ✓ Get matched within 24 hours</p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Modal -->
+    <div id="pricingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Choose Your Pay Per Call Option</h3>
+                <button class="modal-close" onclick="closePricingModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Select the pay-per-call option that works best for your business:</p>
+                
+                <div class="modal-options">
+                    <div class="modal-option">
+                        <div class="option-header">
+                            <h4>120-Second Buffer</h4>
+                            <span class="option-price">$35 per call</span>
+                        </div>
+                        <p>Extended-buffer live call from a high-intent insurance prospect. Agent has up to 120 seconds to engage and verify interest before accepting the lead.</p>
+                        <a href="https://buy.stripe.com/3cI4gyayz5RA12fdkR63K1e" target="_blank" class="option-button">
+                            Purchase 120-Second Buffer Calls
+                        </a>
+                    </div>
+                    
+                    <div class="modal-option">
+                        <div class="option-header">
+                            <h4>180-Second Buffer</h4>
+                            <span class="option-price">$40 per call</span>
+                        </div>
+                        <p>Extended-buffer live call from a high-intent insurance prospect. Agent has up to 180 seconds to engage and verify interest before accepting the lead.</p>
+                        <a href="https://buy.stripe.com/6oU9AS0XZa7QcKX1C963K1f" target="_blank" class="option-button">
+                            Purchase 180-Second Buffer Calls
+                        </a>
+                    </div>
+                    
+                    <div class="modal-option">
+                        <div class="option-header">
+                            <h4>AI-Qualified "Ready to Quote"</h4>
+                            <span class="option-price">$45 per call</span>
+                        </div>
+                        <p>AI-verified prospect call that passes a live qualification check. Only calls answering "Yes" are delivered. No buffer time — prospect is fully qualified and ready to quote.</p>
+                        <a href="https://buy.stripe.com/cNi00ifSTeo612f5Sp63K1g" target="_blank" class="option-button">
+                            Purchase AI-Qualified Calls
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>perEnroll</h4>
+                    <p>Connecting licensed health insurance agents with top ACA agencies nationwide.</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul style="list-style: none;">
+                        <li><a href="/marketing.html#how-it-works">How It Works</a></li>
+                        <li><a href="/live-calls.html">Live Calls</a></li>
+                        <li><a href="/marketing.html#why-perenroll">Why perEnroll</a></li>
+                        <li><a href="/marketing.html#about">About</a></li>
+                        <li><a href="/portal.html">Start Onboarding</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <ul style="list-style: none;">
+                        <li><a href="/terms-of-service.html">Terms of Service</a></li>
+                        <li><a href="/privacy-policy.html">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: <a href="mailto:admin@getlifeassurance.com">admin@getlifeassurance.com</a></p>
+                    <p>Phone: <a href="tel:+15512129263">1 (551) 212-9263</a></p>
+                    <p>Jersey City, NJ 07307</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Life Assurance Solutions LLC. All rights reserved. perEnroll.com is a service of Life Assurance Solutions LLC.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        mobileMenuToggle.addEventListener('click', () => {
+            mobileMenu.classList.toggle('active');
+        });
+        
+        // Close mobile menu when clicking on links
+        const mobileMenuLinks = document.querySelectorAll('.mobile-menu-links a');
+        mobileMenuLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.remove('active');
+            });
+        });
+        
+        // Form submission
+        document.getElementById('call-interest-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form data
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            
+            // Get selected call types
+            const callTypes = Array.from(document.querySelectorAll('input[name="callTypes"]:checked')).map(cb => cb.value);
+            data.callTypes = callTypes;
+            
+            // Store form data in localStorage for the onboarding flow
+            localStorage.setItem('callInterestData', JSON.stringify(data));
+            
+            // Redirect to onboarding
+            window.location.href = '/portal.html';
+        });
+        
+        // Add scroll effect to header
+        let lastScrollY = window.scrollY;
+        const header = document.querySelector('.header');
+        
+        window.addEventListener('scroll', () => {
+            const currentScrollY = window.scrollY;
+            
+            if (currentScrollY > 100) {
+                header.style.background = 'rgba(255, 255, 255, 0.98)';
+                header.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
+            } else {
+                header.style.background = 'rgba(255, 255, 255, 0.95)';
+                header.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+            }
+            
+            lastScrollY = currentScrollY;
+        });
+        
+        // Animated Statistics
+        function animateStats() {
+            const statNumbers = document.querySelectorAll('.stat-number[data-target]');
+            
+            statNumbers.forEach(stat => {
+                const target = parseInt(stat.getAttribute('data-target'));
+                const duration = 2000; // 2 seconds
+                const increment = target / (duration / 16); // 60fps
+                let current = 0;
+                
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        current = target;
+                        clearInterval(timer);
+                    }
+                    stat.textContent = Math.floor(current);
+                }, 16);
+            });
+        }
+        
+        // Animate stats in the new stats section
+        function animateStatsSection() {
+            const statNumbers = document.querySelectorAll('.stats-section .stat-number[data-target]');
+            
+            statNumbers.forEach(stat => {
+                const target = stat.getAttribute('data-target');
+                const isDollar = target.includes('$');
+                const numericTarget = parseInt(target.replace('$', ''));
+                const duration = 2000;
+                const increment = numericTarget / (duration / 16);
+                let current = 0;
+                
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= numericTarget) {
+                        current = numericTarget;
+                        clearInterval(timer);
+                    }
+                    stat.textContent = isDollar ? '$' + Math.floor(current) : Math.floor(current);
+                }, 16);
+            });
+        }
+        
+        // Initialize animations when page loads
+        setTimeout(animateStatsSection, 500);
+        
+        // Pricing Modal Functions
+        function openPricingModal() {
+            document.getElementById('pricingModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closePricingModal() {
+            document.getElementById('pricingModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('pricingModal');
+            if (event.target === modal) {
+                closePricingModal();
+            }
+        }
+    </script>
+</body>
+</html>
+
+</html>

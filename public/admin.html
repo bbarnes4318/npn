@@ -3,148 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin — Agent Documents</title>
-  <link rel="stylesheet" href="/styles.css" />
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="/new-styles.css" />
 </head>
 <body>
   <header class="header">
     <div class="container header-inner">
       <a class="logo" href="/">
-        <span class="logo-mark">N</span>
-        <span>ACA Agent Onboarding</span>
+        <img src="/perenroll.png" alt="perEnroll Logo" style="height: 40px;" />
       </a>
-      <nav class="nav">
-        <a href="/portal.html">Portal</a>
-        <a href="#">Admin</a>
-      </nav>
     </div>
   </header>
 
   <main class="section">
     <div class="container">
-      <div class="card" style="margin-bottom:16px;">
-        <h2 style="margin:0;">Admin — Download Agent Documents</h2>
-        <p class="help">Enter an Agent ID to list artifacts and download a ZIP of all documents (W‑9, certifications, signatures, etc.).</p>
-      </div>
-
-      <div class="card">
-        <form id="adminForm" class="form" onsubmit="return false;">
-          <div class="grid columns-2">
-            <div class="field">
-              <label class="label">Admin Password</label>
-              <input class="input" type="password" id="adminPasswordInput" placeholder="Enter admin password" />
-              <div class="help">Required if ADMIN_PASSWORD is set on the server. Stored locally in your browser only.</div>
-            </div>
-            <div class="field">
-              <label class="label">Agent ID</label>
-              <input class="input" type="text" id="agentIdInput" placeholder="e.g., abc123xyz" />
-            </div>
-            <div class="field">
-              <label class="label">Find by Email</label>
-              <div class="inline" style="gap:8px;">
-                <input class="input" type="email" id="emailInput" placeholder="someone@example.com" />
-                <button class="button ghost" id="findByEmailBtn" type="button">Find</button>
-              </div>
-              <div class="help">Looks up the agent and auto-fills Agent ID.</div>
-            </div>
-          </div>
-          <div class="cta-row" style="margin-top:8px;">
-            <button class="button secondary" id="listBtn" type="button">List documents</button>
-            <button class="button primary" id="downloadZipBtn" type="button">Download ZIP</button>
-            <button class="button ghost" id="openW9Btn" type="button">Open W‑9 (PDF)</button>
-          </div>
-          <div class="cta-row" style="margin-top:8px;">
-            <button class="button primary" id="openIntakePdfBtn" type="button" style="background: #28a745; border-color: #28a745;">📄 View Signed Intake PDF</button>
-            <button class="button primary" id="openW9SignedPdfBtn" type="button" style="background: #17a2b8; border-color: #17a2b8;">📄 View Signed W9 PDF</button>
-          </div>
-          <div class="cta-row" style="margin-top:8px; border-top: 1px solid #e9ecef; padding-top: 16px;">
-            <button class="button primary" id="downloadAllBtn" type="button" style="background: #dc3545; border-color: #dc3545;">📥 DOWNLOAD ALL SIGNED DOCUMENTS</button>
-            <div class="help" style="margin-top: 8px; color: #dc3545; font-weight: bold;">This will download EVERY signed document from EVERY agent including all W9s, signatures, and submissions in one ZIP file.</div>
-          </div>
-          <div id="adminMsg" class="help"></div>
-        </form>
-      </div>
-
-      <div class="card" style="margin-top:16px;">
-        <h3 style="margin-top:0;">Recent Agents</h3>
-        <div class="inline" style="gap:8px; margin-bottom:8px; align-items:center; flex-wrap:wrap;">
-          <input class="input" id="recentSearchInput" type="text" placeholder="Filter by email or name" style="min-width:260px;" />
-          <button class="button secondary" id="refreshAgentsBtn" type="button">Refresh</button>
-          <span id="recentMsg" class="help"></span>
-        </div>
-        <div style="overflow:auto;">
-          <table class="table" style="width:100%; min-width:720px;">
-            <thead>
-              <tr>
-                <th>Created</th>
-                <th>Agent ID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Progress</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="agentsTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>Documents</h3>
-        <ul id="docsList" class="list"></ul>
-      </div>
-
-      <div class="card" style="margin-top: 16px;">
-        <h3 style="margin-top: 0;">📄 ALL SUBMITTED SIGNED PDFs</h3>
-        <div class="inline" style="gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap;">
-          <button class="button secondary" id="refreshAllPdfsBtn" type="button">🔄 Refresh All PDFs</button>
-          <button class="button primary" id="downloadAllPdfsBtn" type="button" style="background: #dc3545; border-color: #dc3545;">📥 Download All PDFs ZIP</button>
-          <span id="allPdfsMsg" class="help"></span>
-        </div>
-        <div style="overflow: auto; max-height: 400px;">
-          <table class="table" style="width: 100%; min-width: 800px;">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Agent ID</th>
-                <th>Name</th>
-                <th>Type</th>
-                <th>PDF File</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="allPdfsTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="card" style="margin-top:16px;">
-        <h3 style="margin-top:0;">All Form Submissions</h3>
-        <div class="inline" style="gap:8px; margin-bottom:8px; align-items:center; flex-wrap:wrap;">
-          <select class="input" id="submissionTypeFilter" style="min-width:120px;">
-            <option value="">All Types</option>
-            <option value="intake">Intake</option>
-            <option value="w9">W-9</option>
-            <option value="banking">Banking</option>
-            <option value="packet">Packet</option>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2>Admin Dashboard</h2>
+        <div style="display: flex; gap: 1rem;">
+          <input type="text" id="search" class="input" placeholder="Search by name or email..." />
+          <select id="status-filter" class="input">
+            <option value="all">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="complete">Complete</option>
           </select>
-          <input class="input" id="submissionSearchInput" type="text" placeholder="Search by name, email, or ID" style="min-width:260px;" />
-          <button class="button secondary" id="refreshSubmissionsBtn" type="button">Refresh</button>
-          <span id="submissionsMsg" class="help"></span>
         </div>
-        <div style="overflow:auto;">
-          <table class="table" style="width:100%; min-width:800px;">
+      </div>
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table">
             <thead>
               <tr>
-                <th>Date</th>
-                <th>Type</th>
-                <th>ID</th>
-                <th>Name/Email</th>
-                <th>Details</th>
+                <th>Agent Name</th>
+                <th>Email</th>
+                <th>Onboarding Status</th>
+                <th>Documents</th>
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody id="submissionsTableBody"></tbody>
+            <tbody id="agents-table-body">
+              <!-- Agent rows will be dynamically inserted here -->
+            </tbody>
           </table>
         </div>
       </div>
@@ -160,6 +58,15 @@
     </div>
   </footer>
 
+  <!-- Agent Details Modal -->
+  <div id="agent-modal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" id="modal-close">&times;</span>
+      <div id="modal-content-body">
+        <!-- Agent details will be loaded here -->
+      </div>
+    </div>
+  </div>
   <script src="/admin.js" defer></script>
 </body>
 </html>

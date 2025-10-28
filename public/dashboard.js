@@ -50,6 +50,109 @@
     }
   }
 
+  // Phone number formatting function
+  function formatPhoneNumber(input) {
+    let value = input.value.replace(/\D/g, ''); // Remove all non-digits
+    let formattedValue = '';
+    
+    if (value.length >= 1) {
+      formattedValue = '(' + value.substring(0, 3);
+    }
+    if (value.length >= 4) {
+      formattedValue += ') ' + value.substring(3, 6);
+    }
+    if (value.length >= 7) {
+      formattedValue += '-' + value.substring(6, 10);
+    }
+    
+    input.value = formattedValue;
+  }
+
+  // SSN formatting function
+  function formatSSN(input) {
+    let value = input.value.replace(/\D/g, ''); // Remove all non-digits
+    let formattedValue = '';
+    
+    if (value.length >= 1) {
+      formattedValue = value.substring(0, 3);
+    }
+    if (value.length >= 4) {
+      formattedValue += '-' + value.substring(3, 5);
+    }
+    if (value.length >= 6) {
+      formattedValue += '-' + value.substring(5, 9);
+    }
+    
+    input.value = formattedValue;
+  }
+
+  // Auto-fill hire date with 11/01/2025
+  function autoFillHireDate() {
+    const hireDateFields = document.querySelectorAll('input[name="dateOfHire"], input[name="date_of_hire"]');
+    hireDateFields.forEach(field => {
+      if (!field.value) {
+        field.value = '2025-11-01';
+      }
+    });
+  }
+
+  // Auto-populate signature dates with today's date
+  function autoPopulateSignatureDates() {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    const signatureDateFields = document.querySelectorAll('input[name="signatureDate"]');
+    signatureDateFields.forEach(field => {
+      if (!field.value) {
+        field.value = today;
+      }
+    });
+  }
+
+  // Initialize phone formatting for all phone inputs
+  function initializePhoneFormatting() {
+    const phoneInputs = document.querySelectorAll('input[type="tel"], input[name="phone"]');
+    phoneInputs.forEach(input => {
+      input.addEventListener('input', () => formatPhoneNumber(input));
+      input.addEventListener('keydown', (e) => {
+        // Allow backspace, delete, tab, escape, enter
+        if ([8, 9, 27, 13, 46].indexOf(e.keyCode) !== -1 ||
+            // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+            (e.keyCode === 65 && e.ctrlKey === true) ||
+            (e.keyCode === 67 && e.ctrlKey === true) ||
+            (e.keyCode === 86 && e.ctrlKey === true) ||
+            (e.keyCode === 88 && e.ctrlKey === true)) {
+          return;
+        }
+        // Ensure that it is a number and stop the keypress
+        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+          e.preventDefault();
+        }
+      });
+    });
+  }
+
+  // Initialize SSN formatting for all SSN inputs
+  function initializeSSNFormatting() {
+    const ssnInputs = document.querySelectorAll('input[name="ssn"], input[id*="ssn"], input[placeholder*="XXX-XX-XXXX"]');
+    ssnInputs.forEach(input => {
+      input.addEventListener('input', () => formatSSN(input));
+      input.addEventListener('keydown', (e) => {
+        // Allow backspace, delete, tab, escape, enter
+        if ([8, 9, 27, 13, 46].indexOf(e.keyCode) !== -1 ||
+            // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+            (e.keyCode === 65 && e.ctrlKey === true) ||
+            (e.keyCode === 67 && e.ctrlKey === true) ||
+            (e.keyCode === 86 && e.ctrlKey === true) ||
+            (e.keyCode === 88 && e.ctrlKey === true)) {
+          return;
+        }
+        // Ensure that it is a number and stop the keypress
+        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+          e.preventDefault();
+        }
+      });
+    });
+  }
+
   async function api(path, options={}) {
     const res = await fetch(path, options);
     if (!res.ok) throw new Error('Request failed');
@@ -278,6 +381,12 @@
 
     // Wire conditionals
     wireConditionals();
+
+    // Initialize phone formatting and auto-fill dates
+    initializePhoneFormatting();
+    initializeSSNFormatting();
+    autoFillHireDate();
+    autoPopulateSignatureDates();
 
     // Populate states for integrated Intake and re-select saved values
     const statesMulti = document.querySelector('.states-multi');
