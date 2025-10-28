@@ -2118,11 +2118,13 @@ p {
 
 .modal-content {
   background-color: var(--brand-bg);
-  margin: 8% auto;
+  margin: 5% auto;
   padding: 0;
   border-radius: 16px;
   width: 90%;
-  max-width: 700px;
+  max-width: 750px;
+  max-height: 85vh;
+  overflow-y: auto;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
   border: 1px solid rgba(0, 176, 79, 0.1);
   animation: modalSlideIn 0.3s ease-out;
@@ -2143,7 +2145,7 @@ p {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 2rem 2rem 1rem;
+  padding: 1.5rem 1.5rem 0.75rem;
   border-bottom: 1px solid #E9ECEF;
   background: linear-gradient(135deg, rgba(0, 176, 79, 0.02) 0%, rgba(0, 176, 79, 0.05) 100%);
   border-radius: 16px 16px 0 0;
@@ -2178,7 +2180,7 @@ p {
 }
 
 .modal-body {
-  padding: 2rem 2rem 2.5rem;
+  padding: 1.5rem 1.5rem 2rem;
 }
 
 .modal-body p {
@@ -2189,13 +2191,13 @@ p {
 
 .modal-options {
   display: grid;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .modal-option {
   border: 2px solid #E9ECEF;
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1.25rem;
   transition: var(--transition-normal);
   background: #FAFBFC;
   position: relative;
@@ -2212,7 +2214,7 @@ p {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .option-header h4 {
@@ -2230,7 +2232,7 @@ p {
 
 .modal-option p {
   color: var(--brand-text-light);
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
   font-size: 0.95rem;
   line-height: 1.5;
 }
@@ -2270,22 +2272,23 @@ p {
   }
   
   .modal-content {
-    margin: 10% auto;
+    margin: 8% auto;
     width: 95%;
     max-width: 600px;
+    max-height: 80vh;
   }
   
   .modal-header,
   .modal-body {
-    padding: 1.5rem;
+    padding: 1.25rem;
   }
   
   .modal-header {
-    padding: 1.5rem 1.5rem 1rem;
+    padding: 1.25rem 1.25rem 0.75rem;
   }
   
   .modal-body {
-    padding: 1.5rem 1.5rem 2rem;
+    padding: 1.25rem 1.25rem 1.75rem;
   }
   
   .option-header {
