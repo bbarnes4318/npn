@@ -517,9 +517,9 @@ async function gatherAgentDocuments(agent, { includeW9 = true } = {}) {
       });
     }
     
-  } catch (e) {
+      } catch (e) {
     console.error('Error gathering agent documents:', e);
-  }
+      }
   
   return files;
 }
@@ -1154,13 +1154,13 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
       agent = await readAgent(body.agentId);
     } else if (body.email) {
       agent = await findOrCreateAgentByEmail(body.email);
-      if (!agent) {
-        agent = newAgent({
-          firstName: body.firstName || '',
-          lastName: body.lastName || '',
-          email: body.email || '',
-          phone: body.phone || ''
-        });
+    if (!agent) {
+      agent = newAgent({
+        firstName: body.firstName || '',
+        lastName: body.lastName || '',
+        email: body.email || '',
+        phone: body.phone || ''
+      });
       }
     }
     if (agent) {
@@ -1310,12 +1310,12 @@ app.post('/api/w9', async (req, res) => {
     // Link to agent if provided
     if (body.agentId) {
       const agent = await readAgent(body.agentId);
-      if (agent) {
-        agent.progress.w9Submitted = true;
-        agent.submissions.w9Id = id;
-        
-        // Generate official W-9 PDF
-        try {
+    if (agent) {
+      agent.progress.w9Submitted = true;
+      agent.submissions.w9Id = id;
+      
+      // Generate official W-9 PDF
+      try {
           console.log('Generating official W-9 PDF for agent:', agent.id);
           const agentDir = path.join(AGENTS_DIR, agent.id);
           await fse.ensureDir(agentDir);
@@ -1447,10 +1447,10 @@ app.post('/api/w9', async (req, res) => {
           await fse.writeFile(outPath, pdfBytes);
           agent.submissions.w9PdfPath = outPath;
           console.log('Signed W-9 PDF saved successfully to:', outPath);
-        } catch (e) {
+      } catch (e) {
           console.error('Failed to generate W-9 PDF:', e);
-        }
-        
+      }
+      
         await writeAgent(agent);
       }
     }
@@ -1539,15 +1539,15 @@ app.post('/api/banking', async (req, res) => {
     // Link to agent if provided
     if (agentId) {
       const agent = await readAgent(agentId);
-      if (agent) {
-        agent.progress.bankingSubmitted = true;
-        agent.submissions.bankingId = id;
-        agent.banking = {
-          bankName: submission.bankName,
-          accountType: submission.accountType,
-          paymentMethod: submission.paymentMethod,
-          lastUpdated: new Date().toISOString()
-        };
+    if (agent) {
+      agent.progress.bankingSubmitted = true;
+      agent.submissions.bankingId = id;
+      agent.banking = {
+        bankName: submission.bankName,
+        accountType: submission.accountType,
+        paymentMethod: submission.paymentMethod,
+        lastUpdated: new Date().toISOString()
+      };
         await writeAgent(agent);
       }
     }
@@ -1653,9 +1653,9 @@ app.get('/api/admin/all-pdfs', requireAdmin, async (req, res) => {
           for (const file of agentFiles) {
             const fileName = file.Key.split('/').pop();
             if (fileName.toLowerCase().endsWith('.pdf')) {
-              allPdfs.push({
-                agentId: agentId,
-                agentName: agentName,
+            allPdfs.push({
+              agentId: agentId,
+              agentName: agentName,
                 type: fileName.includes('SIGNED_INTAKE') ? 'Signed Intake Documents' : 
                       fileName.includes('SIGNED_W9') ? 'Signed W9 Form' :
                       fileName.includes('SIGNED_BANKING') ? 'Signed Banking Form' : 'Other PDF',
