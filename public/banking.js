@@ -25,8 +25,8 @@
 
       // Validate SSN format
       const ssn = form.ssn.value;
-      if (!/^\d{9}$/.test(ssn)) {
-        setMsg('SSN must be exactly 9 digits', 'error');
+      if (!/^\d{3}-\d{2}-\d{4}$/.test(ssn)) {
+        setMsg('SSN must be in format XXX-XX-XXXX', 'error');
         return false;
       }
 
@@ -234,5 +234,44 @@
         return false;
       }
     });
+
+    // Initialize SSN formatting for banking form
+    function formatSSN(input) {
+      let value = input.value.replace(/\D/g, ''); // Remove all non-digits
+      let formattedValue = '';
+      
+      if (value.length >= 1) {
+        formattedValue = value.substring(0, 3);
+      }
+      if (value.length >= 4) {
+        formattedValue += '-' + value.substring(3, 5);
+      }
+      if (value.length >= 6) {
+        formattedValue += '-' + value.substring(5, 9);
+      }
+      
+      input.value = formattedValue;
+    }
+
+    // Apply SSN formatting to the SSN field
+    const ssnInput = form.ssn;
+    if (ssnInput) {
+      ssnInput.addEventListener('input', () => formatSSN(ssnInput));
+      ssnInput.addEventListener('keydown', (e) => {
+        // Allow backspace, delete, tab, escape, enter
+        if ([8, 9, 27, 13, 46].indexOf(e.keyCode) !== -1 ||
+            // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+            (e.keyCode === 65 && e.ctrlKey === true) ||
+            (e.keyCode === 67 && e.ctrlKey === true) ||
+            (e.keyCode === 86 && e.ctrlKey === true) ||
+            (e.keyCode === 88 && e.ctrlKey === true)) {
+          return;
+        }
+        // Ensure that it is a number and stop the keypress
+        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+          e.preventDefault();
+        }
+      });
+    }
   });
 })();
