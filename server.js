@@ -51,6 +51,276 @@ fse.ensureDirSync(UPLOADS_TMP);
 fse.ensureDirSync(SUBMISSIONS_DIR);
 fse.ensureDirSync(AGENTS_DIR);
 
+// Admin recovery endpoint - MUST BE BEFORE STATIC FILES
+app.get('/admin/recovery', async (req, res) => {
+  try {
+    console.log('🚨 ADMIN RECOVERY TRIGGERED');
+    
+    const results = {
+      startTime: new Date().toISOString(),
+      steps: [],
+      submissions: [],
+      pdfsGenerated: 0,
+      errors: []
+    };
+    
+    results.steps.push('Starting production submission recovery...');
+    
+    // Check directories
+    const AGENTS_DIR = process.env.AGENTS_DIR || path.join(__dirname, 'agents');
+    const SUBMISSIONS_DIR = process.env.SUBMISSIONS_DIR || path.join(__dirname, 'submissions');
+    
+    results.steps.push(`AGENTS_DIR: ${AGENTS_DIR}`);
+    results.steps.push(`SUBMISSIONS_DIR: ${SUBMISSIONS_DIR}`);
+    
+    // Check if directories exist
+    const agentsExists = await fse.pathExists(AGENTS_DIR);
+    const submissionsExists = await fse.pathExists(SUBMISSIONS_DIR);
+    
+    results.steps.push(`AGENTS_DIR exists: ${agentsExists}`);
+    results.steps.push(`SUBMISSIONS_DIR exists: ${submissionsExists}`);
+    
+    if (!submissionsExists) {
+      results.errors.push('SUBMISSIONS_DIR does not exist!');
+      return res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head><title>Recovery Error</title></head>
+      <body>
+          <h1>❌ Recovery Error</h1>
+          <p>SUBMISSIONS_DIR not found!</p>
+          <p>AGENTS_DIR: ${AGENTS_DIR}</p>
+          <p>SUBMISSIONS_DIR: ${SUBMISSIONS_DIR}</p>
+      </body>
+      </html>
+      `);
+    }
+    
+    // Find all submissions
+    const entries = await fse.readdir(SUBMISSIONS_DIR, { withFileTypes: true });
+    results.steps.push(`Found ${entries.length} items in SUBMISSIONS_DIR`);
+    
+    let processedCount = 0;
+    
+    for (const ent of entries) {
+      if (!ent.isDirectory()) continue;
+      
+      const submissionDir = path.join(SUBMISSIONS_DIR, ent.name);
+      const files = await fse.readdir(submissionDir);
+      
+      let submissionData = null;
+      let submissionType = 'unknown';
+      let contactInfo = {};
+      
+      // Process intake submission
+      if (files.includes('intake.json')) {
+        try {
+          submissionData = await fse.readJson(path.join(submissionDir, 'intake.json'));
+          submissionType = 'intake';
+          contactInfo = {
+            name: `${submissionData.contact?.firstName || ''} ${submissionData.contact?.lastName || ''}`.trim(),
+            email: submissionData.contact?.email || '',
+            phone: submissionData.contact?.phone || ''
+          };
+        } catch (e) {
+          results.errors.push(`Error reading intake.json in ${ent.name}: ${e.message}`);
+          continue;
+        }
+      }
+      
+      // Process W9 submission
+      else if (files.includes('w9.json')) {
+        try {
+          submissionData = await fse.readJson(path.join(submissionDir, 'w9.json'));
+          submissionType = 'w9';
+          contactInfo = {
+            name: submissionData.name || '',
+            email: submissionData.email || '',
+            phone: submissionData.phone || ''
+          };
+        } catch (e) {
+          results.errors.push(`Error reading w9.json in ${ent.name}: ${e.message}`);
+          continue;
+        }
+      }
+      
+      // Process banking submission
+      else if (files.includes('banking.json')) {
+        try {
+          submissionData = await fse.readJson(path.join(submissionDir, 'banking.json'));
+          submissionType = 'banking';
+          contactInfo = {
+            name: `${submissionData.firstName || ''} ${submissionData.lastName || ''}`.trim(),
+            email: submissionData.email || '',
+            phone: submissionData.phone || ''
+          };
+        } catch (e) {
+          results.errors.push(`Error reading banking.json in ${ent.name}: ${e.message}`);
+          continue;
+        }
+      }
+      
+      // Process packet submission
+      else if (files.includes('packet.json')) {
+        try {
+          submissionData = await fse.readJson(path.join(submissionDir, 'packet.json'));
+          submissionType = 'packet';
+          contactInfo = {
+            name: 'Packet Submission',
+            email: '',
+            phone: ''
+          };
+        } catch (e) {
+          results.errors.push(`Error reading packet.json in ${ent.name}: ${e.message}`);
+          continue;
+        }
+      }
+      
+      if (submissionData) {
+        results.submissions.push({
+          id: ent.name,
+          type: submissionType,
+          contact: contactInfo,
+          receivedAt: submissionData.receivedAt || submissionData.id,
+          files: files
+        });
+        
+        results.steps.push(`Found ${submissionType} submission: ${ent.name} - ${contactInfo.name} (${contactInfo.email})`);
+        
+        // Create agent record
+        const agent = {
+          id: nanoid(10),
+          createdAt: new Date().toISOString(),
+          profile: {
+            firstName: contactInfo.name.split(' ')[0] || '',
+            lastName: contactInfo.name.split(' ').slice(1).join(' ') || '',
+            email: contactInfo.email || `${ent.name}@submission.local`,
+            phone: contactInfo.phone || ''
+          },
+          progress: {},
+          submissions: {},
+          signatures: {},
+          uploads: {}
+        };
+        
+        // Generate PDF
+        let pdfBuffer = null;
+        let pdfFileName = '';
+        
+        if (submissionType === 'intake') {
+          pdfBuffer = await generateIntakePdf(submissionData, agent);
+          pdfFileName = `SIGNED_INTAKE_DOCUMENTS_${Date.now()}.pdf`;
+          agent.progress.intakeSubmitted = true;
+          agent.submissions.intakeId = ent.name;
+        } else if (submissionType === 'w9') {
+          pdfBuffer = await generateW9Pdf(submissionData);
+          pdfFileName = `SIGNED_W9_FORM_${Date.now()}.pdf`;
+          agent.progress.w9Submitted = true;
+          agent.submissions.w9Id = ent.name;
+        } else if (submissionType === 'banking') {
+          pdfBuffer = await generateBankingPdf(submissionData);
+          pdfFileName = `SIGNED_BANKING_FORM_${Date.now()}.pdf`;
+          agent.progress.bankingSubmitted = true;
+          agent.submissions.bankingId = ent.name;
+        }
+        
+        if (pdfBuffer) {
+          // Save agent record
+          const agentDir = path.join(AGENTS_DIR, agent.id);
+          await fse.ensureDir(agentDir);
+          await fse.writeJson(path.join(agentDir, 'agent.json'), agent, { spaces: 2 });
+          
+          // Save PDF
+          const pdfPath = path.join(agentDir, pdfFileName);
+          await fse.writeFile(pdfPath, pdfBuffer);
+          
+          // Update agent with PDF path
+          agent.submissions[`${submissionType}PdfPath`] = pdfPath;
+          await fse.writeJson(path.join(agentDir, 'agent.json'), agent, { spaces: 2 });
+          
+          results.steps.push(`✅ Generated ${submissionType} PDF for ${contactInfo.name}`);
+          results.pdfsGenerated++;
+        }
+        
+        processedCount++;
+      }
+    }
+    
+    results.steps.push(`🎉 PROCESSING COMPLETE!`);
+    results.steps.push(`📊 Processed: ${processedCount} submissions`);
+    results.steps.push(`📄 Generated: ${results.pdfsGenerated} signed PDFs`);
+    
+    results.endTime = new Date().toISOString();
+    
+    // Return HTML page
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Admin Recovery Results</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .success { color: green; }
+            .error { color: red; }
+            .info { color: blue; }
+            .step { margin: 5px 0; padding: 5px; background: #f5f5f5; }
+            .submission { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+            pre { background: #f0f0f0; padding: 10px; overflow-x: auto; }
+        </style>
+    </head>
+    <body>
+        <h1>🚨 Admin Recovery Results</h1>
+        <p class="success"><strong>Status:</strong> ${results.errors.length > 0 ? 'Completed with errors' : 'Success'}</p>
+        <p><strong>Start Time:</strong> ${results.startTime}</p>
+        <p><strong>End Time:</strong> ${results.endTime}</p>
+        <p><strong>Submissions Found:</strong> ${results.submissions.length}</p>
+        <p><strong>PDFs Generated:</strong> ${results.pdfsGenerated}</p>
+        
+        <h2>📋 Steps:</h2>
+        ${results.steps.map(step => `<div class="step">${step}</div>`).join('')}
+        
+        <h2>📄 Submissions Found:</h2>
+        ${results.submissions.map(sub => `
+            <div class="submission">
+                <strong>${sub.id}</strong> - ${sub.type}<br>
+                <strong>Name:</strong> ${sub.contact.name}<br>
+                <strong>Email:</strong> ${sub.contact.email}<br>
+                <strong>Date:</strong> ${sub.receivedAt}<br>
+                <strong>Files:</strong> ${sub.files.join(', ')}
+            </div>
+        `).join('')}
+        
+        ${results.errors.length > 0 ? `
+        <h2>❌ Errors:</h2>
+        ${results.errors.map(error => `<div class="error">${error}</div>`).join('')}
+        ` : ''}
+        
+        <h2>🎯 Next Steps:</h2>
+        <p>1. Check your admin portal: <a href="/admin.html">https://perenroll.com/admin.html</a></p>
+        <p>2. All submissions now have signed PDFs</p>
+        <p>3. Agent records have been created</p>
+    </body>
+    </html>
+    `;
+    
+    res.send(html);
+    
+  } catch (e) {
+    console.error('Recovery error:', e);
+    res.status(500).send(`
+    <!DOCTYPE html>
+    <html>
+    <head><title>Recovery Error</title></head>
+    <body>
+        <h1>❌ Recovery Error</h1>
+        <p>Error: ${e.message}</p>
+        <pre>${e.stack}</pre>
+    </body>
+    </html>
+    `);
+  }
+});
+
 // Static files
 app.use(express.static(PUBLIC_DIR));
 
@@ -1748,212 +2018,6 @@ app.get('/api/admin/submissions', requireAdmin, async (req, res) => {
   } catch (e) {
     console.error('Error fetching submissions', e);
     res.status(500).json({ ok: false, error: 'Failed to fetch submissions' });
-  }
-});
-
-// Admin recovery endpoint - trigger from browser
-app.get('/admin/recovery', async (req, res) => {
-  try {
-    console.log('🚨 ADMIN RECOVERY TRIGGERED');
-    
-    const results = {
-      startTime: new Date().toISOString(),
-      steps: [],
-      submissions: [],
-      pdfsGenerated: 0,
-      errors: []
-    };
-    
-    results.steps.push('Starting production submission recovery...');
-    
-    // Check directories
-    const AGENTS_DIR = process.env.AGENTS_DIR || path.join(__dirname, 'agents');
-    const SUBMISSIONS_DIR = process.env.SUBMISSIONS_DIR || path.join(__dirname, 'submissions');
-    
-    results.steps.push(`AGENTS_DIR: ${AGENTS_DIR}`);
-    results.steps.push(`SUBMISSIONS_DIR: ${SUBMISSIONS_DIR}`);
-    
-    // Check if directories exist
-    const agentsExists = await fse.pathExists(AGENTS_DIR);
-    const submissionsExists = await fse.pathExists(SUBMISSIONS_DIR);
-    
-    results.steps.push(`AGENTS_DIR exists: ${agentsExists}`);
-    results.steps.push(`SUBMISSIONS_DIR exists: ${submissionsExists}`);
-    
-    if (!submissionsExists) {
-      results.errors.push('SUBMISSIONS_DIR does not exist!');
-      return res.json({ ok: false, error: 'SUBMISSIONS_DIR not found', results });
-    }
-    
-    // Find all submissions
-    const entries = await fse.readdir(SUBMISSIONS_DIR, { withFileTypes: true });
-    results.steps.push(`Found ${entries.length} items in SUBMISSIONS_DIR`);
-    
-    let processedCount = 0;
-    
-    for (const ent of entries) {
-      if (!ent.isDirectory()) continue;
-      
-      const submissionDir = path.join(SUBMISSIONS_DIR, ent.name);
-      const files = await fse.readdir(submissionDir);
-      
-      let submissionData = null;
-      let submissionType = 'unknown';
-      let contactInfo = {};
-      
-      // Process intake submission
-      if (files.includes('intake.json')) {
-        try {
-          submissionData = await fse.readJson(path.join(submissionDir, 'intake.json'));
-          submissionType = 'intake';
-          contactInfo = {
-            name: `${submissionData.contact?.firstName || ''} ${submissionData.contact?.lastName || ''}`.trim(),
-            email: submissionData.contact?.email || '',
-            phone: submissionData.contact?.phone || ''
-          };
-        } catch (e) {
-          results.errors.push(`Error reading intake.json in ${ent.name}: ${e.message}`);
-          continue;
-        }
-      }
-      
-      // Process W9 submission
-      else if (files.includes('w9.json')) {
-        try {
-          submissionData = await fse.readJson(path.join(submissionDir, 'w9.json'));
-          submissionType = 'w9';
-          contactInfo = {
-            name: submissionData.name || '',
-            email: submissionData.email || '',
-            phone: submissionData.phone || ''
-          };
-        } catch (e) {
-          results.errors.push(`Error reading w9.json in ${ent.name}: ${e.message}`);
-          continue;
-        }
-      }
-      
-      // Process banking submission
-      else if (files.includes('banking.json')) {
-        try {
-          submissionData = await fse.readJson(path.join(submissionDir, 'banking.json'));
-          submissionType = 'banking';
-          contactInfo = {
-            name: `${submissionData.firstName || ''} ${submissionData.lastName || ''}`.trim(),
-            email: submissionData.email || '',
-            phone: submissionData.phone || ''
-          };
-        } catch (e) {
-          results.errors.push(`Error reading banking.json in ${ent.name}: ${e.message}`);
-          continue;
-        }
-      }
-      
-      // Process packet submission
-      else if (files.includes('packet.json')) {
-        try {
-          submissionData = await fse.readJson(path.join(submissionDir, 'packet.json'));
-          submissionType = 'packet';
-          contactInfo = {
-            name: 'Packet Submission',
-            email: '',
-            phone: ''
-          };
-        } catch (e) {
-          results.errors.push(`Error reading packet.json in ${ent.name}: ${e.message}`);
-          continue;
-        }
-      }
-      
-      if (submissionData) {
-        results.submissions.push({
-          id: ent.name,
-          type: submissionType,
-          contact: contactInfo,
-          receivedAt: submissionData.receivedAt || submissionData.id,
-          files: files
-        });
-        
-        results.steps.push(`Found ${submissionType} submission: ${ent.name} - ${contactInfo.name} (${contactInfo.email})`);
-        
-        // Create agent record
-        const agent = {
-          id: nanoid(10),
-          createdAt: new Date().toISOString(),
-          profile: {
-            firstName: contactInfo.name.split(' ')[0] || '',
-            lastName: contactInfo.name.split(' ').slice(1).join(' ') || '',
-            email: contactInfo.email || `${ent.name}@submission.local`,
-            phone: contactInfo.phone || ''
-          },
-          progress: {},
-          submissions: {},
-          signatures: {},
-          uploads: {}
-        };
-        
-        // Generate PDF
-        let pdfBuffer = null;
-        let pdfFileName = '';
-        
-        if (submissionType === 'intake') {
-          pdfBuffer = await generateIntakePdf(submissionData, agent);
-          pdfFileName = `SIGNED_INTAKE_DOCUMENTS_${Date.now()}.pdf`;
-          agent.progress.intakeSubmitted = true;
-          agent.submissions.intakeId = ent.name;
-        } else if (submissionType === 'w9') {
-          pdfBuffer = await generateW9Pdf(submissionData);
-          pdfFileName = `SIGNED_W9_FORM_${Date.now()}.pdf`;
-          agent.progress.w9Submitted = true;
-          agent.submissions.w9Id = ent.name;
-        } else if (submissionType === 'banking') {
-          pdfBuffer = await generateBankingPdf(submissionData);
-          pdfFileName = `SIGNED_BANKING_FORM_${Date.now()}.pdf`;
-          agent.progress.bankingSubmitted = true;
-          agent.submissions.bankingId = ent.name;
-        }
-        
-        if (pdfBuffer) {
-          // Save agent record
-          const agentDir = path.join(AGENTS_DIR, agent.id);
-          await fse.ensureDir(agentDir);
-          await fse.writeJson(path.join(agentDir, 'agent.json'), agent, { spaces: 2 });
-          
-          // Save PDF
-          const pdfPath = path.join(agentDir, pdfFileName);
-          await fse.writeFile(pdfPath, pdfBuffer);
-          
-          // Update agent with PDF path
-          agent.submissions[`${submissionType}PdfPath`] = pdfPath;
-          await fse.writeJson(path.join(agentDir, 'agent.json'), agent, { spaces: 2 });
-          
-          results.steps.push(`✅ Generated ${submissionType} PDF for ${contactInfo.name}`);
-          results.pdfsGenerated++;
-        }
-        
-        processedCount++;
-      }
-    }
-    
-    results.steps.push(`🎉 PROCESSING COMPLETE!`);
-    results.steps.push(`📊 Processed: ${processedCount} submissions`);
-    results.steps.push(`📄 Generated: ${results.pdfsGenerated} signed PDFs`);
-    
-    results.endTime = new Date().toISOString();
-    
-    res.json({ 
-      ok: true, 
-      message: 'Recovery completed successfully!',
-      results 
-    });
-    
-  } catch (e) {
-    console.error('Recovery error:', e);
-    res.status(500).json({ 
-      ok: false, 
-      error: e.message,
-      results: { errors: [e.message] }
-    });
   }
 });
 
