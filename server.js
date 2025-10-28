@@ -78,16 +78,22 @@ app.get('/api/admin/recovery', async (req, res) => {
     results.steps.push(`AGENTS_DIR: ${AGENTS_DIR}`);
     results.steps.push(`SUBMISSIONS_DIR: ${SUBMISSIONS_DIR}`);
     
-    // Check if directories exist
+    // Check if directories exist and create them if needed
     const agentsExists = await fse.pathExists(AGENTS_DIR);
     const submissionsExists = await fse.pathExists(SUBMISSIONS_DIR);
     
     results.steps.push(`AGENTS_DIR exists: ${agentsExists}`);
     results.steps.push(`SUBMISSIONS_DIR exists: ${submissionsExists}`);
     
+    // Create directories if they don't exist
+    if (!agentsExists) {
+      await fse.ensureDir(AGENTS_DIR);
+      results.steps.push(`✅ Created AGENTS_DIR: ${AGENTS_DIR}`);
+    }
+    
     if (!submissionsExists) {
-      results.errors.push('SUBMISSIONS_DIR does not exist!');
-      return res.json({ ok: false, error: 'SUBMISSIONS_DIR not found', results });
+      await fse.ensureDir(SUBMISSIONS_DIR);
+      results.steps.push(`✅ Created SUBMISSIONS_DIR: ${SUBMISSIONS_DIR}`);
     }
     
     // Find all submissions
@@ -283,27 +289,22 @@ app.post('/api/admin/recovery', async (req, res) => {
     results.steps.push(`AGENTS_DIR: ${AGENTS_DIR}`);
     results.steps.push(`SUBMISSIONS_DIR: ${SUBMISSIONS_DIR}`);
     
-    // Check if directories exist
+    // Check if directories exist and create them if needed
     const agentsExists = await fse.pathExists(AGENTS_DIR);
     const submissionsExists = await fse.pathExists(SUBMISSIONS_DIR);
     
     results.steps.push(`AGENTS_DIR exists: ${agentsExists}`);
     results.steps.push(`SUBMISSIONS_DIR exists: ${submissionsExists}`);
     
+    // Create directories if they don't exist
+    if (!agentsExists) {
+      await fse.ensureDir(AGENTS_DIR);
+      results.steps.push(`✅ Created AGENTS_DIR: ${AGENTS_DIR}`);
+    }
+    
     if (!submissionsExists) {
-      results.errors.push('SUBMISSIONS_DIR does not exist!');
-      return res.send(`
-      <!DOCTYPE html>
-      <html>
-      <head><title>Recovery Error</title></head>
-      <body>
-          <h1>❌ Recovery Error</h1>
-          <p>SUBMISSIONS_DIR not found!</p>
-          <p>AGENTS_DIR: ${AGENTS_DIR}</p>
-          <p>SUBMISSIONS_DIR: ${SUBMISSIONS_DIR}</p>
-      </body>
-      </html>
-      `);
+      await fse.ensureDir(SUBMISSIONS_DIR);
+      results.steps.push(`✅ Created SUBMISSIONS_DIR: ${SUBMISSIONS_DIR}`);
     }
     
     // Find all submissions
