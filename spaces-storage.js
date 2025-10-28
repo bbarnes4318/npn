@@ -2,15 +2,15 @@ const AWS = require('aws-sdk');
 const path = require('path');
 
 // DigitalOcean Spaces configuration
-const spacesEndpoint = new AWS.Endpoint(process.env.SPACES_ENDPOINT || 'nyc3.digitaloceanspaces.com');
+const spacesEndpoint = new AWS.Endpoint(process.env.SPACES_ENDPOINT || 'atl1.digitaloceanspaces.com');
 const s3 = new AWS.S3({
   endpoint: spacesEndpoint,
   accessKeyId: process.env.SPACES_ACCESS_KEY_ID,
   secretAccessKey: process.env.SPACES_SECRET_ACCESS_KEY,
-  region: process.env.SPACES_REGION || 'nyc3'
+  region: process.env.SPACES_REGION || 'atl1'
 });
 
-const BUCKET_NAME = process.env.SPACES_BUCKET_NAME || 'npn-documents';
+const BUCKET_NAME = process.env.SPACES_BUCKET_NAME || 'aca-npn';
 
 class SpacesStorage {
   constructor() {
