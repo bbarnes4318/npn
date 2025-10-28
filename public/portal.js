@@ -294,6 +294,12 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Form found, collecting data...');
     const formData = new FormData(bankingForm);
     const data = Object.fromEntries(formData.entries());
+    
+    // Remove dashes from SSN before sending to server
+    if (data.ssn) {
+      data.ssn = data.ssn.replace(/-/g, '');
+    }
+    
     console.log('Form data:', data);
     
     const agentId = getAgentId();
