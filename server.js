@@ -77,6 +77,32 @@ app.get('/api/admin/recovery', async (req, res) => {
     
     results.steps.push(`AGENTS_DIR: ${AGENTS_DIR}`);
     results.steps.push(`SUBMISSIONS_DIR: ${SUBMISSIONS_DIR}`);
+    results.steps.push(`__dirname: ${__dirname}`);
+    results.steps.push(`process.cwd(): ${process.cwd()}`);
+    
+    // Check multiple possible locations for submissions
+    const possibleSubmissionsDirs = [
+      SUBMISSIONS_DIR,
+      path.join(__dirname, 'submissions'),
+      path.join(process.cwd(), 'submissions'),
+      '/workspace/submissions',
+      '/app/submissions',
+      '/tmp/submissions'
+    ];
+    
+    results.steps.push('Checking all possible submission directories:');
+    for (const dir of possibleSubmissionsDirs) {
+      const exists = await fse.pathExists(dir);
+      results.steps.push(`  ${dir}: ${exists ? 'EXISTS' : 'NOT FOUND'}`);
+      if (exists) {
+        try {
+          const entries = await fse.readdir(dir, { withFileTypes: true });
+          results.steps.push(`    Contains ${entries.length} items: ${entries.map(e => e.name).join(', ')}`);
+        } catch (e) {
+          results.steps.push(`    Error reading: ${e.message}`);
+        }
+      }
+    }
     
     // Check if directories exist and create them if needed
     const agentsExists = await fse.pathExists(AGENTS_DIR);
