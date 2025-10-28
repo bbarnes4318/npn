@@ -134,7 +134,7 @@ function generateProducerAgreementPdf(agent) {
     // Section 3: WORK SCHEDULE & SALES EXPECTATIONS
     doc.fontSize(14).text('3. WORK SCHEDULE & SALES EXPECTATIONS', { underline: true });
     doc.moveDown(0.5);
-    doc.fontSize(11).text('3.1 Work Hours: Monday through Friday, 10:00 AM – 6:00 PM EST');
+    doc.fontSize(11).text('3.1 Work Hours: Monday through Friday, 9:00 AM – 8:00 PM EST; Saturday & Sunday, 9:00 AM – 6:00 PM EST');
     doc.text('3.2 Sales Goal: A minimum of five (5) sales per day is required to remain eligible for base pay.');
     doc.text('3.3 Breaks: Producer may take a 1-hour lunch and two (2) 15-minute breaks each workday.');
     doc.moveDown(1);
