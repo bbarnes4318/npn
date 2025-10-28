@@ -1183,6 +1183,56 @@ app.get('/health', (req, res) => {
   res.json({ ok: true });
 });
 
+// Debug endpoint to check directory structure
+app.get('/api/debug', (req, res) => {
+  try {
+    const debug = {
+      ok: true,
+      directories: {
+        AGENTS_DIR: AGENTS_DIR,
+        SUBMISSIONS_DIR: SUBMISSIONS_DIR,
+        UPLOADS_DIR: UPLOADS_DIR
+      },
+      exists: {},
+      contents: {}
+    };
+    
+    // Check if directories exist
+    debug.exists.agents = fse.existsSync(AGENTS_DIR);
+    debug.exists.submissions = fse.existsSync(SUBMISSIONS_DIR);
+    debug.exists.uploads = fse.existsSync(UPLOADS_DIR);
+    
+    // List contents if they exist
+    if (debug.exists.agents) {
+      try {
+        debug.contents.agents = fse.readdirSync(AGENTS_DIR);
+      } catch (e) {
+        debug.contents.agents = `Error: ${e.message}`;
+      }
+    }
+    
+    if (debug.exists.submissions) {
+      try {
+        debug.contents.submissions = fse.readdirSync(SUBMISSIONS_DIR);
+      } catch (e) {
+        debug.contents.submissions = `Error: ${e.message}`;
+      }
+    }
+    
+    if (debug.exists.uploads) {
+      try {
+        debug.contents.uploads = fse.readdirSync(UPLOADS_DIR);
+      } catch (e) {
+        debug.contents.uploads = `Error: ${e.message}`;
+      }
+    }
+    
+    res.json(debug);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 // Secure document download routes for known PDFs in project root
 const DOCS = {
   w9: path.join(ROOT, 'W9.pdf'),
