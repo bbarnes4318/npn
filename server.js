@@ -113,13 +113,23 @@ app.get('/api/admin/recovery', async (req, res) => {
     
     // Create directories if they don't exist
     if (!agentsExists) {
-      await fse.ensureDir(AGENTS_DIR);
-      results.steps.push(`✅ Created AGENTS_DIR: ${AGENTS_DIR}`);
+      try {
+        await fse.ensureDir(AGENTS_DIR);
+        results.steps.push(`✅ Created AGENTS_DIR: ${AGENTS_DIR}`);
+      } catch (error) {
+        results.steps.push(`❌ Failed to create AGENTS_DIR: ${error.message}`);
+        results.errors.push(`Failed to create AGENTS_DIR: ${error.message}`);
+      }
     }
     
     if (!submissionsExists) {
-      await fse.ensureDir(SUBMISSIONS_DIR);
-      results.steps.push(`✅ Created SUBMISSIONS_DIR: ${SUBMISSIONS_DIR}`);
+      try {
+        await fse.ensureDir(SUBMISSIONS_DIR);
+        results.steps.push(`✅ Created SUBMISSIONS_DIR: ${SUBMISSIONS_DIR}`);
+      } catch (error) {
+        results.steps.push(`❌ Failed to create SUBMISSIONS_DIR: ${error.message}`);
+        results.errors.push(`Failed to create SUBMISSIONS_DIR: ${error.message}`);
+      }
     }
     
     // Find all submissions
@@ -324,13 +334,23 @@ app.post('/api/admin/recovery', async (req, res) => {
     
     // Create directories if they don't exist
     if (!agentsExists) {
-      await fse.ensureDir(AGENTS_DIR);
-      results.steps.push(`✅ Created AGENTS_DIR: ${AGENTS_DIR}`);
+      try {
+        await fse.ensureDir(AGENTS_DIR);
+        results.steps.push(`✅ Created AGENTS_DIR: ${AGENTS_DIR}`);
+      } catch (error) {
+        results.steps.push(`❌ Failed to create AGENTS_DIR: ${error.message}`);
+        results.errors.push(`Failed to create AGENTS_DIR: ${error.message}`);
+      }
     }
     
     if (!submissionsExists) {
-      await fse.ensureDir(SUBMISSIONS_DIR);
-      results.steps.push(`✅ Created SUBMISSIONS_DIR: ${SUBMISSIONS_DIR}`);
+      try {
+        await fse.ensureDir(SUBMISSIONS_DIR);
+        results.steps.push(`✅ Created SUBMISSIONS_DIR: ${SUBMISSIONS_DIR}`);
+      } catch (error) {
+        results.steps.push(`❌ Failed to create SUBMISSIONS_DIR: ${error.message}`);
+        results.errors.push(`Failed to create SUBMISSIONS_DIR: ${error.message}`);
+      }
     }
     
     // Find all submissions
