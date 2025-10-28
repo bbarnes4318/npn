@@ -1543,10 +1543,10 @@ app.post('/api/w9', async (req, res) => {
     if (agent) {
       agent.progress.w9Submitted = true;
       agent.submissions.w9Id = id;
-        
-        // Generate official W-9 PDF
-        try {
-          console.log('Generating W-9 PDF for agent:', agent.id);
+      
+      // Generate official W-9 PDF
+      try {
+        console.log('Generating W-9 PDF for agent:', agent.id);
           const agentDir = path.join(AGENTS_DIR, agent.id);
           await fse.ensureDir(agentDir);
           const outPath = path.join(agentDir, `SIGNED_W9_FORM_${Date.now()}.pdf`);
@@ -1765,17 +1765,16 @@ app.post('/api/w9', async (req, res) => {
           
           await fse.writeFile(outPath, pdfBytes);
           agent.submissions.w9PdfPath = outPath;
-          console.log('✅ Signed W-9 PDF saved successfully to:', outPath);
-        } catch (e) {
-          console.error('❌ Failed to generate W-9 PDF:', e);
-          // Don't fail the entire submission if PDF generation fails
-        }
-        
-        try {
-          await writeAgent(agent);
-        } catch (e) {
-          console.error('❌ Failed to write agent:', e);
-        }
+        console.log('✅ Signed W-9 PDF saved successfully to:', outPath);
+      } catch (e) {
+        console.error('❌ Failed to generate W-9 PDF:', e);
+        // Don't fail the entire submission if PDF generation fails
+      }
+      
+      try {
+        await writeAgent(agent);
+      } catch (e) {
+        console.error('❌ Failed to write agent:', e);
       }
     }
     
@@ -1873,30 +1872,33 @@ app.post('/api/banking', async (req, res) => {
     if (agent) {
       agent.progress.bankingSubmitted = true;
       agent.submissions.bankingId = id;
-        agent.banking = {
-          bankName: submission.bankName,
-          accountType: submission.accountType,
-          paymentMethod: submission.paymentMethod,
-          lastUpdated: new Date().toISOString()
-        };
-
-        // Generate and save banking PDF
-        try {
-          console.log('Generating banking PDF for agent:', agent.id);
-          const { generateBankingPdf } = require('./pdf-generator');
-          const pdfBuffer = await generateBankingPdf(submission);
-          const agentDir = path.join(AGENTS_DIR, agent.id);
-          await fse.ensureDir(agentDir);
-          const pdfPath = path.join(agentDir, `SIGNED_BANKING_FORM_${Date.now()}.pdf`);
-          await fse.writeFile(pdfPath, pdfBuffer);
-          agent.submissions.bankingPdfPath = pdfPath;
-          console.log('✅ Signed banking PDF saved to:', pdfPath);
-        } catch (e) {
-          console.error('❌ Failed to generate banking PDF:', e);
-          // Don't fail the entire submission if PDF generation fails
-        }
-
+      agent.banking = {
+        bankName: submission.bankName,
+        accountType: submission.accountType,
+        paymentMethod: submission.paymentMethod,
+        lastUpdated: new Date().toISOString()
+      };
+      
+      // Generate and save banking PDF
+      try {
+        console.log('Generating banking PDF for agent:', agent.id);
+        const { generateBankingPdf } = require('./pdf-generator');
+        const pdfBuffer = await generateBankingPdf(submission);
+        const agentDir = path.join(AGENTS_DIR, agent.id);
+        await fse.ensureDir(agentDir);
+        const pdfPath = path.join(agentDir, `SIGNED_BANKING_FORM_${Date.now()}.pdf`);
+        await fse.writeFile(pdfPath, pdfBuffer);
+        agent.submissions.bankingPdfPath = pdfPath;
+        console.log('✅ Signed banking PDF saved to:', pdfPath);
+      } catch (e) {
+        console.error('❌ Failed to generate banking PDF:', e);
+        // Don't fail the entire submission if PDF generation fails
+      }
+      
+      try {
         await writeAgent(agent);
+      } catch (e) {
+        console.error('❌ Failed to write agent:', e);
       }
     }
 
