@@ -763,6 +763,12 @@ p {
   margin-top: 3rem;
 }
 
+.testimonials-column {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
 .testimonial-card {
   background: white;
   border-radius: 12px;
