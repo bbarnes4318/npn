@@ -5,6 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Agent Onboarding Portal</title>
   <link rel="stylesheet" href="/new-styles.css" />
+  <style>
+    .contract-terms {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 16px 0;
+    }
+    .contract-section {
+      margin-bottom: 16px;
+    }
+    .contract-section:last-child {
+      margin-bottom: 0;
+    }
+    .contract-section h4 {
+      color: #495057;
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0 0 8px 0;
+    }
+    .contract-section p {
+      margin: 0 0 8px 0;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .contract-section ul {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+    .contract-section li {
+      font-size: 13px;
+      line-height: 1.4;
+      margin-bottom: 4px;
+    }
+  </style>
 </head>
 <body>
   <header class="header">
@@ -205,6 +240,47 @@
                   <label style="margin-left:12px;"><input type="radio" name="childSupport" value="yes" required /> Yes</label>
                 </div>
                 <textarea class="input" name="childSupportExplain" placeholder="If yes, please explain" style="display:none"></textarea>
+              </div>
+
+              <h3 style="margin-top: 24px;">Producer Agreement Terms</h3>
+              <div class="contract-terms">
+                <div class="contract-section">
+                  <h4>1. Authorization & Representation</h4>
+                  <p>You authorize Life Assurance Solutions LLC to sign and submit all necessary documentation on your behalf related to ACA carrier appointments, including appointment forms, contracting packets, and certification confirmations.</p>
+                </div>
+                
+                <div class="contract-section">
+                  <h4>2. Position & Compensation</h4>
+                  <p><strong>Position:</strong> ACA Health Insurance Producer (Remote)</p>
+                  <p><strong>Compensation:</strong></p>
+                  <ul>
+                    <li>Hourly Pay: $12 per hour</li>
+                    <li>Per-Sale Bonus: $15 per sale beginning with the 6th sale of each workday</li>
+                    <li>Residual Pay: $2 per active plan per month, beginning February 2026</li>
+                  </ul>
+                </div>
+                
+                <div class="contract-section">
+                  <h4>3. Work Schedule & Expectations</h4>
+                  <p><strong>Work Hours:</strong> Monday through Friday, 10:00 AM – 6:00 PM EST</p>
+                  <p><strong>Sales Goal:</strong> Minimum of five (5) sales per day required to remain eligible for base pay</p>
+                  <p><strong>Breaks:</strong> 1-hour lunch and two (2) 15-minute breaks each workday</p>
+                </div>
+                
+                <div class="contract-section">
+                  <h4>4. Book of Business</h4>
+                  <p>All leads, clients, and applications submitted under this Agreement are considered part of the Company's Book of Business. The Company retains full ownership of the Book.</p>
+                </div>
+                
+                <div class="contract-section">
+                  <h4>5. Independent Contractor Relationship</h4>
+                  <p>This is an independent contractor relationship; no employer-employee relationship exists. You are responsible for all taxes, licenses, and certifications required for your position.</p>
+                </div>
+                
+                <div class="contract-section">
+                  <h4>6. Term & Termination</h4>
+                  <p>This Agreement becomes effective upon execution and remains in effect until terminated by either party in writing.</p>
+                </div>
               </div>
 
               <h3 style="margin-top: 24px;">Acknowledgments</h3>
