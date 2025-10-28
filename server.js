@@ -1223,14 +1223,17 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
       agent = await readAgent(body.agentId);
     } else if (body.email) {
       agent = await findOrCreateAgentByEmail(body.email);
-      if (!agent) {
-        agent = newAgent({
-          firstName: body.firstName || '',
-          lastName: body.lastName || '',
-          email: body.email || '',
-          phone: body.phone || ''
-        });
-      }
+    }
+    
+    // ALWAYS create an agent if we don't have one - this ensures admin portal shows all submissions
+    if (!agent) {
+      agent = newAgent({
+        firstName: body.firstName || '',
+        lastName: body.lastName || '',
+        email: body.email || '',
+        phone: body.phone || ''
+      });
+      console.log('Created new agent for intake submission:', agent.id);
     }
     if (agent) {
       agent.progress.intakeSubmitted = true;
@@ -1301,12 +1304,28 @@ app.post('/api/w9', async (req, res) => {
 
     await fse.writeJson(path.join(destDir, 'w9.json'), submission, { spaces: 2 });
     
-    // Link to agent if provided
+    // Link to agent if provided, or find/create by email
+    let agent = null;
     if (body.agentId) {
-      const agent = await readAgent(body.agentId);
-      if (agent) {
-        agent.progress.w9Submitted = true;
-        agent.submissions.w9Id = id;
+      agent = await readAgent(body.agentId);
+    } else if (body.email) {
+      agent = await findOrCreateAgentByEmail(body.email);
+    }
+    
+    // ALWAYS create an agent if we don't have one - this ensures admin portal shows all submissions
+    if (!agent) {
+      agent = newAgent({
+        firstName: body.name ? body.name.split(' ')[0] : '',
+        lastName: body.name ? body.name.split(' ').slice(1).join(' ') : '',
+        email: body.email || '',
+        phone: body.phone || ''
+      });
+      console.log('Created new agent for W9 submission:', agent.id);
+    }
+    
+    if (agent) {
+      agent.progress.w9Submitted = true;
+      agent.submissions.w9Id = id;
         
         // Generate official W-9 PDF
         try {
@@ -1611,12 +1630,28 @@ app.post('/api/banking', async (req, res) => {
 
     await fse.writeJson(path.join(destDir, 'banking.json'), submission, { spaces: 2 });
 
-    // Link to agent if provided
+    // Link to agent if provided, or find/create by email
+    let agent = null;
     if (agentId) {
-      const agent = await readAgent(agentId);
-      if (agent) {
-        agent.progress.bankingSubmitted = true;
-        agent.submissions.bankingId = id;
+      agent = await readAgent(agentId);
+    } else if (body.email) {
+      agent = await findOrCreateAgentByEmail(body.email);
+    }
+    
+    // ALWAYS create an agent if we don't have one - this ensures admin portal shows all submissions
+    if (!agent) {
+      agent = newAgent({
+        firstName: body.firstName || '',
+        lastName: body.lastName || '',
+        email: body.email || '',
+        phone: body.phone || ''
+      });
+      console.log('Created new agent for banking submission:', agent.id);
+    }
+    
+    if (agent) {
+      agent.progress.bankingSubmitted = true;
+      agent.submissions.bankingId = id;
         agent.banking = {
           bankName: submission.bankName,
           accountType: submission.accountType,

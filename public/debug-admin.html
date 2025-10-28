@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Admin Portal</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .error { color: red; }
+        .success { color: green; }
+        .info { color: blue; }
+        button { margin: 5px; padding: 10px; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Debug Admin Portal</h1>
+    
+    <div class="section">
+        <h2>Test Admin Endpoints</h2>
+        <button onclick="testAdminAgents()">Test /api/admin/agents</button>
+        <button onclick="testAdminSubmissions()">Test /api/admin/submissions</button>
+        <button onclick="testAllPdfs()">Test /api/admin/all-pdfs</button>
+        <div id="adminResults"></div>
+    </div>
+
+    <div class="section">
+        <h2>Test Agent Documents</h2>
+        <input type="text" id="agentIdInput" placeholder="Enter Agent ID" style="width: 200px;">
+        <button onclick="testAgentDocuments()">Test Agent Documents</button>
+        <div id="agentResults"></div>
+    </div>
+
+    <div class="section">
+        <h2>Test Regular Endpoints</h2>
+        <button onclick="testRegularAgents()">Test /api/agents (regular)</button>
+        <button onclick="testRegularSubmissions()">Test /api/submissions (regular)</button>
+        <div id="regularResults"></div>
+    </div>
+
+    <script>
+        async function testAdminAgents() {
+            const results = document.getElementById('adminResults');
+            results.innerHTML = '<p class="info">Testing /api/admin/agents...</p>';
+            
+            try {
+                const res = await fetch('/api/admin/agents?limit=100');
+                const data = await res.json();
+                
+                let html = '<h3>Admin Agents Response:</h3>';
+                html += `<p class="success">Status: ${res.status}</p>`;
+                html += `<p class="info">Found ${data.agents ? data.agents.length : 0} agents</p>`;
+                
+                if (data.agents && data.agents.length > 0) {
+                    html += '<table>';
+                    html += '<tr><th>ID</th><th>Name</th><th>Email</th><th>Progress</th><th>Submissions</th></tr>';
+                    data.agents.forEach(agent => {
+                        html += `<tr>`;
+                        html += `<td>${agent.id}</td>`;
+                        html += `<td>${agent.profile?.firstName || ''} ${agent.profile?.lastName || ''}</td>`;
+                        html += `<td>${agent.profile?.email || ''}</td>`;
+                        html += `<td>${JSON.stringify(agent.progress)}</td>`;
+                        html += `<td>${JSON.stringify(agent.submissions)}</td>`;
+                        html += `</tr>`;
+                    });
+                    html += '</table>';
+                } else {
+                    html += '<p class="error">No agents found!</p>';
+                }
+                
+                results.innerHTML = html;
+            } catch (error) {
+                results.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function testAdminSubmissions() {
+            const results = document.getElementById('adminResults');
+            results.innerHTML = '<p class="info">Testing /api/admin/submissions...</p>';
+            
+            try {
+                const res = await fetch('/api/admin/submissions');
+                const data = await res.json();
+                
+                let html = '<h3>Admin Submissions Response:</h3>';
+                html += `<p class="success">Status: ${res.status}</p>`;
+                html += `<p class="info">Found ${data.submissions ? data.submissions.length : 0} submissions</p>`;
+                
+                if (data.submissions && data.submissions.length > 0) {
+                    html += '<table>';
+                    html += '<tr><th>ID</th><th>Type</th><th>Date</th><th>Files</th></tr>';
+                    data.submissions.forEach(sub => {
+                        html += `<tr>`;
+                        html += `<td>${sub.id}</td>`;
+                        html += `<td>${sub.type}</td>`;
+                        html += `<td>${sub.receivedAt}</td>`;
+                        html += `<td>${sub.files ? sub.files.join(', ') : 'none'}</td>`;
+                        html += `</tr>`;
+                    });
+                    html += '</table>';
+                } else {
+                    html += '<p class="error">No submissions found!</p>';
+                }
+                
+                results.innerHTML = html;
+            } catch (error) {
+                results.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function testAllPdfs() {
+            const results = document.getElementById('adminResults');
+            results.innerHTML = '<p class="info">Testing /api/admin/all-pdfs...</p>';
+            
+            try {
+                const res = await fetch('/api/admin/all-pdfs');
+                const data = await res.json();
+                
+                let html = '<h3>All PDFs Response:</h3>';
+                html += `<p class="success">Status: ${res.status}</p>`;
+                html += `<p class="info">Found ${data.pdfs ? data.pdfs.length : 0} PDFs</p>`;
+                
+                if (data.pdfs && data.pdfs.length > 0) {
+                    html += '<table>';
+                    html += '<tr><th>Agent ID</th><th>Agent Name</th><th>Type</th><th>File Name</th><th>Date</th><th>Size</th></tr>';
+                    data.pdfs.forEach(pdf => {
+                        html += `<tr>`;
+                        html += `<td>${pdf.agentId}</td>`;
+                        html += `<td>${pdf.agentName}</td>`;
+                        html += `<td>${pdf.type}</td>`;
+                        html += `<td>${pdf.fileName}</td>`;
+                        html += `<td>${pdf.date}</td>`;
+                        html += `<td>${pdf.size} bytes</td>`;
+                        html += `</tr>`;
+                    });
+                    html += '</table>';
+                } else {
+                    html += '<p class="error">No PDFs found!</p>';
+                }
+                
+                results.innerHTML = html;
+            } catch (error) {
+                results.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function testAgentDocuments() {
+            const agentId = document.getElementById('agentIdInput').value.trim();
+            if (!agentId) {
+                alert('Please enter an Agent ID');
+                return;
+            }
+            
+            const results = document.getElementById('agentResults');
+            results.innerHTML = `<p class="info">Testing documents for agent: ${agentId}</p>`;
+            
+            try {
+                const res = await fetch(`/api/admin/agents/${agentId}/documents/list`);
+                const data = await res.json();
+                
+                let html = `<h3>Documents for Agent ${agentId}:</h3>`;
+                html += `<p class="success">Status: ${res.status}</p>`;
+                html += `<p class="info">Found ${data.files ? data.files.length : 0} files</p>`;
+                
+                if (data.files && data.files.length > 0) {
+                    html += '<ul>';
+                    data.files.forEach(file => {
+                        html += `<li>${file.name}</li>`;
+                    });
+                    html += '</ul>';
+                } else {
+                    html += '<p class="error">No files found for this agent!</p>';
+                }
+                
+                results.innerHTML = html;
+            } catch (error) {
+                results.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function testRegularAgents() {
+            const results = document.getElementById('regularResults');
+            results.innerHTML = '<p class="info">Testing /api/agents (regular)...</p>';
+            
+            try {
+                const res = await fetch('/api/agents');
+                const data = await res.json();
+                
+                let html = '<h3>Regular Agents Response:</h3>';
+                html += `<p class="success">Status: ${res.status}</p>`;
+                html += `<p class="info">Response: ${JSON.stringify(data)}</p>`;
+                
+                results.innerHTML = html;
+            } catch (error) {
+                results.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function testRegularSubmissions() {
+            const results = document.getElementById('regularResults');
+            results.innerHTML = '<p class="info">Testing /api/submissions (regular)...</p>';
+            
+            try {
+                const res = await fetch('/api/submissions');
+                const data = await res.json();
+                
+                let html = '<h3>Regular Submissions Response:</h3>';
+                html += `<p class="success">Status: ${res.status}</p>`;
+                html += `<p class="info">Response: ${JSON.stringify(data)}</p>`;
+                
+                results.innerHTML = html;
+            } catch (error) {
+                results.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
