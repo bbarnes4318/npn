@@ -7,6 +7,109 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
   let currentStep = 0;
 
+  // Phone number formatting function
+  function formatPhoneNumber(input) {
+    let value = input.value.replace(/\D/g, ''); // Remove all non-digits
+    let formattedValue = '';
+    
+    if (value.length >= 1) {
+      formattedValue = '(' + value.substring(0, 3);
+    }
+    if (value.length >= 4) {
+      formattedValue += ') ' + value.substring(3, 6);
+    }
+    if (value.length >= 7) {
+      formattedValue += '-' + value.substring(6, 10);
+    }
+    
+    input.value = formattedValue;
+  }
+
+  // SSN formatting function
+  function formatSSN(input) {
+    let value = input.value.replace(/\D/g, ''); // Remove all non-digits
+    let formattedValue = '';
+    
+    if (value.length >= 1) {
+      formattedValue = value.substring(0, 3);
+    }
+    if (value.length >= 4) {
+      formattedValue += '-' + value.substring(3, 5);
+    }
+    if (value.length >= 6) {
+      formattedValue += '-' + value.substring(5, 9);
+    }
+    
+    input.value = formattedValue;
+  }
+
+  // Auto-fill hire date with 11/01/2025
+  function autoFillHireDate() {
+    const hireDateFields = document.querySelectorAll('input[name="dateOfHire"], input[name="date_of_hire"]');
+    hireDateFields.forEach(field => {
+      if (!field.value) {
+        field.value = '2025-11-01';
+      }
+    });
+  }
+
+  // Auto-populate signature dates with today's date
+  function autoPopulateSignatureDates() {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    const signatureDateFields = document.querySelectorAll('input[name="signatureDate"]');
+    signatureDateFields.forEach(field => {
+      if (!field.value) {
+        field.value = today;
+      }
+    });
+  }
+
+  // Initialize phone formatting for all phone inputs
+  function initializePhoneFormatting() {
+    const phoneInputs = document.querySelectorAll('input[type="tel"], input[name="phone"]');
+    phoneInputs.forEach(input => {
+      input.addEventListener('input', () => formatPhoneNumber(input));
+      input.addEventListener('keydown', (e) => {
+        // Allow backspace, delete, tab, escape, enter
+        if ([8, 9, 27, 13, 46].indexOf(e.keyCode) !== -1 ||
+            // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+            (e.keyCode === 65 && e.ctrlKey === true) ||
+            (e.keyCode === 67 && e.ctrlKey === true) ||
+            (e.keyCode === 86 && e.ctrlKey === true) ||
+            (e.keyCode === 88 && e.ctrlKey === true)) {
+          return;
+        }
+        // Ensure that it is a number and stop the keypress
+        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+          e.preventDefault();
+        }
+      });
+    });
+  }
+
+  // Initialize SSN formatting for all SSN inputs
+  function initializeSSNFormatting() {
+    const ssnInputs = document.querySelectorAll('input[name="ssn"], input[id*="ssn"], input[placeholder*="XXX-XX-XXXX"]');
+    ssnInputs.forEach(input => {
+      input.addEventListener('input', () => formatSSN(input));
+      input.addEventListener('keydown', (e) => {
+        // Allow backspace, delete, tab, escape, enter
+        if ([8, 9, 27, 13, 46].indexOf(e.keyCode) !== -1 ||
+            // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+            (e.keyCode === 65 && e.ctrlKey === true) ||
+            (e.keyCode === 67 && e.ctrlKey === true) ||
+            (e.keyCode === 86 && e.ctrlKey === true) ||
+            (e.keyCode === 88 && e.ctrlKey === true)) {
+          return;
+        }
+        // Ensure that it is a number and stop the keypress
+        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+          e.preventDefault();
+        }
+      });
+    });
+  }
+
   // Pre-populate form with marketing data
   function prePopulateFromMarketing() {
     const marketingData = localStorage.getItem('marketingFormData');
@@ -546,104 +649,13 @@ document.addEventListener('DOMContentLoaded', () => {
   setupFileUpload();
   setupW9SignaturePad();
   prePopulateFromMarketing();
+  initializePhoneFormatting();
+  initializeSSNFormatting();
+  autoFillHireDate();
+  autoPopulateSignatureDates();
   showStep(currentStep);
   
   // Ensure page loads at the very top
   window.scrollTo(0, 0);
   
-  // Document download functionality
-  // Get agent ID from URL or localStorage
-  function getAgentIdForDownloads() {
-    console.log('Getting agent ID for downloads...');
-    
-    // Try to get from URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const agentIdFromUrl = urlParams.get('agentId');
-    if (agentIdFromUrl) {
-      console.log('Found agent ID in URL:', agentIdFromUrl);
-      return agentIdFromUrl;
-    }
-    
-    // Try to get from localStorage
-    const agentIdFromStorage = localStorage.getItem('agentId');
-    if (agentIdFromStorage) {
-      console.log('Found agent ID in localStorage:', agentIdFromStorage);
-      return agentIdFromStorage;
-    }
-    
-    // Try to get from marketing form data
-    const marketingData = localStorage.getItem('marketingFormData');
-    if (marketingData) {
-      try {
-        const data = JSON.parse(marketingData);
-        if (data.agentId) {
-          console.log('Found agent ID in marketing data:', data.agentId);
-          return data.agentId;
-        }
-      } catch (e) {
-        console.error('Error parsing marketing data:', e);
-      }
-    }
-    
-    console.log('No agent ID found in URL, localStorage, or marketing data');
-    return null;
-  }
-  
-  // Download intake documents
-  document.getElementById('downloadIntakeBtn')?.addEventListener('click', async () => {
-    const agentId = getAgentIdForDownloads();
-    if (!agentId) {
-      alert('Unable to find your agent ID. Please contact support.');
-      return;
-    }
-    
-    try {
-      const response = await fetch(`/api/agents/${agentId}/documents/intake.pdf`);
-      if (!response.ok) {
-        throw new Error('Failed to download intake documents');
-      }
-      
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Signed_Intake_Documents_${agentId}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      URL.revokeObjectURL(url);
-      a.remove();
-    } catch (error) {
-      console.error('Download error:', error);
-      alert('Failed to download intake documents. Please contact support.');
-    }
-  });
-  
-  // Download W-9 form
-  document.getElementById('downloadW9Btn')?.addEventListener('click', async () => {
-    const agentId = getAgentIdForDownloads();
-    if (!agentId) {
-      alert('Unable to find your agent ID. Please contact support.');
-      return;
-    }
-    
-    try {
-      const response = await fetch(`/api/agents/${agentId}/documents/w9.pdf`);
-      if (!response.ok) {
-        throw new Error('Failed to download W-9 form');
-      }
-      
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Signed_W9_Form_${agentId}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      URL.revokeObjectURL(url);
-      a.remove();
-    } catch (error) {
-      console.error('Download error:', error);
-      alert('Failed to download W-9 form. Please contact support.');
-    }
-  });
 });
