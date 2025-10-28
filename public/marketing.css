@@ -2118,14 +2118,13 @@ p {
 
 .modal-content {
   background-color: var(--brand-bg);
-  margin: 5% auto;
+  margin: 8% auto;
   padding: 0;
-  border-radius: 12px;
+  border-radius: 16px;
   width: 90%;
-  max-width: 800px;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: var(--shadow-lg);
+  max-width: 700px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 176, 79, 0.1);
   animation: modalSlideIn 0.3s ease-out;
 }
 
@@ -2146,6 +2145,8 @@ p {
   align-items: center;
   padding: 2rem 2rem 1rem;
   border-bottom: 1px solid #E9ECEF;
+  background: linear-gradient(135deg, rgba(0, 176, 79, 0.02) 0%, rgba(0, 176, 79, 0.05) 100%);
+  border-radius: 16px 16px 0 0;
 }
 
 .modal-header h3 {
@@ -2177,30 +2178,34 @@ p {
 }
 
 .modal-body {
-  padding: 2rem;
+  padding: 2rem 2rem 2.5rem;
 }
 
 .modal-body p {
   color: var(--brand-text-light);
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   font-size: 1rem;
 }
 
 .modal-options {
   display: grid;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .modal-option {
   border: 2px solid #E9ECEF;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 1.5rem;
   transition: var(--transition-normal);
+  background: #FAFBFC;
+  position: relative;
 }
 
 .modal-option:hover {
   border-color: var(--brand-primary);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 8px 25px rgba(0, 176, 79, 0.15);
+  background: white;
+  transform: translateY(-2px);
 }
 
 .option-header {
@@ -2225,29 +2230,32 @@ p {
 
 .modal-option p {
   color: var(--brand-text-light);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 .option-button {
   display: inline-block;
-  background: var(--brand-primary);
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #00D966 100%);
   color: white;
   text-decoration: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
+  padding: 0.875rem 1.75rem;
+  border-radius: 8px;
   font-weight: 600;
   font-size: 0.95rem;
   transition: var(--transition-normal);
   text-align: center;
   width: 100%;
+  box-shadow: 0 4px 15px rgba(0, 176, 79, 0.3);
 }
 
 .option-button:hover {
-  background: #008a3f;
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #008a3f 0%, #00C55A 100%);
+  transform: translateY(-2px);
   color: white;
   text-decoration: none;
+  box-shadow: 0 6px 20px rgba(0, 176, 79, 0.4);
 }
 
 /* Responsive Design for Pricing */
@@ -2264,11 +2272,20 @@ p {
   .modal-content {
     margin: 10% auto;
     width: 95%;
+    max-width: 600px;
   }
   
   .modal-header,
   .modal-body {
     padding: 1.5rem;
+  }
+  
+  .modal-header {
+    padding: 1.5rem 1.5rem 1rem;
+  }
+  
+  .modal-body {
+    padding: 1.5rem 1.5rem 2rem;
   }
   
   .option-header {
