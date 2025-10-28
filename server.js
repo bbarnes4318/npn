@@ -7,9 +7,13 @@ const { nanoid } = require('nanoid');
 const archiver = require('archiver');
 const PDFDocument = require('pdfkit');
 const { PDFDocument: PdfLibDocument, StandardFonts, rgb } = require('pdf-lib');
+const SpacesStorage = require('./spaces-storage');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Initialize Spaces storage
+const spacesStorage = new SpacesStorage();
 
 // Paths
 const ROOT = __dirname;
@@ -120,27 +124,43 @@ app.get('/api/admin/agents/find', requireAdmin, async (req, res) => {
 app.get('/api/admin/agents', requireAdmin, async (req, res) => {
   try {
     console.log('Admin: Listing agents...');
-    console.log('AGENTS_DIR:', AGENTS_DIR);
     const q = (req.query.q || '').toString().trim().toLowerCase();
     const limit = Math.max(1, Math.min(200, parseInt(req.query.limit, 10) || 50));
-    const entries = await fse.readdir(AGENTS_DIR, { withFileTypes: true });
-    console.log(`Admin: Found ${entries.length} entries in AGENTS_DIR`);
+    
+    // List all agent directories in Spaces
+    const files = await spacesStorage.listFiles('agents/');
+    const agentDirs = new Set();
+    files.forEach(file => {
+      const parts = file.Key.split('/');
+      if (parts.length >= 2 && parts[0] === 'agents') {
+        agentDirs.add(parts[1]);
+      }
+    });
+    
+    console.log(`Admin: Found ${agentDirs.size} agent directories in Spaces`);
     const agents = [];
-    for (const ent of entries) {
-      if (!ent.isDirectory()) continue;
-      const p = path.join(AGENTS_DIR, ent.name, 'agent.json');
-      if (!(await fse.pathExists(p))) continue;
+    
+    for (const agentId of agentDirs) {
       try {
-        const a = await fse.readJson(p);
-        const email = (a.profile?.email || '').toLowerCase();
-        const name = `${a.profile?.firstName || ''} ${a.profile?.lastName || ''}`.toLowerCase();
+        const agent = await readAgent(agentId);
+        if (!agent) continue;
+        
+        const email = (agent.profile?.email || '').toLowerCase();
+        const name = `${agent.profile?.firstName || ''} ${agent.profile?.lastName || ''}`.toLowerCase();
         if (q && !(email.includes(q) || name.includes(q))) continue;
-        agents.push({ id: a.id, createdAt: a.createdAt || '', profile: a.profile || {}, progress: a.progress || {} });
-        console.log(`Admin: Added agent ${a.id} - ${a.profile?.firstName} ${a.profile?.lastName}`);
+        
+        agents.push({ 
+          id: agent.id, 
+          createdAt: agent.createdAt || '', 
+          profile: agent.profile || {}, 
+          progress: agent.progress || {} 
+        });
+        console.log(`Admin: Added agent ${agent.id} - ${agent.profile?.firstName} ${agent.profile?.lastName}`);
       } catch (e) {
-        console.log(`Admin: Error reading agent ${ent.name}:`, e.message);
+        console.log(`Admin: Error reading agent ${agentId}:`, e.message);
       }
     }
+    
     agents.sort((x, y) => (new Date(y.createdAt || 0)) - (new Date(x.createdAt || 0)));
     console.log(`Admin: Returning ${agents.length} agents`);
     res.json({ ok: true, agents: agents.slice(0, limit) });
@@ -184,8 +204,13 @@ app.get('/api/admin/agents/:id/documents/download/:filename', requireAdmin, asyn
       console.log('Admin: File not found:', req.params.filename);
       return res.status(404).send('File not found');
     }
-    console.log('Admin: Sending file:', file.path);
-    return res.download(file.path, file.name);
+    console.log('Admin: Sending file from Spaces:', file.path);
+    
+    // Get file from Spaces and stream it
+    const buffer = await spacesStorage.getFileBuffer(file.path);
+    res.setHeader('Content-Disposition', `attachment; filename="${file.name}"`);
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.send(buffer);
   } catch (e) {
     console.error('admin download doc error', e);
     return res.status(500).send('Failed to download document');
@@ -437,76 +462,65 @@ function requireAdmin(req, res, next) {
 async function gatherAgentDocuments(agent, { includeW9 = true } = {}) {
   const files = [];
   try {
-    // Producer Agreement drawn signature
-    const sig = agent.signatures?.producerAgreement;
-    if (sig?.path && await fse.pathExists(sig.path)) {
-      files.push({ path: sig.path, name: `ProducerAgreement_Signature_${agent.id}.png` });
+    // List all files for this agent in Spaces
+    const agentFiles = await spacesStorage.listFiles(`agents/${agent.id}/`);
+    
+    for (const file of agentFiles) {
+      const fileName = file.Key.split('/').pop();
+      if (fileName === 'agent.json') continue; // Skip the agent metadata file
+      
+      files.push({ 
+        path: file.Key, 
+        name: fileName,
+        size: file.Size,
+        lastModified: file.LastModified
+      });
     }
-    // Producer Agreement signed PDF
-    if (agent.submissions?.producerAgreementPdfPath && await fse.pathExists(agent.submissions.producerAgreementPdfPath)) {
-      files.push({ path: agent.submissions.producerAgreementPdfPath, name: path.basename(agent.submissions.producerAgreementPdfPath) });
+    
+    // Also check for submission files
+    if (agent.submissions?.intakeId) {
+      const intakeFiles = await spacesStorage.listFiles(`submissions/${agent.submissions.intakeId}/`);
+      intakeFiles.forEach(file => {
+        const fileName = file.Key.split('/').pop();
+        files.push({ 
+          path: file.Key, 
+          name: `Intake_${fileName}`,
+          size: file.Size,
+          lastModified: file.LastModified
+        });
+      });
     }
-    // CMS/FFM certification proof
-    if (agent.uploads?.certProof && await fse.pathExists(agent.uploads.certProof)) {
-      const ext = path.extname(agent.uploads.certProof) || '';
-      files.push({ path: agent.uploads.certProof, name: `CMS_FFM_CertProof_${agent.id}${ext}` });
+    
+    if (agent.submissions?.w9Id && includeW9) {
+      const w9Files = await spacesStorage.listFiles(`submissions/${agent.submissions.w9Id}/`);
+      w9Files.forEach(file => {
+        const fileName = file.Key.split('/').pop();
+        files.push({ 
+          path: file.Key, 
+          name: `W9_${fileName}`,
+          size: file.Size,
+          lastModified: file.LastModified
+        });
+      });
     }
-    // Intake submission JSON
-    const intakeId = agent.submissions?.intakeId;
-    if (intakeId) {
-      const intakeJson = path.join(SUBMISSIONS_DIR, intakeId, 'intake.json');
-      if (await fse.pathExists(intakeJson)) files.push({ path: intakeJson, name: `Intake_${intakeId}.json` });
+    
+    if (agent.submissions?.packetId) {
+      const packetFiles = await spacesStorage.listFiles(`submissions/${agent.submissions.packetId}/`);
+      packetFiles.forEach(file => {
+        const fileName = file.Key.split('/').pop();
+        files.push({ 
+          path: file.Key, 
+          name: `Packet_${fileName}`,
+          size: file.Size,
+          lastModified: file.LastModified
+        });
+      });
     }
-    // Packet submission JSON
-    const packetId = agent.submissions?.packetId;
-    if (packetId) {
-      const packetJson = path.join(SUBMISSIONS_DIR, packetId, 'packet.json');
-      if (await fse.pathExists(packetJson)) files.push({ path: packetJson, name: `Packet_${packetId}.json` });
-    }
-    // Dashboard/Intake PDF
-    if (agent.submissions?.dashboardPdfPath && await fse.pathExists(agent.submissions.dashboardPdfPath)) {
-      files.push({ path: agent.submissions.dashboardPdfPath, name: path.basename(agent.submissions.dashboardPdfPath) });
-    }
-    // Signed Intake Documents PDF
-    if (agent.submissions?.intakePdfPath && await fse.pathExists(agent.submissions.intakePdfPath)) {
-      files.push({ path: agent.submissions.intakePdfPath, name: path.basename(agent.submissions.intakePdfPath) });
-    }
-    // W-9 e-sign JSON
-    if (includeW9) {
-      const w9Id = agent.submissions?.w9Id;
-      if (w9Id) {
-        const w9Json = path.join(SUBMISSIONS_DIR, w9Id, 'w9.json');
-        if (await fse.pathExists(w9Json)) files.push({ path: w9Json, name: `W9_${w9Id}.json` });
-      }
-      // W-9 generated PDF
-      if (agent.submissions?.w9PdfPath && await fse.pathExists(agent.submissions.w9PdfPath)) {
-        files.push({ path: agent.submissions.w9PdfPath, name: path.basename(agent.submissions.w9PdfPath) });
-      }
-      // W-9 uploaded file (agent-bound)
-      if (agent.submissions?.w9FilePath && await fse.pathExists(agent.submissions.w9FilePath)) {
-        const ext = path.extname(agent.submissions.w9FilePath) || '';
-        files.push({ path: agent.submissions.w9FilePath, name: `W9_Upload_${agent.id}${ext}` });
-      }
-      // Check for any W9 files in agent directory
-      try {
-        const agentDir = path.join(AGENTS_DIR, agent.id);
-        if (await fse.pathExists(agentDir)) {
-          const agentFiles = await fse.readdir(agentDir);
-          for (const file of agentFiles) {
-            if (file.toLowerCase().includes('w9') || file.toLowerCase().includes('w-9')) {
-              const filePath = path.join(agentDir, file);
-              const stat = await fse.stat(filePath);
-              if (stat.isFile()) {
-                files.push({ path: filePath, name: `W9_${agent.id}_${file}` });
-              }
-            }
-          }
-        }
-      } catch (e) {
-        console.error(`Error checking agent directory for W9 files:`, e);
-      }
-    }
-  } catch {}
+    
+  } catch (e) {
+    console.error('Error gathering agent documents:', e);
+  }
+  
   return files;
 }
 
@@ -822,15 +836,28 @@ app.get('/api/agents/:id/documents/cert', async (req, res) => {
 
 // ---- Agent portal helpers ----
 async function readAgent(agentId) {
-  const p = path.join(AGENTS_DIR, agentId, 'agent.json');
-  if (!(await fse.pathExists(p))) return null;
-  return fse.readJson(p);
+  try {
+    const key = `agents/${agentId}/agent.json`;
+    if (await spacesStorage.fileExists(key)) {
+      const buffer = await spacesStorage.getFileBuffer(key);
+      return JSON.parse(buffer.toString());
+    }
+    return null;
+  } catch (e) {
+    console.error(`Error reading agent ${agentId}:`, e);
+    return null;
+  }
 }
 
 async function writeAgent(agent) {
-  const dir = path.join(AGENTS_DIR, agent.id);
-  await fse.ensureDir(dir);
-  await fse.writeJson(path.join(dir, 'agent.json'), agent, { spaces: 2 });
+  try {
+    const key = `agents/${agent.id}/agent.json`;
+    const agentJson = JSON.stringify(agent, null, 2);
+    await spacesStorage.uploadBuffer(Buffer.from(agentJson), key, 'application/json');
+  } catch (e) {
+    console.error(`Error writing agent ${agent.id}:`, e);
+    throw e;
+  }
 }
 
 function newAgent({ firstName = '', lastName = '', email = '', phone = '' }) {
@@ -1603,65 +1630,41 @@ app.get('/api/admin/all-pdfs', requireAdmin, async (req, res) => {
     console.log('Admin: Getting all PDFs from all agents');
     
     const allPdfs = [];
-    const agentEntries = await fse.readdir(AGENTS_DIR, { withFileTypes: true });
     
-    for (const ent of agentEntries) {
-      if (!ent.isDirectory()) continue;
-      const agentId = ent.name;
+    // List all agent directories in Spaces
+    const files = await spacesStorage.listFiles('agents/');
+    const agentDirs = new Set();
+    files.forEach(file => {
+      const parts = file.Key.split('/');
+      if (parts.length >= 2 && parts[0] === 'agents') {
+        agentDirs.add(parts[1]);
+      }
+    });
+    
+    for (const agentId of agentDirs) {
       try {
         const agent = await readAgent(agentId);
         if (agent) {
           const agentName = `${agent.profile?.firstName || ''} ${agent.profile?.lastName || ''}`.trim() || 'Unknown';
           
-          // Check for signed intake PDF
-          if (agent.submissions?.intakePdfPath && await fse.pathExists(agent.submissions.intakePdfPath)) {
-            const stats = await fse.stat(agent.submissions.intakePdfPath);
-            allPdfs.push({
-              agentId: agentId,
-              agentName: agentName,
-              type: 'Signed Intake Documents',
-              pdfPath: agent.submissions.intakePdfPath,
-              fileName: path.basename(agent.submissions.intakePdfPath),
-              date: stats.mtime.toISOString(),
-              size: stats.size
-            });
-          }
+          // Get all files for this agent
+          const agentFiles = await spacesStorage.listFiles(`agents/${agentId}/`);
           
-          // Check for signed W9 PDF
-          if (agent.submissions?.w9PdfPath && await fse.pathExists(agent.submissions.w9PdfPath)) {
-            const stats = await fse.stat(agent.submissions.w9PdfPath);
-            allPdfs.push({
-              agentId: agentId,
-              agentName: agentName,
-              type: 'Signed W9 Form',
-              pdfPath: agent.submissions.w9PdfPath,
-              fileName: path.basename(agent.submissions.w9PdfPath),
-              date: stats.mtime.toISOString(),
-              size: stats.size
-            });
-          }
-          
-          // Check for other PDFs in agent directory
-          try {
-            const agentDir = path.join(AGENTS_DIR, agentId);
-            const files = await fse.readdir(agentDir);
-            for (const file of files) {
-              if (file.toLowerCase().endsWith('.pdf')) {
-                const filePath = path.join(agentDir, file);
-                const stats = await fse.stat(filePath);
-                allPdfs.push({
-                  agentId: agentId,
-                  agentName: agentName,
-                  type: 'Other PDF',
-                  pdfPath: filePath,
-                  fileName: file,
-                  date: stats.mtime.toISOString(),
-                  size: stats.size
-                });
-              }
+          for (const file of agentFiles) {
+            const fileName = file.Key.split('/').pop();
+            if (fileName.toLowerCase().endsWith('.pdf')) {
+              allPdfs.push({
+                agentId: agentId,
+                agentName: agentName,
+                type: fileName.includes('SIGNED_INTAKE') ? 'Signed Intake Documents' : 
+                      fileName.includes('SIGNED_W9') ? 'Signed W9 Form' :
+                      fileName.includes('SIGNED_BANKING') ? 'Signed Banking Form' : 'Other PDF',
+                pdfPath: file.Key,
+                fileName: fileName,
+                date: file.LastModified.toISOString(),
+                size: file.Size
+              });
             }
-          } catch (e) {
-            console.error(`Error checking agent directory for PDFs:`, e);
           }
         }
       } catch (e) {
@@ -1688,26 +1691,18 @@ app.get('/api/admin/pdf/:agentId/:fileName', requireAdmin, async (req, res) => {
     const agent = await readAgent(agentId);
     if (!agent) return res.status(404).send('Agent not found');
     
-    // Check if it's a known PDF path
-    let pdfPath = null;
-    if (fileName.includes('SIGNED_INTAKE_DOCUMENTS') && agent.submissions?.intakePdfPath) {
-      pdfPath = agent.submissions.intakePdfPath;
-    } else if (fileName.includes('SIGNED_W9_FORM') && agent.submissions?.w9PdfPath) {
-      pdfPath = agent.submissions.w9PdfPath;
-    } else {
-      // Look for the file in agent directory
-      const agentDir = path.join(AGENTS_DIR, agentId);
-      const fullPath = path.join(agentDir, fileName);
-      if (await fse.pathExists(fullPath)) {
-        pdfPath = fullPath;
-      }
-    }
+    // Look for the file in Spaces
+    const key = `agents/${agentId}/${fileName}`;
     
-    if (!pdfPath || !await fse.pathExists(pdfPath)) {
+    if (!await spacesStorage.fileExists(key)) {
       return res.status(404).send('PDF not found');
     }
     
-    return res.download(pdfPath, fileName);
+    // Get file from Spaces and stream it
+    const buffer = await spacesStorage.getFileBuffer(key);
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.send(buffer);
     
   } catch (e) {
     console.error('Error downloading PDF:', e);
