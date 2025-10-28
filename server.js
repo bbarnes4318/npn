@@ -51,8 +51,8 @@ fse.ensureDirSync(UPLOADS_TMP);
 fse.ensureDirSync(SUBMISSIONS_DIR);
 fse.ensureDirSync(AGENTS_DIR);
 
-// Admin recovery endpoint - MUST BE BEFORE STATIC FILES
-app.get('/admin/recovery', async (req, res) => {
+// Admin recovery API endpoint - MUST BE BEFORE STATIC FILES
+app.post('/api/admin/recovery', async (req, res) => {
   try {
     console.log('🚨 ADMIN RECOVERY TRIGGERED');
     
@@ -252,72 +252,19 @@ app.get('/admin/recovery', async (req, res) => {
     
     results.endTime = new Date().toISOString();
     
-    // Return HTML page
-    const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Admin Recovery Results</title>
-        <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .success { color: green; }
-            .error { color: red; }
-            .info { color: blue; }
-            .step { margin: 5px 0; padding: 5px; background: #f5f5f5; }
-            .submission { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
-            pre { background: #f0f0f0; padding: 10px; overflow-x: auto; }
-        </style>
-    </head>
-    <body>
-        <h1>🚨 Admin Recovery Results</h1>
-        <p class="success"><strong>Status:</strong> ${results.errors.length > 0 ? 'Completed with errors' : 'Success'}</p>
-        <p><strong>Start Time:</strong> ${results.startTime}</p>
-        <p><strong>End Time:</strong> ${results.endTime}</p>
-        <p><strong>Submissions Found:</strong> ${results.submissions.length}</p>
-        <p><strong>PDFs Generated:</strong> ${results.pdfsGenerated}</p>
-        
-        <h2>📋 Steps:</h2>
-        ${results.steps.map(step => `<div class="step">${step}</div>`).join('')}
-        
-        <h2>📄 Submissions Found:</h2>
-        ${results.submissions.map(sub => `
-            <div class="submission">
-                <strong>${sub.id}</strong> - ${sub.type}<br>
-                <strong>Name:</strong> ${sub.contact.name}<br>
-                <strong>Email:</strong> ${sub.contact.email}<br>
-                <strong>Date:</strong> ${sub.receivedAt}<br>
-                <strong>Files:</strong> ${sub.files.join(', ')}
-            </div>
-        `).join('')}
-        
-        ${results.errors.length > 0 ? `
-        <h2>❌ Errors:</h2>
-        ${results.errors.map(error => `<div class="error">${error}</div>`).join('')}
-        ` : ''}
-        
-        <h2>🎯 Next Steps:</h2>
-        <p>1. Check your admin portal: <a href="/admin.html">https://perenroll.com/admin.html</a></p>
-        <p>2. All submissions now have signed PDFs</p>
-        <p>3. Agent records have been created</p>
-    </body>
-    </html>
-    `;
-    
-    res.send(html);
+    res.json({ 
+      ok: true, 
+      message: 'Recovery completed successfully!',
+      results 
+    });
     
   } catch (e) {
     console.error('Recovery error:', e);
-    res.status(500).send(`
-    <!DOCTYPE html>
-    <html>
-    <head><title>Recovery Error</title></head>
-    <body>
-        <h1>❌ Recovery Error</h1>
-        <p>Error: ${e.message}</p>
-        <pre>${e.stack}</pre>
-    </body>
-    </html>
-    `);
+    res.status(500).json({ 
+      ok: false, 
+      error: e.message,
+      results: { errors: [e.message] }
+    });
   }
 });
 

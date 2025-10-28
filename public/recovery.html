@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Recovery</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .loading { color: blue; }
+        .success { color: green; }
+        .error { color: red; }
+        .step { margin: 5px 0; padding: 5px; background: #f5f5f5; }
+        .submission { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>🚨 Admin Recovery</h1>
+    <p class="loading">Starting recovery process...</p>
+    <div id="results"></div>
+
+    <script>
+        async function runRecovery() {
+            const resultsDiv = document.getElementById('results');
+            
+            try {
+                // Call the recovery API endpoint
+                const response = await fetch('/api/admin/recovery', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.ok) {
+                    resultsDiv.innerHTML = `
+                        <h2 class="success">✅ Recovery Completed Successfully!</h2>
+                        <p><strong>Submissions Found:</strong> ${data.results.submissions.length}</p>
+                        <p><strong>PDFs Generated:</strong> ${data.results.pdfsGenerated}</p>
+                        
+                        <h3>📋 Steps:</h3>
+                        ${data.results.steps.map(step => `<div class="step">${step}</div>`).join('')}
+                        
+                        <h3>📄 Submissions Found:</h3>
+                        ${data.results.submissions.map(sub => `
+                            <div class="submission">
+                                <strong>${sub.id}</strong> - ${sub.type}<br>
+                                <strong>Name:</strong> ${sub.contact.name}<br>
+                                <strong>Email:</strong> ${sub.contact.email}<br>
+                                <strong>Date:</strong> ${sub.receivedAt}<br>
+                                <strong>Files:</strong> ${sub.files.join(', ')}
+                            </div>
+                        `).join('')}
+                        
+                        ${data.results.errors.length > 0 ? `
+                        <h3>❌ Errors:</h3>
+                        ${data.results.errors.map(error => `<div class="error">${error}</div>`).join('')}
+                        ` : ''}
+                        
+                        <h3>🎯 Next Steps:</h3>
+                        <p>1. Check your admin portal: <a href="/admin.html">https://perenroll.com/admin.html</a></p>
+                        <p>2. All submissions now have signed PDFs</p>
+                        <p>3. Agent records have been created</p>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <h2 class="error">❌ Recovery Failed</h2>
+                        <p>Error: ${data.error}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <h2 class="error">❌ Recovery Error</h2>
+                    <p>Error: ${error.message}</p>
+                    <p>This might mean the API endpoint doesn't exist or there's a server error.</p>
+                `;
+            }
+        }
+        
+        // Run recovery when page loads
+        runRecovery();
+    </script>
+</body>
+</html>
