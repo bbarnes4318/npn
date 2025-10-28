@@ -7,9 +7,13 @@ const { nanoid } = require('nanoid');
 const archiver = require('archiver');
 const PDFDocument = require('pdfkit');
 const { PDFDocument: PdfLibDocument, StandardFonts, rgb } = require('pdf-lib');
+const SpacesStorage = require('./spaces-storage');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Initialize Spaces storage
+const spacesStorage = new SpacesStorage();
 
 // Paths
 const ROOT = __dirname;
@@ -50,480 +54,6 @@ fse.ensureDirSync(PUBLIC_DIR);
 fse.ensureDirSync(UPLOADS_TMP);
 fse.ensureDirSync(SUBMISSIONS_DIR);
 fse.ensureDirSync(AGENTS_DIR);
-
-// Test endpoint to verify API routing works
-app.get('/api/test', (req, res) => {
-  res.json({ ok: true, message: 'API endpoint working' });
-});
-
-// Admin recovery API endpoint - MUST BE BEFORE STATIC FILES
-app.get('/api/admin/recovery', async (req, res) => {
-  try {
-    console.log('🚨 ADMIN RECOVERY TRIGGERED (GET)');
-    
-    const results = {
-      startTime: new Date().toISOString(),
-      steps: [],
-      submissions: [],
-      pdfsGenerated: 0,
-      errors: []
-    };
-    
-    results.steps.push('Starting production submission recovery...');
-    
-    // Check directories
-    const AGENTS_DIR = process.env.AGENTS_DIR || path.join(__dirname, 'agents');
-    const SUBMISSIONS_DIR = process.env.SUBMISSIONS_DIR || path.join(__dirname, 'submissions');
-    
-    results.steps.push(`AGENTS_DIR: ${AGENTS_DIR}`);
-    results.steps.push(`SUBMISSIONS_DIR: ${SUBMISSIONS_DIR}`);
-    results.steps.push(`__dirname: ${__dirname}`);
-    results.steps.push(`process.cwd(): ${process.cwd()}`);
-    
-    // Check multiple possible locations for submissions
-    const possibleSubmissionsDirs = [
-      SUBMISSIONS_DIR,
-      path.join(__dirname, 'submissions'),
-      path.join(process.cwd(), 'submissions'),
-      '/workspace/submissions',
-      '/app/submissions',
-      '/tmp/submissions'
-    ];
-    
-    results.steps.push('Checking all possible submission directories:');
-    for (const dir of possibleSubmissionsDirs) {
-      const exists = await fse.pathExists(dir);
-      results.steps.push(`  ${dir}: ${exists ? 'EXISTS' : 'NOT FOUND'}`);
-      if (exists) {
-        try {
-          const entries = await fse.readdir(dir, { withFileTypes: true });
-          results.steps.push(`    Contains ${entries.length} items: ${entries.map(e => e.name).join(', ')}`);
-        } catch (e) {
-          results.steps.push(`    Error reading: ${e.message}`);
-        }
-      }
-    }
-    
-    // Check if directories exist and create them if needed
-    const agentsExists = await fse.pathExists(AGENTS_DIR);
-    const submissionsExists = await fse.pathExists(SUBMISSIONS_DIR);
-    
-    results.steps.push(`AGENTS_DIR exists: ${agentsExists}`);
-    results.steps.push(`SUBMISSIONS_DIR exists: ${submissionsExists}`);
-    
-    // Create directories if they don't exist
-    if (!agentsExists) {
-      try {
-        await fse.ensureDir(AGENTS_DIR);
-        results.steps.push(`✅ Created AGENTS_DIR: ${AGENTS_DIR}`);
-      } catch (error) {
-        results.steps.push(`❌ Failed to create AGENTS_DIR: ${error.message}`);
-        results.errors.push(`Failed to create AGENTS_DIR: ${error.message}`);
-      }
-    }
-    
-    if (!submissionsExists) {
-      try {
-        await fse.ensureDir(SUBMISSIONS_DIR);
-        results.steps.push(`✅ Created SUBMISSIONS_DIR: ${SUBMISSIONS_DIR}`);
-      } catch (error) {
-        results.steps.push(`❌ Failed to create SUBMISSIONS_DIR: ${error.message}`);
-        results.errors.push(`Failed to create SUBMISSIONS_DIR: ${error.message}`);
-      }
-    }
-    
-    // Find all submissions
-    const entries = await fse.readdir(SUBMISSIONS_DIR, { withFileTypes: true });
-    results.steps.push(`Found ${entries.length} items in SUBMISSIONS_DIR`);
-    
-    let processedCount = 0;
-    
-    for (const ent of entries) {
-      if (!ent.isDirectory()) continue;
-      
-      const submissionDir = path.join(SUBMISSIONS_DIR, ent.name);
-      const files = await fse.readdir(submissionDir);
-      
-      let submissionData = null;
-      let submissionType = 'unknown';
-      let contactInfo = {};
-      
-      // Process intake submission
-      if (files.includes('intake.json')) {
-        try {
-          submissionData = await fse.readJson(path.join(submissionDir, 'intake.json'));
-          submissionType = 'intake';
-          contactInfo = {
-            name: `${submissionData.contact?.firstName || ''} ${submissionData.contact?.lastName || ''}`.trim(),
-            email: submissionData.contact?.email || '',
-            phone: submissionData.contact?.phone || ''
-          };
-        } catch (e) {
-          results.errors.push(`Error reading intake.json in ${ent.name}: ${e.message}`);
-          continue;
-        }
-      }
-      
-      // Process W9 submission
-      else if (files.includes('w9.json')) {
-        try {
-          submissionData = await fse.readJson(path.join(submissionDir, 'w9.json'));
-          submissionType = 'w9';
-          contactInfo = {
-            name: submissionData.name || '',
-            email: submissionData.email || '',
-            phone: submissionData.phone || ''
-          };
-        } catch (e) {
-          results.errors.push(`Error reading w9.json in ${ent.name}: ${e.message}`);
-          continue;
-        }
-      }
-      
-      // Process banking submission
-      else if (files.includes('banking.json')) {
-        try {
-          submissionData = await fse.readJson(path.join(submissionDir, 'banking.json'));
-          submissionType = 'banking';
-          contactInfo = {
-            name: `${submissionData.firstName || ''} ${submissionData.lastName || ''}`.trim(),
-            email: submissionData.email || '',
-            phone: submissionData.phone || ''
-          };
-        } catch (e) {
-          results.errors.push(`Error reading banking.json in ${ent.name}: ${e.message}`);
-          continue;
-        }
-      }
-      
-      // Process packet submission
-      else if (files.includes('packet.json')) {
-        try {
-          submissionData = await fse.readJson(path.join(submissionDir, 'packet.json'));
-          submissionType = 'packet';
-          contactInfo = {
-            name: 'Packet Submission',
-            email: '',
-            phone: ''
-          };
-        } catch (e) {
-          results.errors.push(`Error reading packet.json in ${ent.name}: ${e.message}`);
-          continue;
-        }
-      }
-      
-      if (submissionData) {
-        results.submissions.push({
-          id: ent.name,
-          type: submissionType,
-          contact: contactInfo,
-          receivedAt: submissionData.receivedAt || submissionData.id,
-          files: files
-        });
-        
-        results.steps.push(`Found ${submissionType} submission: ${ent.name} - ${contactInfo.name} (${contactInfo.email})`);
-        
-        // Create agent record
-        const agent = {
-          id: nanoid(10),
-          createdAt: new Date().toISOString(),
-          profile: {
-            firstName: contactInfo.name.split(' ')[0] || '',
-            lastName: contactInfo.name.split(' ').slice(1).join(' ') || '',
-            email: contactInfo.email || `${ent.name}@submission.local`,
-            phone: contactInfo.phone || ''
-          },
-          progress: {},
-          submissions: {},
-          signatures: {},
-          uploads: {}
-        };
-        
-        // Generate PDF
-        let pdfBuffer = null;
-        let pdfFileName = '';
-        
-        if (submissionType === 'intake') {
-          pdfBuffer = await generateIntakePdf(submissionData, agent);
-          pdfFileName = `SIGNED_INTAKE_DOCUMENTS_${Date.now()}.pdf`;
-          agent.progress.intakeSubmitted = true;
-          agent.submissions.intakeId = ent.name;
-        } else if (submissionType === 'w9') {
-          pdfBuffer = await generateW9Pdf(submissionData);
-          pdfFileName = `SIGNED_W9_FORM_${Date.now()}.pdf`;
-          agent.progress.w9Submitted = true;
-          agent.submissions.w9Id = ent.name;
-        } else if (submissionType === 'banking') {
-          pdfBuffer = await generateBankingPdf(submissionData);
-          pdfFileName = `SIGNED_BANKING_FORM_${Date.now()}.pdf`;
-          agent.progress.bankingSubmitted = true;
-          agent.submissions.bankingId = ent.name;
-        }
-        
-        if (pdfBuffer) {
-          // Save agent record
-          const agentDir = path.join(AGENTS_DIR, agent.id);
-          await fse.ensureDir(agentDir);
-          await fse.writeJson(path.join(agentDir, 'agent.json'), agent, { spaces: 2 });
-          
-          // Save PDF
-          const pdfPath = path.join(agentDir, pdfFileName);
-          await fse.writeFile(pdfPath, pdfBuffer);
-          
-          // Update agent with PDF path
-          agent.submissions[`${submissionType}PdfPath`] = pdfPath;
-          await fse.writeJson(path.join(agentDir, 'agent.json'), agent, { spaces: 2 });
-          
-          results.steps.push(`✅ Generated ${submissionType} PDF for ${contactInfo.name}`);
-          results.pdfsGenerated++;
-        }
-        
-        processedCount++;
-      }
-    }
-    
-    results.steps.push(`🎉 PROCESSING COMPLETE!`);
-    results.steps.push(`📊 Processed: ${processedCount} submissions`);
-    results.steps.push(`📄 Generated: ${results.pdfsGenerated} signed PDFs`);
-    
-    results.endTime = new Date().toISOString();
-    
-    res.json({ 
-      ok: true, 
-      message: 'Recovery completed successfully!',
-      results 
-    });
-    
-  } catch (e) {
-    console.error('Recovery error:', e);
-    res.status(500).json({ 
-      ok: false, 
-      error: e.message,
-      results: { errors: [e.message] }
-    });
-  }
-});
-
-app.post('/api/admin/recovery', async (req, res) => {
-  try {
-    console.log('🚨 ADMIN RECOVERY TRIGGERED');
-    
-    const results = {
-      startTime: new Date().toISOString(),
-      steps: [],
-      submissions: [],
-      pdfsGenerated: 0,
-      errors: []
-    };
-    
-    results.steps.push('Starting production submission recovery...');
-    
-    // Check directories
-    const AGENTS_DIR = process.env.AGENTS_DIR || path.join(__dirname, 'agents');
-    const SUBMISSIONS_DIR = process.env.SUBMISSIONS_DIR || path.join(__dirname, 'submissions');
-    
-    results.steps.push(`AGENTS_DIR: ${AGENTS_DIR}`);
-    results.steps.push(`SUBMISSIONS_DIR: ${SUBMISSIONS_DIR}`);
-    
-    // Check if directories exist and create them if needed
-    const agentsExists = await fse.pathExists(AGENTS_DIR);
-    const submissionsExists = await fse.pathExists(SUBMISSIONS_DIR);
-    
-    results.steps.push(`AGENTS_DIR exists: ${agentsExists}`);
-    results.steps.push(`SUBMISSIONS_DIR exists: ${submissionsExists}`);
-    
-    // Create directories if they don't exist
-    if (!agentsExists) {
-      try {
-        await fse.ensureDir(AGENTS_DIR);
-        results.steps.push(`✅ Created AGENTS_DIR: ${AGENTS_DIR}`);
-      } catch (error) {
-        results.steps.push(`❌ Failed to create AGENTS_DIR: ${error.message}`);
-        results.errors.push(`Failed to create AGENTS_DIR: ${error.message}`);
-      }
-    }
-    
-    if (!submissionsExists) {
-      try {
-        await fse.ensureDir(SUBMISSIONS_DIR);
-        results.steps.push(`✅ Created SUBMISSIONS_DIR: ${SUBMISSIONS_DIR}`);
-      } catch (error) {
-        results.steps.push(`❌ Failed to create SUBMISSIONS_DIR: ${error.message}`);
-        results.errors.push(`Failed to create SUBMISSIONS_DIR: ${error.message}`);
-      }
-    }
-    
-    // Find all submissions
-    const entries = await fse.readdir(SUBMISSIONS_DIR, { withFileTypes: true });
-    results.steps.push(`Found ${entries.length} items in SUBMISSIONS_DIR`);
-    
-    let processedCount = 0;
-    
-    for (const ent of entries) {
-      if (!ent.isDirectory()) continue;
-      
-      const submissionDir = path.join(SUBMISSIONS_DIR, ent.name);
-      const files = await fse.readdir(submissionDir);
-      
-      let submissionData = null;
-      let submissionType = 'unknown';
-      let contactInfo = {};
-      
-      // Process intake submission
-      if (files.includes('intake.json')) {
-        try {
-          submissionData = await fse.readJson(path.join(submissionDir, 'intake.json'));
-          submissionType = 'intake';
-          contactInfo = {
-            name: `${submissionData.contact?.firstName || ''} ${submissionData.contact?.lastName || ''}`.trim(),
-            email: submissionData.contact?.email || '',
-            phone: submissionData.contact?.phone || ''
-          };
-        } catch (e) {
-          results.errors.push(`Error reading intake.json in ${ent.name}: ${e.message}`);
-          continue;
-        }
-      }
-      
-      // Process W9 submission
-      else if (files.includes('w9.json')) {
-        try {
-          submissionData = await fse.readJson(path.join(submissionDir, 'w9.json'));
-          submissionType = 'w9';
-          contactInfo = {
-            name: submissionData.name || '',
-            email: submissionData.email || '',
-            phone: submissionData.phone || ''
-          };
-        } catch (e) {
-          results.errors.push(`Error reading w9.json in ${ent.name}: ${e.message}`);
-          continue;
-        }
-      }
-      
-      // Process banking submission
-      else if (files.includes('banking.json')) {
-        try {
-          submissionData = await fse.readJson(path.join(submissionDir, 'banking.json'));
-          submissionType = 'banking';
-          contactInfo = {
-            name: `${submissionData.firstName || ''} ${submissionData.lastName || ''}`.trim(),
-            email: submissionData.email || '',
-            phone: submissionData.phone || ''
-          };
-        } catch (e) {
-          results.errors.push(`Error reading banking.json in ${ent.name}: ${e.message}`);
-          continue;
-        }
-      }
-      
-      // Process packet submission
-      else if (files.includes('packet.json')) {
-        try {
-          submissionData = await fse.readJson(path.join(submissionDir, 'packet.json'));
-          submissionType = 'packet';
-          contactInfo = {
-            name: 'Packet Submission',
-            email: '',
-            phone: ''
-          };
-        } catch (e) {
-          results.errors.push(`Error reading packet.json in ${ent.name}: ${e.message}`);
-          continue;
-        }
-      }
-      
-      if (submissionData) {
-        results.submissions.push({
-          id: ent.name,
-          type: submissionType,
-          contact: contactInfo,
-          receivedAt: submissionData.receivedAt || submissionData.id,
-          files: files
-        });
-        
-        results.steps.push(`Found ${submissionType} submission: ${ent.name} - ${contactInfo.name} (${contactInfo.email})`);
-        
-        // Create agent record
-        const agent = {
-          id: nanoid(10),
-          createdAt: new Date().toISOString(),
-          profile: {
-            firstName: contactInfo.name.split(' ')[0] || '',
-            lastName: contactInfo.name.split(' ').slice(1).join(' ') || '',
-            email: contactInfo.email || `${ent.name}@submission.local`,
-            phone: contactInfo.phone || ''
-          },
-          progress: {},
-          submissions: {},
-          signatures: {},
-          uploads: {}
-        };
-        
-        // Generate PDF
-        let pdfBuffer = null;
-        let pdfFileName = '';
-        
-        if (submissionType === 'intake') {
-          pdfBuffer = await generateIntakePdf(submissionData, agent);
-          pdfFileName = `SIGNED_INTAKE_DOCUMENTS_${Date.now()}.pdf`;
-          agent.progress.intakeSubmitted = true;
-          agent.submissions.intakeId = ent.name;
-        } else if (submissionType === 'w9') {
-          pdfBuffer = await generateW9Pdf(submissionData);
-          pdfFileName = `SIGNED_W9_FORM_${Date.now()}.pdf`;
-          agent.progress.w9Submitted = true;
-          agent.submissions.w9Id = ent.name;
-        } else if (submissionType === 'banking') {
-          pdfBuffer = await generateBankingPdf(submissionData);
-          pdfFileName = `SIGNED_BANKING_FORM_${Date.now()}.pdf`;
-          agent.progress.bankingSubmitted = true;
-          agent.submissions.bankingId = ent.name;
-        }
-        
-        if (pdfBuffer) {
-          // Save agent record
-          const agentDir = path.join(AGENTS_DIR, agent.id);
-          await fse.ensureDir(agentDir);
-          await fse.writeJson(path.join(agentDir, 'agent.json'), agent, { spaces: 2 });
-          
-          // Save PDF
-          const pdfPath = path.join(agentDir, pdfFileName);
-          await fse.writeFile(pdfPath, pdfBuffer);
-          
-          // Update agent with PDF path
-          agent.submissions[`${submissionType}PdfPath`] = pdfPath;
-          await fse.writeJson(path.join(agentDir, 'agent.json'), agent, { spaces: 2 });
-          
-          results.steps.push(`✅ Generated ${submissionType} PDF for ${contactInfo.name}`);
-          results.pdfsGenerated++;
-        }
-        
-        processedCount++;
-      }
-    }
-    
-    results.steps.push(`🎉 PROCESSING COMPLETE!`);
-    results.steps.push(`📊 Processed: ${processedCount} submissions`);
-    results.steps.push(`📄 Generated: ${results.pdfsGenerated} signed PDFs`);
-    
-    results.endTime = new Date().toISOString();
-    
-    res.json({ 
-      ok: true, 
-      message: 'Recovery completed successfully!',
-      results 
-    });
-    
-  } catch (e) {
-    console.error('Recovery error:', e);
-    res.status(500).json({ 
-      ok: false, 
-      error: e.message,
-      results: { errors: [e.message] }
-    });
-  }
-});
 
 // Static files
 app.use(express.static(PUBLIC_DIR));
@@ -594,27 +124,43 @@ app.get('/api/admin/agents/find', requireAdmin, async (req, res) => {
 app.get('/api/admin/agents', requireAdmin, async (req, res) => {
   try {
     console.log('Admin: Listing agents...');
-    console.log('AGENTS_DIR:', AGENTS_DIR);
     const q = (req.query.q || '').toString().trim().toLowerCase();
     const limit = Math.max(1, Math.min(200, parseInt(req.query.limit, 10) || 50));
-    const entries = await fse.readdir(AGENTS_DIR, { withFileTypes: true });
-    console.log(`Admin: Found ${entries.length} entries in AGENTS_DIR`);
+    
+    // List all agent directories in Spaces
+    const files = await spacesStorage.listFiles('agents/');
+    const agentDirs = new Set();
+    files.forEach(file => {
+      const parts = file.Key.split('/');
+      if (parts.length >= 2 && parts[0] === 'agents') {
+        agentDirs.add(parts[1]);
+      }
+    });
+    
+    console.log(`Admin: Found ${agentDirs.size} agent directories in Spaces`);
     const agents = [];
-    for (const ent of entries) {
-      if (!ent.isDirectory()) continue;
-      const p = path.join(AGENTS_DIR, ent.name, 'agent.json');
-      if (!(await fse.pathExists(p))) continue;
+    
+    for (const agentId of agentDirs) {
       try {
-        const a = await fse.readJson(p);
-        const email = (a.profile?.email || '').toLowerCase();
-        const name = `${a.profile?.firstName || ''} ${a.profile?.lastName || ''}`.toLowerCase();
+        const agent = await readAgent(agentId);
+        if (!agent) continue;
+        
+        const email = (agent.profile?.email || '').toLowerCase();
+        const name = `${agent.profile?.firstName || ''} ${agent.profile?.lastName || ''}`.toLowerCase();
         if (q && !(email.includes(q) || name.includes(q))) continue;
-        agents.push({ id: a.id, createdAt: a.createdAt || '', profile: a.profile || {}, progress: a.progress || {} });
-        console.log(`Admin: Added agent ${a.id} - ${a.profile?.firstName} ${a.profile?.lastName}`);
+        
+        agents.push({ 
+          id: agent.id, 
+          createdAt: agent.createdAt || '', 
+          profile: agent.profile || {}, 
+          progress: agent.progress || {} 
+        });
+        console.log(`Admin: Added agent ${agent.id} - ${agent.profile?.firstName} ${agent.profile?.lastName}`);
       } catch (e) {
-        console.log(`Admin: Error reading agent ${ent.name}:`, e.message);
+        console.log(`Admin: Error reading agent ${agentId}:`, e.message);
       }
     }
+    
     agents.sort((x, y) => (new Date(y.createdAt || 0)) - (new Date(x.createdAt || 0)));
     console.log(`Admin: Returning ${agents.length} agents`);
     res.json({ ok: true, agents: agents.slice(0, limit) });
@@ -634,10 +180,6 @@ app.get('/api/admin/agents/:id/documents/list', requireAdmin, async (req, res) =
       return res.status(404).json({ ok: false, error: 'Not found' });
     }
     console.log('Admin: Agent found:', agent.id);
-    
-    // Ensure all PDFs are generated before listing
-    await ensurePdfsGenerated(agent);
-    
     const files = await gatherAgentDocuments(agent, { includeW9: true });
     console.log('Admin: Found files:', files.length);
     res.json({ ok: true, files: files.map(f => ({ name: f.name })) });
@@ -662,8 +204,13 @@ app.get('/api/admin/agents/:id/documents/download/:filename', requireAdmin, asyn
       console.log('Admin: File not found:', req.params.filename);
       return res.status(404).send('File not found');
     }
-    console.log('Admin: Sending file:', file.path);
-    return res.download(file.path, file.name);
+    console.log('Admin: Sending file from Spaces:', file.path);
+    
+    // Get file from Spaces and stream it
+    const buffer = await spacesStorage.getFileBuffer(file.path);
+    res.setHeader('Content-Disposition', `attachment; filename="${file.name}"`);
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.send(buffer);
   } catch (e) {
     console.error('admin download doc error', e);
     return res.status(500).send('Failed to download document');
@@ -782,11 +329,36 @@ app.get('/api/admin/agents/:id/documents/w9.pdf', requireAdmin, async (req, res)
           console.warn('pdf-lib W9 fill failed, falling back to simple PDF', e);
         }
         // Fallback: simple generated summary PDF
-        const { generateW9SubstitutePdf } = require('./pdf-generator');
-        const pdfBuffer = await generateW9SubstitutePdf(data);
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="W9_${w9Id}.pdf"`);
-        res.send(pdfBuffer);
+        const doc = new PDFDocument({ margin: 50 });
+        doc.pipe(res);
+        doc.fontSize(16).text('Form W-9 (Substitute)', { align: 'center' });
+        doc.moveDown();
+        doc.fontSize(11).text('Request for Taxpayer Identification Number and Certification');
+        doc.moveDown();
+        function field(label, value) {
+          doc.font('Times-Bold').text(label + ':', { continued: true });
+          doc.font('Times-Roman').text(' ' + (value || ''));
+        }
+        field('Name', data.name);
+        field('Business name', data.businessName);
+        field('Tax classification', data.taxClassification);
+        if (data.taxClassification === 'llc') field('LLC classification', data.llcClassification);
+        field('Exempt payee code', data.exemptPayeeCode);
+        field('FATCA code', data.fatcaCode);
+        field('Address 1', data.address?.address1);
+        field('Address 2', data.address?.address2);
+        field('City', data.address?.city);
+        field('State', data.address?.state);
+        field('ZIP', data.address?.zip);
+        doc.moveDown();
+        field('SSN', data.tin?.ssn);
+        field('EIN', data.tin?.ein);
+        doc.moveDown();
+        field('Certification signature (typed)', data.certification?.signature);
+        field('Certification date', data.certification?.signatureDate);
+        doc.end();
         return;
       }
     }
@@ -886,193 +458,69 @@ function requireAdmin(req, res, next) {
   return res.status(401).json({ ok: false, error: 'Unauthorized' });
 }
 
-// ------- PDF Generation Fallback -------
-async function ensurePdfsGenerated(agent) {
-  try {
-    const agentDir = path.join(AGENTS_DIR, agent.id);
-    await fse.ensureDir(agentDir);
-    
-    // Check and generate intake PDF if missing
-    if (agent.submissions?.intakeId && !agent.submissions?.intakePdfPath) {
-      console.log('⚠️ Intake PDF missing, attempting to generate...');
-      try {
-        const intakeJson = path.join(SUBMISSIONS_DIR, agent.submissions.intakeId, 'intake.json');
-        if (await fse.pathExists(intakeJson)) {
-          const submission = await fse.readJson(intakeJson);
-          const { generateIntakePdf } = require('./pdf-generator');
-          const pdfBuffer = await generateIntakePdf(submission, agent);
-          const outPath = path.join(agentDir, `SIGNED_INTAKE_DOCUMENTS_${Date.now()}.pdf`);
-          await fse.writeFile(outPath, pdfBuffer);
-          agent.submissions.intakePdfPath = outPath;
-          console.log('✅ Generated missing intake PDF:', outPath);
-        }
-      } catch (e) {
-        console.error('❌ Failed to generate missing intake PDF:', e);
-      }
-    }
-    
-    // Check and generate W-9 PDF if missing
-    if (agent.submissions?.w9Id && !agent.submissions?.w9PdfPath) {
-      console.log('⚠️ W-9 PDF missing, attempting to generate...');
-      try {
-        const w9Json = path.join(SUBMISSIONS_DIR, agent.submissions.w9Id, 'w9.json');
-        if (await fse.pathExists(w9Json)) {
-          const submission = await fse.readJson(w9Json);
-          const pdfBytes = await new Promise((resolve, reject) => {
-            const chunks = [];
-            const doc = new PDFDocument({ margin: 50, size: 'LETTER' });
-            doc.on('data', chunks.push.bind(chunks));
-            doc.on('end', () => resolve(Buffer.concat(chunks)));
-            doc.on('error', reject);
-            
-            // Generate W-9 PDF content (simplified version)
-            doc.fontSize(20).text('FORM W-9', { align: 'center' });
-            doc.moveDown(1);
-            doc.fontSize(14).text('Request for Taxpayer Identification Number and Certification', { align: 'center' });
-            doc.moveDown(2);
-            doc.fontSize(16).text('PART I — TAXPAYER INFORMATION');
-            doc.moveDown(1);
-            doc.fontSize(14).text(`Name: ${submission.name || 'N/A'}`);
-            doc.fontSize(14).text(`Business Name: ${submission.businessName || 'N/A'}`);
-            doc.fontSize(14).text(`Tax Classification: ${submission.taxClassification || 'N/A'}`);
-            doc.moveDown(1);
-            doc.fontSize(14).text(`Address: ${submission.address?.address1 || 'N/A'}`);
-            doc.fontSize(14).text(`City: ${submission.address?.city || 'N/A'}`);
-            doc.fontSize(14).text(`State: ${submission.address?.state || 'N/A'}`);
-            doc.fontSize(14).text(`ZIP: ${submission.address?.zip || 'N/A'}`);
-            doc.moveDown(1);
-            doc.fontSize(14).text(`SSN: ${submission.tin?.ssn || 'N/A'}`);
-            doc.fontSize(14).text(`EIN: ${submission.tin?.ein || 'N/A'}`);
-            doc.moveDown(2);
-            doc.fontSize(16).text('SIGNATURE SECTION');
-            doc.moveDown(1);
-            doc.fontSize(14).text(`Digital Signature: ${submission.certification?.signature || 'NOT PROVIDED'}`);
-            doc.fontSize(14).text(`Signature Date: ${submission.certification?.signatureDate || 'NOT PROVIDED'}`);
-            doc.end();
-          });
-          
-          const outPath = path.join(agentDir, `SIGNED_W9_FORM_${Date.now()}.pdf`);
-          await fse.writeFile(outPath, pdfBytes);
-          agent.submissions.w9PdfPath = outPath;
-          console.log('✅ Generated missing W-9 PDF:', outPath);
-        }
-      } catch (e) {
-        console.error('❌ Failed to generate missing W-9 PDF:', e);
-      }
-    }
-    
-    // Check and generate banking PDF if missing
-    if (agent.submissions?.bankingId && !agent.submissions?.bankingPdfPath) {
-      console.log('⚠️ Banking PDF missing, attempting to generate...');
-      try {
-        const bankingJson = path.join(SUBMISSIONS_DIR, agent.submissions.bankingId, 'banking.json');
-        if (await fse.pathExists(bankingJson)) {
-          const submission = await fse.readJson(bankingJson);
-          const { generateBankingPdf } = require('./pdf-generator');
-          const pdfBuffer = await generateBankingPdf(submission);
-          const outPath = path.join(agentDir, `SIGNED_BANKING_FORM_${Date.now()}.pdf`);
-          await fse.writeFile(outPath, pdfBuffer);
-          agent.submissions.bankingPdfPath = outPath;
-          console.log('✅ Generated missing banking PDF:', outPath);
-        }
-      } catch (e) {
-        console.error('❌ Failed to generate missing banking PDF:', e);
-      }
-    }
-    
-    // Save agent if any PDFs were generated
-    if (agent.submissions?.intakePdfPath || agent.submissions?.w9PdfPath || agent.submissions?.bankingPdfPath) {
-      await writeAgent(agent);
-    }
-  } catch (e) {
-    console.error('Error in ensurePdfsGenerated:', e);
-  }
-}
-
 // ------- Document listing and ZIP download -------
 async function gatherAgentDocuments(agent, { includeW9 = true } = {}) {
   const files = [];
   try {
-    // Producer Agreement drawn signature
-    const sig = agent.signatures?.producerAgreement;
-    if (sig?.path && await fse.pathExists(sig.path)) {
-      files.push({ path: sig.path, name: `ProducerAgreement_Signature_${agent.id}.png` });
+    // List all files for this agent in Spaces
+    const agentFiles = await spacesStorage.listFiles(`agents/${agent.id}/`);
+    
+    for (const file of agentFiles) {
+      const fileName = file.Key.split('/').pop();
+      if (fileName === 'agent.json') continue; // Skip the agent metadata file
+      
+      files.push({ 
+        path: file.Key, 
+        name: fileName,
+        size: file.Size,
+        lastModified: file.LastModified
+      });
     }
-    // Producer Agreement signed PDF
-    if (agent.submissions?.producerAgreementPdfPath && await fse.pathExists(agent.submissions.producerAgreementPdfPath)) {
-      files.push({ path: agent.submissions.producerAgreementPdfPath, name: path.basename(agent.submissions.producerAgreementPdfPath) });
+    
+    // Also check for submission files
+    if (agent.submissions?.intakeId) {
+      const intakeFiles = await spacesStorage.listFiles(`submissions/${agent.submissions.intakeId}/`);
+      intakeFiles.forEach(file => {
+        const fileName = file.Key.split('/').pop();
+        files.push({ 
+          path: file.Key, 
+          name: `Intake_${fileName}`,
+          size: file.Size,
+          lastModified: file.LastModified
+        });
+      });
     }
-    // CMS/FFM certification proof
-    if (agent.uploads?.certProof && await fse.pathExists(agent.uploads.certProof)) {
-      const ext = path.extname(agent.uploads.certProof) || '';
-      files.push({ path: agent.uploads.certProof, name: `CMS_FFM_CertProof_${agent.id}${ext}` });
+    
+    if (agent.submissions?.w9Id && includeW9) {
+      const w9Files = await spacesStorage.listFiles(`submissions/${agent.submissions.w9Id}/`);
+      w9Files.forEach(file => {
+        const fileName = file.Key.split('/').pop();
+        files.push({ 
+          path: file.Key, 
+          name: `W9_${fileName}`,
+          size: file.Size,
+          lastModified: file.LastModified
+        });
+      });
     }
-    // Intake submission JSON
-    const intakeId = agent.submissions?.intakeId;
-    if (intakeId) {
-      const intakeJson = path.join(SUBMISSIONS_DIR, intakeId, 'intake.json');
-      if (await fse.pathExists(intakeJson)) files.push({ path: intakeJson, name: `Intake_${intakeId}.json` });
+    
+    if (agent.submissions?.packetId) {
+      const packetFiles = await spacesStorage.listFiles(`submissions/${agent.submissions.packetId}/`);
+      packetFiles.forEach(file => {
+        const fileName = file.Key.split('/').pop();
+        files.push({ 
+          path: file.Key, 
+          name: `Packet_${fileName}`,
+          size: file.Size,
+          lastModified: file.LastModified
+        });
+      });
     }
-    // Packet submission JSON
-    const packetId = agent.submissions?.packetId;
-    if (packetId) {
-      const packetJson = path.join(SUBMISSIONS_DIR, packetId, 'packet.json');
-      if (await fse.pathExists(packetJson)) files.push({ path: packetJson, name: `Packet_${packetId}.json` });
-    }
-    // Banking submission JSON
-    const bankingId = agent.submissions?.bankingId;
-    if (bankingId) {
-      const bankingJson = path.join(SUBMISSIONS_DIR, bankingId, 'banking.json');
-      if (await fse.pathExists(bankingJson)) files.push({ path: bankingJson, name: `Banking_${bankingId}.json` });
-    }
-    // Dashboard/Intake PDF
-    if (agent.submissions?.dashboardPdfPath && await fse.pathExists(agent.submissions.dashboardPdfPath)) {
-      files.push({ path: agent.submissions.dashboardPdfPath, name: path.basename(agent.submissions.dashboardPdfPath) });
-    }
-    // Signed Intake Documents PDF
-    if (agent.submissions?.intakePdfPath && await fse.pathExists(agent.submissions.intakePdfPath)) {
-      files.push({ path: agent.submissions.intakePdfPath, name: path.basename(agent.submissions.intakePdfPath) });
-    }
-    // Signed Banking Documents PDF
-    if (agent.submissions?.bankingPdfPath && await fse.pathExists(agent.submissions.bankingPdfPath)) {
-      files.push({ path: agent.submissions.bankingPdfPath, name: path.basename(agent.submissions.bankingPdfPath) });
-    }
-    // W-9 e-sign JSON
-    if (includeW9) {
-      const w9Id = agent.submissions?.w9Id;
-      if (w9Id) {
-        const w9Json = path.join(SUBMISSIONS_DIR, w9Id, 'w9.json');
-        if (await fse.pathExists(w9Json)) files.push({ path: w9Json, name: `W9_${w9Id}.json` });
-      }
-      // W-9 generated PDF
-      if (agent.submissions?.w9PdfPath && await fse.pathExists(agent.submissions.w9PdfPath)) {
-        files.push({ path: agent.submissions.w9PdfPath, name: path.basename(agent.submissions.w9PdfPath) });
-      }
-      // W-9 uploaded file (agent-bound)
-      if (agent.submissions?.w9FilePath && await fse.pathExists(agent.submissions.w9FilePath)) {
-        const ext = path.extname(agent.submissions.w9FilePath) || '';
-        files.push({ path: agent.submissions.w9FilePath, name: `W9_Upload_${agent.id}${ext}` });
-      }
-      // Check for any W9 files in agent directory
-      try {
-        const agentDir = path.join(AGENTS_DIR, agent.id);
-        if (await fse.pathExists(agentDir)) {
-          const agentFiles = await fse.readdir(agentDir);
-          for (const file of agentFiles) {
-            if (file.toLowerCase().includes('w9') || file.toLowerCase().includes('w-9')) {
-              const filePath = path.join(agentDir, file);
-              const stat = await fse.stat(filePath);
-              if (stat.isFile()) {
-                files.push({ path: filePath, name: `W9_${agent.id}_${file}` });
-              }
-            }
-          }
-        }
-      } catch (e) {
-        console.error(`Error checking agent directory for W9 files:`, e);
-      }
-    }
-  } catch {}
+    
+  } catch (e) {
+    console.error('Error gathering agent documents:', e);
+  }
+  
   return files;
 }
 
@@ -1183,56 +631,6 @@ app.get('/health', (req, res) => {
   res.json({ ok: true });
 });
 
-// Debug endpoint to check directory structure
-app.get('/api/debug', (req, res) => {
-  try {
-    const debug = {
-      ok: true,
-      directories: {
-        AGENTS_DIR: AGENTS_DIR,
-        SUBMISSIONS_DIR: SUBMISSIONS_DIR,
-        UPLOADS_DIR: UPLOADS_DIR
-      },
-      exists: {},
-      contents: {}
-    };
-    
-    // Check if directories exist
-    debug.exists.agents = fse.existsSync(AGENTS_DIR);
-    debug.exists.submissions = fse.existsSync(SUBMISSIONS_DIR);
-    debug.exists.uploads = fse.existsSync(UPLOADS_DIR);
-    
-    // List contents if they exist
-    if (debug.exists.agents) {
-      try {
-        debug.contents.agents = fse.readdirSync(AGENTS_DIR);
-      } catch (e) {
-        debug.contents.agents = `Error: ${e.message}`;
-      }
-    }
-    
-    if (debug.exists.submissions) {
-      try {
-        debug.contents.submissions = fse.readdirSync(SUBMISSIONS_DIR);
-      } catch (e) {
-        debug.contents.submissions = `Error: ${e.message}`;
-      }
-    }
-    
-    if (debug.exists.uploads) {
-      try {
-        debug.contents.uploads = fse.readdirSync(UPLOADS_DIR);
-      } catch (e) {
-        debug.contents.uploads = `Error: ${e.message}`;
-      }
-    }
-    
-    res.json(debug);
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
-});
-
 // Secure document download routes for known PDFs in project root
 const DOCS = {
   w9: path.join(ROOT, 'W9.pdf'),
@@ -1277,46 +675,6 @@ app.get('/docs/:doc', async (req, res) => {
     return res.sendFile(filePath);
   } catch (e) {
     return res.status(500).send('Error serving document');
-  }
-});
-
-// Generate intake PDF from e-sign JSON if available
-app.get('/api/agents/:id/documents/intake.pdf', async (req, res) => {
-  try {
-    const agent = await readAgent(req.params.id);
-    if (!agent) return res.status(404).send('Not found');
-    
-    const intakeId = agent.submissions?.intakeId;
-    const persistedPdf = agent.submissions?.intakePdfPath;
-    
-    if (persistedPdf && await fse.pathExists(persistedPdf)) {
-      return res.download(persistedPdf, path.basename(persistedPdf));
-    }
-    
-    if (intakeId) {
-      const intakeJsonPath = path.join(SUBMISSIONS_DIR, intakeId, 'intake.json');
-      if (await fse.pathExists(intakeJsonPath)) {
-        const data = await fse.readJson(intakeJsonPath);
-        
-        // Generate PDF using the existing generator
-        try {
-          const { generateIntakePdf } = require('./pdf-generator');
-          const pdfBuffer = await generateIntakePdf(data, agent);
-          
-          res.setHeader('Content-Type', 'application/pdf');
-          res.setHeader('Content-Disposition', `attachment; filename="Signed_Intake_Documents_${agent.id}.pdf"`);
-          return res.send(pdfBuffer);
-        } catch (e) {
-          console.error('Failed to generate intake PDF:', e);
-          return res.status(500).send('Failed to generate PDF');
-        }
-      }
-    }
-    
-    return res.status(404).send('Intake documents not found');
-  } catch (e) {
-    console.error('intake pdf error', e);
-    return res.status(500).send('Error generating intake PDF');
   }
 });
 
@@ -1478,15 +836,28 @@ app.get('/api/agents/:id/documents/cert', async (req, res) => {
 
 // ---- Agent portal helpers ----
 async function readAgent(agentId) {
-  const p = path.join(AGENTS_DIR, agentId, 'agent.json');
-  if (!(await fse.pathExists(p))) return null;
-  return fse.readJson(p);
+  try {
+    const key = `agents/${agentId}/agent.json`;
+    if (await spacesStorage.fileExists(key)) {
+      const buffer = await spacesStorage.getFileBuffer(key);
+      return JSON.parse(buffer.toString());
+    }
+    return null;
+  } catch (e) {
+    console.error(`Error reading agent ${agentId}:`, e);
+    return null;
+  }
 }
 
 async function writeAgent(agent) {
-  const dir = path.join(AGENTS_DIR, agent.id);
-  await fse.ensureDir(dir);
-  await fse.writeJson(path.join(dir, 'agent.json'), agent, { spaces: 2 });
+  try {
+    const key = `agents/${agent.id}/agent.json`;
+    const agentJson = JSON.stringify(agent, null, 2);
+    await spacesStorage.uploadBuffer(Buffer.from(agentJson), key, 'application/json');
+  } catch (e) {
+    console.error(`Error writing agent ${agent.id}:`, e);
+    throw e;
+  }
 }
 
 function newAgent({ firstName = '', lastName = '', email = '', phone = '' }) {
@@ -1656,13 +1027,49 @@ app.post('/api/agents/:id/signatures', async (req, res) => {
     // When Producer Agreement is signed, also generate and persist a signed PDF copy for records
     if (doc === 'producerAgreement') {
       try {
-        const { generateProducerAgreementPdf } = require('./pdf-generator');
-        const pdfBuffer = await generateProducerAgreementPdf(agent);
         const pdfPath = path.join(dir, `ProducerAgreement_Signed_${Date.now()}.pdf`);
-        await fse.writeFile(pdfPath, pdfBuffer);
-
+        await new Promise((resolve, reject) => {
+          const out = fs.createWriteStream(pdfPath);
+          out.on('finish', resolve);
+          out.on('error', reject);
+          const docPdf = new PDFDocument({ margin: 50 });
+          docPdf.pipe(out);
+          docPdf.fontSize(16).text('Producer Agreement (REMOTE)', { align: 'center' });
+          docPdf.moveDown();
+          docPdf.fontSize(11).text('This Producer Agreement (the "Agreement") is made and entered into as of the date written below by and between Life Assurance Solutions LLC (the "Company") and the insurance producer (the "Producer").');
+          docPdf.moveDown();
+          const items = [
+            'Authorization to Sign Documents for Carrier Appointments. The Producer authorizes Life Assurance Solutions LLC to sign and submit all necessary documents on their behalf related to ACA (Affordable Care Act) insurance carrier appointments. This includes appointment forms, contracting packets, and certification confirmations. Life Assurance Solutions LLC is also authorized to represent the Producer with GAs, FMOs, and ACA carriers to facilitate onboarding and production access.',
+            'Book of Business. All leads, clients, and applications submitted under this Agreement are considered part of the Company\'s Book of Business. The Company retains full ownership of the Book.',
+            'Daily and Performance Bonuses. Bonuses, if any, are issued solely at the discretion of Life Assurance Solutions LLC management.',
+            'Term and Termination. This Agreement becomes effective upon execution and remains in effect until terminated by either party in writing.',
+            'General Provisions. This is an independent contractor relationship; no employer-employee relationship exists. This Agreement is governed by the laws of the State of New Jersey. No modifications will be valid unless in writing and signed by both parties.'
+          ];
+          items.forEach((t, i) => {
+            docPdf.moveDown(0.6);
+            docPdf.font('Times-Bold').text(`${i+1}.`, { continued: true });
+            docPdf.font('Times-Roman').text(` ${t}`);
+          });
+          docPdf.moveDown();
+          const fullName = `${agent.profile?.firstName || ''} ${agent.profile?.lastName || ''}`.trim();
+          if (fullName) docPdf.font('Times-Bold').text('Producer: ', { continued: true }).font('Times-Roman').text(fullName);
+          docPdf.moveDown(0.4);
+          const signedAt = new Date().toLocaleDateString();
+          docPdf.font('Times-Bold').text('Date: ', { continued: true }).font('Times-Roman').text(signedAt);
+          try {
+            const sigPath = agent.signatures?.producerAgreement?.path;
+            if (sigPath && fs.existsSync(sigPath)) {
+              docPdf.moveDown();
+              docPdf.font('Times-Bold').text('Signature:');
+              docPdf.image(sigPath, { fit: [300, 120] });
+            }
+          } catch {}
+          docPdf.end();
+        });
         agent.submissions = agent.submissions || {};
-        agent.submissions.producerAgreementPdfPath = pdfPath;
+        agent.submissions.producerAgreementPdfPath = agent.submissions.producerAgreementPdfPath || null;
+        // Save latest
+        agent.submissions.producerAgreementPdfPath = path.join(AGENTS_DIR, agent.id, path.basename(pdfPath));
       } catch (e) {
         console.warn('Failed to persist Producer Agreement PDF copy', e);
       }
@@ -1747,17 +1154,14 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
       agent = await readAgent(body.agentId);
     } else if (body.email) {
       agent = await findOrCreateAgentByEmail(body.email);
-    }
-    
-    // ALWAYS create an agent if we don't have one - this ensures admin portal shows all submissions
-    if (!agent) {
-      agent = newAgent({
-        firstName: body.firstName || '',
-        lastName: body.lastName || '',
-        email: body.email || '',
-        phone: body.phone || ''
-      });
-      console.log('Created new agent for intake submission:', agent.id);
+      if (!agent) {
+        agent = newAgent({
+          firstName: body.firstName || '',
+          lastName: body.lastName || '',
+          email: body.email || '',
+          phone: body.phone || ''
+        });
+      }
     }
     if (agent) {
       agent.progress.intakeSubmitted = true;
@@ -1768,18 +1172,93 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
       
       // Generate comprehensive signed documents PDF
       try {
-        console.log('Generating intake PDF for agent:', agent.id);
-        const { generateIntakePdf } = require('./pdf-generator');
-        const pdfBuffer = await generateIntakePdf(submission, agent);
+        console.log('Generating comprehensive signed documents for intake submission');
         const agentDir = path.join(AGENTS_DIR, agent.id);
         await fse.ensureDir(agentDir);
         const outPath = path.join(agentDir, `SIGNED_INTAKE_DOCUMENTS_${Date.now()}.pdf`);
-        await fse.writeFile(outPath, pdfBuffer);
+        
+        // Create comprehensive PDF with all intake data
+        const pdfBytes = await new Promise((resolve, reject) => {
+          const chunks = [];
+          const doc = new PDFDocument({ 
+            margin: 50,
+            size: 'LETTER',
+            info: {
+              Title: 'Signed Intake Documents',
+              Author: 'Life Assurance Solutions LLC',
+              Subject: 'Agent Intake Form with Digital Signature'
+            }
+          });
+          
+          doc.on('data', (b) => chunks.push(b));
+          doc.on('end', () => resolve(Buffer.concat(chunks)));
+          doc.on('error', reject);
+          
+          // Title Page
+          doc.fontSize(20).text('SIGNED INTAKE DOCUMENTS', { align: 'center' });
+          doc.moveDown(1);
+          doc.fontSize(16).text('Life Assurance Solutions LLC', { align: 'center' });
+          doc.moveDown(2);
+          
+          // Agent Information
+          doc.fontSize(14).text('AGENT INFORMATION');
+          doc.moveDown(0.5);
+          doc.fontSize(12).text(`Name: ${submission.contact?.firstName || ''} ${submission.contact?.lastName || ''}`);
+          doc.text(`Email: ${submission.contact?.email || ''}`);
+          doc.text(`Phone: ${submission.contact?.phone || ''}`);
+          doc.text(`Agent ID: ${agent.id}`);
+          doc.text(`Date Submitted: ${new Date().toLocaleDateString()}`);
+          doc.moveDown(1);
+          
+          // Business Information
+          doc.fontSize(14).text('BUSINESS INFORMATION');
+          doc.moveDown(0.5);
+          doc.fontSize(12).text(`Agency Name: ${submission.business?.agencyName || ''}`);
+          doc.text(`Website: ${submission.business?.website || ''}`);
+          doc.text(`Address: ${submission.business?.address1 || ''} ${submission.business?.address2 || ''}`);
+          doc.text(`City, State, ZIP: ${submission.business?.city || ''}, ${submission.business?.state || ''} ${submission.business?.zip || ''}`);
+          doc.text(`NPN: ${submission.npn || ''}`);
+          doc.text(`States Licensed: ${submission.statesLicensed?.join(', ') || ''}`);
+          doc.moveDown(1);
+          
+          // Background Information
+          doc.fontSize(14).text('BACKGROUND INFORMATION');
+          doc.moveDown(0.5);
+          doc.fontSize(12).text(`Prior Terminations: ${submission.background?.priorTerminations ? 'YES' : 'NO'}`);
+          if (submission.background?.priorTerminationsExplain) {
+            doc.text(`Termination Explanation: ${submission.background.priorTerminationsExplain}`);
+          }
+          doc.text(`Felonies: ${submission.background?.felonies ? 'YES' : 'NO'}`);
+          if (submission.background?.feloniesExplain) {
+            doc.text(`Felony Explanation: ${submission.background.feloniesExplain}`);
+          }
+          doc.text(`Bankruptcies: ${submission.background?.bankruptcies ? 'YES' : 'NO'}`);
+          if (submission.background?.bankruptciesExplain) {
+            doc.text(`Bankruptcy Explanation: ${submission.background.bankruptciesExplain}`);
+          }
+          doc.moveDown(1);
+          
+          // Signatures Section
+          doc.fontSize(14).text('DIGITAL SIGNATURES AND CERTIFICATIONS');
+          doc.moveDown(0.5);
+          doc.fontSize(12).text(`Digital Signature: ${submission.acknowledgments?.signature || ''}`);
+          doc.text(`Signature Date: ${submission.acknowledgments?.signatureDate || ''}`);
+          doc.text(`Producer Agreement Accepted: ${submission.acknowledgments?.producerAgreementAccepted ? 'YES' : 'NO'}`);
+          doc.text(`Privacy Notice Accepted: ${submission.acknowledgments?.privacyNoticeAccepted ? 'YES' : 'NO'}`);
+          doc.moveDown(1);
+          
+          // Legal Notice
+          doc.fontSize(10).text('This document contains all submitted information and signatures as of the date of generation.');
+          doc.text('All signatures are legally binding and represent the agent\'s agreement to the terms and conditions.');
+          
+          doc.end();
+        });
+        
+        await fse.writeFile(outPath, pdfBytes);
         agent.submissions.intakePdfPath = outPath;
-        console.log('✅ Signed intake documents PDF saved to:', outPath);
+        console.log('Signed intake documents PDF saved to:', outPath);
       } catch (e) {
-        console.error('❌ Failed to generate intake PDF:', e);
-        // Don't fail the entire submission if PDF generation fails
+        console.error('Failed to generate intake PDF:', e);
       }
       
       await writeAgent(agent);
@@ -1828,36 +1307,20 @@ app.post('/api/w9', async (req, res) => {
 
     await fse.writeJson(path.join(destDir, 'w9.json'), submission, { spaces: 2 });
     
-    // Link to agent if provided, or find/create by email
-    let agent = null;
+    // Link to agent if provided
     if (body.agentId) {
-      agent = await readAgent(body.agentId);
-    } else if (body.email) {
-      agent = await findOrCreateAgentByEmail(body.email);
-    }
-    
-    // ALWAYS create an agent if we don't have one - this ensures admin portal shows all submissions
-    if (!agent) {
-      agent = newAgent({
-        firstName: body.name ? body.name.split(' ')[0] : '',
-        lastName: body.name ? body.name.split(' ').slice(1).join(' ') : '',
-        email: body.email || '',
-        phone: body.phone || ''
-      });
-      console.log('Created new agent for W9 submission:', agent.id);
-    }
-    
-    if (agent) {
-      agent.progress.w9Submitted = true;
-      agent.submissions.w9Id = id;
-      
-      // Generate official W-9 PDF
-      try {
-        console.log('Generating W-9 PDF for agent:', agent.id);
+      const agent = await readAgent(body.agentId);
+      if (agent) {
+        agent.progress.w9Submitted = true;
+        agent.submissions.w9Id = id;
+        
+        // Generate official W-9 PDF
+        try {
+          console.log('Generating official W-9 PDF for agent:', agent.id);
           const agentDir = path.join(AGENTS_DIR, agent.id);
           await fse.ensureDir(agentDir);
           const outPath = path.join(agentDir, `SIGNED_W9_FORM_${Date.now()}.pdf`);
-          console.log('W-9 PDF will be saved to:', outPath);
+          console.log('Signed W-9 PDF will be saved to:', outPath);
           
           // Create official W-9 PDF
           console.log('W9 PDF Data:', JSON.stringify(submission, null, 2));
@@ -1883,205 +1346,112 @@ app.post('/api/w9', async (req, res) => {
               reject(err);
             });
             
-            // Official W-9 Form Layout - Looks like real IRS form
-            const pageWidth = doc.page.width;
-            const pageHeight = doc.page.height;
-            const margin = 36; // Standard 0.5 inch margins
-            const contentWidth = pageWidth - (margin * 2);
+            // W-9 Header
+            doc.fontSize(20).text('FORM W-9', { align: 'center' });
+            doc.moveDown(1);
+            doc.fontSize(14).text('Request for Taxpayer Identification Number and Certification', { align: 'center' });
+            doc.moveDown(2);
             
-            // Header - IRS Logo Area (simulated)
-            doc.rect(margin, margin, contentWidth, 40)
-               .stroke('#000000');
+            // Part I - Taxpayer Information
+            doc.fontSize(16).text('PART I — TAXPAYER INFORMATION');
+            doc.moveDown(1);
             
-            doc.fontSize(16).font('Helvetica-Bold')
-               .text('Department of the Treasury', margin + 10, margin + 10)
-               .text('Internal Revenue Service', margin + 10, margin + 25);
+            // Name
+            doc.fontSize(12).text('1 Name (as shown on your income tax return):');
+            doc.moveDown(0.5);
+            doc.fontSize(14).text(submission.name || '_________________________________');
+            doc.moveDown(1);
             
-            doc.fontSize(20).font('Helvetica-Bold')
-               .text('Request for Taxpayer', pageWidth - 200, margin + 10)
-               .text('Identification Number', pageWidth - 200, margin + 25)
-               .text('and Certification', pageWidth - 200, margin + 40);
-            
-            // Form Title
-            doc.fontSize(24).font('Helvetica-Bold')
-               .text('Form W-9', margin, margin + 60, { align: 'center' });
-            
-            doc.fontSize(12).font('Helvetica')
-               .text('(Rev. December 2023)', margin, margin + 85, { align: 'center' });
-            
-            // Part I - Taxpayer Identification Number (TIN)
-            doc.fontSize(14).font('Helvetica-Bold')
-               .text('Part I', margin, margin + 110)
-               .text('Taxpayer Identification Number (TIN)', margin + 50, margin + 110);
-            
-            // TIN Section
-            doc.rect(margin, margin + 130, contentWidth, 60)
-               .stroke('#000000');
-            
-            doc.fontSize(12).font('Helvetica-Bold')
-               .text('Enter your TIN in the appropriate box. The TIN provided must match the name given on Line 1 to avoid', margin + 5, margin + 135)
-               .text('backup withholding. For individuals, this is your social security number (SSN). However, for a resident alien,', margin + 5, margin + 150)
-               .text('sole proprietor, or disregarded entity, see the Part I instructions on page 3. For other entities, it is your employer', margin + 5, margin + 165)
-               .text('identification number (EIN). If you do not have a number, see How to get a TIN on page 3.', margin + 5, margin + 180);
-            
-            // TIN Input Boxes
-            const tinY = margin + 200;
-            doc.fontSize(12).font('Helvetica-Bold')
-               .text('Social Security Number', margin + 5, tinY);
-            
-            // SSN Boxes
-            const ssnValue = submission.tin?.ssn || '';
-            const ssnParts = ssnValue.match(/(\d{3})(\d{2})(\d{4})/) || ['', '', '', ''];
-            
-            for (let i = 0; i < 3; i++) {
-              const boxX = margin + 5 + (i * 35);
-              doc.rect(boxX, tinY + 15, 30, 20).stroke('#000000');
-              doc.fontSize(12).font('Helvetica')
-                 .text(ssnParts[i + 1] || '', boxX + 2, tinY + 20);
-            }
-            
-            doc.fontSize(12).font('Helvetica-Bold')
-               .text('OR', margin + 120, tinY + 20);
-            
-            doc.fontSize(12).font('Helvetica-Bold')
-               .text('Employer Identification Number', margin + 150, tinY);
-            
-            // EIN Boxes
-            const einValue = submission.tin?.ein || '';
-            const einParts = einValue.match(/(\d{2})(\d{7})/) || ['', '', ''];
-            
-            for (let i = 0; i < 2; i++) {
-              const boxX = margin + 150 + (i * 35);
-              doc.rect(boxX, tinY + 15, 30, 20).stroke('#000000');
-              doc.fontSize(12).font('Helvetica')
-                 .text(einParts[i + 1] || '', boxX + 2, tinY + 20);
-            }
-            
-            // Part II - Certification
-            doc.fontSize(14).font('Helvetica-Bold')
-               .text('Part II', margin, margin + 250)
-               .text('Certification', margin + 50, margin + 250);
-            
-            doc.fontSize(12).font('Helvetica')
-               .text('Under penalties of perjury, I certify that:', margin + 5, margin + 270)
-               .text('1. The number shown on this form is my correct taxpayer identification number (or I am waiting for a number to be issued to me), and', margin + 5, margin + 285)
-               .text('2. I am not subject to backup withholding because: (a) I am exempt from backup withholding, or (b) I have not been notified by the', margin + 5, margin + 300)
-               .text('Internal Revenue Service (IRS) that I am subject to backup withholding as a result of a failure to report all interest or dividends, or (c) the IRS', margin + 5, margin + 315)
-               .text('has notified me that I am no longer subject to backup withholding, and', margin + 5, margin + 330)
-               .text('3. I am a U.S. person (including a U.S. resident alien), and', margin + 5, margin + 345)
-               .text('4. The FATCA code(s) entered on this form (if any) indicating that I am exempt from FATCA reporting is correct.', margin + 5, margin + 360);
-            
-            // Signature Section
-            doc.fontSize(14).font('Helvetica-Bold')
-               .text('Signature of U.S. person', margin + 5, margin + 390);
-            
-            doc.rect(margin + 5, margin + 410, 200, 30).stroke('#000000');
-            doc.fontSize(12).font('Helvetica')
-               .text(submission.certification?.signature || '', margin + 10, margin + 420);
-            
-            doc.fontSize(14).font('Helvetica-Bold')
-               .text('Date', margin + 220, margin + 390);
-            
-            doc.rect(margin + 220, margin + 410, 100, 30).stroke('#000000');
-            doc.fontSize(12).font('Helvetica')
-               .text(submission.certification?.signatureDate || '', margin + 225, margin + 420);
-            
-            // Part I - Name and Address
-            doc.fontSize(14).font('Helvetica-Bold')
-               .text('Part I', margin, margin + 460)
-               .text('Name and Address', margin + 50, margin + 460);
-            
-            // Name Line
-            doc.fontSize(12).font('Helvetica-Bold')
-               .text('Name (as shown on your income tax return)', margin + 5, margin + 480);
-            
-            doc.rect(margin + 5, margin + 495, contentWidth - 10, 25).stroke('#000000');
-            doc.fontSize(12).font('Helvetica')
-               .text(submission.name || '', margin + 10, margin + 500);
-            
-            // Business Name Line
-            doc.fontSize(12).font('Helvetica-Bold')
-               .text('Business name/disregarded entity name, if different from above', margin + 5, margin + 530);
-            
-            doc.rect(margin + 5, margin + 545, contentWidth - 10, 25).stroke('#000000');
-            doc.fontSize(12).font('Helvetica')
-               .text(submission.businessName || '', margin + 10, margin + 550);
-            
-            // Address Lines
-            doc.fontSize(12).font('Helvetica-Bold')
-               .text('Address (number, street, and apt. or suite no.)', margin + 5, margin + 580);
-            
-            doc.rect(margin + 5, margin + 595, contentWidth - 10, 25).stroke('#000000');
-            doc.fontSize(12).font('Helvetica')
-               .text(submission.address?.address1 || '', margin + 10, margin + 600);
-            
-            doc.fontSize(12).font('Helvetica-Bold')
-               .text('City, state, and ZIP code', margin + 5, margin + 630);
-            
-            doc.rect(margin + 5, margin + 645, contentWidth - 10, 25).stroke('#000000');
-            doc.fontSize(12).font('Helvetica')
-               .text(`${submission.address?.city || ''}, ${submission.address?.state || ''} ${submission.address?.zip || ''}`, margin + 10, margin + 650);
+            // Business Name
+            doc.fontSize(12).text('2 Business name/disregarded entity name, if different from above:');
+            doc.moveDown(0.5);
+            doc.fontSize(14).text(submission.businessName || '_________________________________');
+            doc.moveDown(1);
             
             // Tax Classification
-            doc.fontSize(14).font('Helvetica-Bold')
-               .text('Part I', margin, margin + 690)
-               .text('Tax Classification', margin + 50, margin + 690);
-            
-            doc.fontSize(12).font('Helvetica-Bold')
-               .text('Check the appropriate box for the federal tax classification of the person whose name is entered on Line 1:', margin + 5, margin + 710);
+            doc.fontSize(12).text('3 Check appropriate box for federal tax classification:');
+            doc.moveDown(0.5);
             
             const classifications = [
-              'Individual/sole proprietor or single-member LLC',
-              'C Corporation',
-              'S Corporation', 
-              'Partnership',
-              'Trust/estate',
-              'LLC',
-              'Other'
+              { key: 'individual', text: 'Individual/sole proprietor or single-member LLC' },
+              { key: 'c_corporation', text: 'C Corporation' },
+              { key: 's_corporation', text: 'S Corporation' },
+              { key: 'partnership', text: 'Partnership' },
+              { key: 'trust', text: 'Trust/estate' },
+              { key: 'llc', text: 'LLC' },
+              { key: 'other', text: 'Other' }
             ];
             
-            const selectedClassification = submission.taxClassification || '';
-            let yPos = margin + 730;
-            
-            classifications.forEach((classification, index) => {
-              const checkboxX = margin + 5;
-              const checkboxY = yPos;
-              
-              // Draw checkbox
-              doc.rect(checkboxX, checkboxY, 12, 12).stroke('#000000');
-              
-              // Check if this classification is selected
-              if (selectedClassification.toLowerCase().includes(classification.toLowerCase().split('/')[0])) {
-                doc.fontSize(10).font('Helvetica-Bold')
-                   .text('X', checkboxX + 2, checkboxY + 1);
-              }
-              
-              doc.fontSize(11).font('Helvetica')
-                 .text(classification, checkboxX + 20, checkboxY + 2);
-              
-              yPos += 18;
+            classifications.forEach((cls, i) => {
+              const isChecked = submission.taxClassification === cls.key;
+              doc.text(`${isChecked ? '☑' : '☐'} ${cls.text}`);
             });
             
-            // Footer
-            doc.fontSize(10).font('Helvetica')
-               .text('For Privacy Act and Paperwork Reduction Act Notice, see page 3.', margin, pageHeight - 30)
-               .text('Cat. No. 10231X', pageWidth - 100, pageHeight - 30);
+            if (submission.taxClassification === 'llc' && submission.llcClassification) {
+              doc.moveDown(0.5);
+              doc.text(`LLC Classification: ${submission.llcClassification}`);
+            }
+            
+            doc.moveDown(1);
+            
+            // Address
+            doc.fontSize(12).text('4 Address (number, street, and apt. or suite no.):');
+            doc.moveDown(0.5);
+            doc.fontSize(14).text(submission.address?.address1 || '_________________________________');
+            doc.moveDown(0.5);
+            doc.fontSize(12).text('City, state, and ZIP code:');
+            doc.fontSize(14).text(`${submission.address?.city || ''}, ${submission.address?.state || ''} ${submission.address?.zip || ''}`);
+            doc.moveDown(2);
+            
+            // Part II - Certification
+            doc.fontSize(16).text('PART II — CERTIFICATION');
+            doc.moveDown(1);
+            
+            // TIN
+            doc.fontSize(12).text('5 Requesting taxpayer\'s identification number (TIN):');
+            doc.moveDown(0.5);
+            
+            if (submission.tin?.ssn) {
+              doc.fontSize(14).text(`☑ SSN: ${submission.tin.ssn}`);
+            } else if (submission.tin?.ein) {
+              doc.fontSize(14).text(`☑ EIN: ${submission.tin.ein}`);
+            } else {
+              doc.text('☐ SSN: _________________  ☐ EIN: _________________');
+            }
+            
+            doc.moveDown(1);
+            
+            // Certification text
+            doc.fontSize(12).text('6 Under penalties of perjury, I certify that:');
+            doc.moveDown(0.5);
+            doc.text('1. The number shown on this form is my correct taxpayer identification number (or I am waiting for a number to be issued to me), and');
+            doc.text('2. I am not subject to backup withholding because: (a) I am exempt from backup withholding, or (b) I have not been notified by the Internal Revenue Service (IRS) that I am subject to backup withholding as a result of a failure to report all interest or dividends, or (c) the IRS has notified me that I are no longer subject to backup withholding, and');
+            doc.text('3. I am a U.S. person (including a U.S. resident alien), and');
+            doc.text('4. The FATCA code(s) entered on this form (if any) indicating that I am exempt from FATCA reporting is correct.');
+            doc.moveDown(2);
+            
+            // Signature Section
+            doc.fontSize(16).text('SIGNATURE SECTION');
+            doc.moveDown(1);
+            doc.fontSize(14).text(`Digital Signature: ${submission.certification?.signature || 'NOT PROVIDED'}`);
+            doc.fontSize(14).text(`Signature Date: ${submission.certification?.signatureDate || 'NOT PROVIDED'}`);
+            doc.moveDown(2);
+            
+            // Legal Notice
+            doc.fontSize(12).text('This document contains the signed W-9 form with digital signature as of the date of generation.');
+            doc.text('The digital signature is legally binding and represents the taxpayer\'s certification under penalties of perjury.');
             
             doc.end();
           });
           
           await fse.writeFile(outPath, pdfBytes);
           agent.submissions.w9PdfPath = outPath;
-        console.log('✅ Signed W-9 PDF saved successfully to:', outPath);
-      } catch (e) {
-        console.error('❌ Failed to generate W-9 PDF:', e);
-        // Don't fail the entire submission if PDF generation fails
-      }
-      
-      try {
+          console.log('Signed W-9 PDF saved successfully to:', outPath);
+        } catch (e) {
+          console.error('Failed to generate W-9 PDF:', e);
+        }
+        
         await writeAgent(agent);
-      } catch (e) {
-        console.error('❌ Failed to write agent:', e);
       }
     }
     
@@ -2107,13 +1477,22 @@ app.post('/api/banking', async (req, res) => {
     }
 
     // Validate SSN format if provided
-    if (body.ssn && !/^\d{3}-\d{2}-\d{4}$/.test(body.ssn)) {
-      return res.status(400).json({ ok: false, error: 'SSN must be in format XXX-XX-XXXX' });
+    if (body.ssn && !/^\d{9}$/.test(body.ssn)) {
+      return res.status(400).json({ ok: false, error: 'SSN must be exactly 9 digits' });
     }
 
     // Validate routing number format
     if (!/^\d{9}$/.test(body.routingNumber)) {
       return res.status(400).json({ ok: false, error: 'Routing number must be exactly 9 digits' });
+    }
+
+    // Validate account number confirmation
+    if (body.accountNumber !== body.confirmAccountNumber) {
+      return res.status(400).json({ ok: false, error: 'Account numbers do not match' });
+    }
+
+    if (body.routingNumber !== body.confirmRoutingNumber) {
+      return res.status(400).json({ ok: false, error: 'Routing numbers do not match' });
     }
 
     // Create banking submission
@@ -2157,55 +1536,19 @@ app.post('/api/banking', async (req, res) => {
 
     await fse.writeJson(path.join(destDir, 'banking.json'), submission, { spaces: 2 });
 
-    // Link to agent if provided, or find/create by email
-    let agent = null;
+    // Link to agent if provided
     if (agentId) {
-      agent = await readAgent(agentId);
-    } else if (body.email) {
-      agent = await findOrCreateAgentByEmail(body.email);
-    }
-    
-    // ALWAYS create an agent if we don't have one - this ensures admin portal shows all submissions
-    if (!agent) {
-      agent = newAgent({
-        firstName: body.firstName || '',
-        lastName: body.lastName || '',
-        email: body.email || '',
-        phone: body.phone || ''
-      });
-      console.log('Created new agent for banking submission:', agent.id);
-    }
-    
-    if (agent) {
-      agent.progress.bankingSubmitted = true;
-      agent.submissions.bankingId = id;
-      agent.banking = {
-        bankName: submission.bankName,
-        accountType: submission.accountType,
-        paymentMethod: submission.paymentMethod,
-        lastUpdated: new Date().toISOString()
-      };
-      
-      // Generate and save banking PDF
-      try {
-        console.log('Generating banking PDF for agent:', agent.id);
-        const { generateBankingPdf } = require('./pdf-generator');
-        const pdfBuffer = await generateBankingPdf(submission);
-        const agentDir = path.join(AGENTS_DIR, agent.id);
-        await fse.ensureDir(agentDir);
-        const pdfPath = path.join(agentDir, `SIGNED_BANKING_FORM_${Date.now()}.pdf`);
-        await fse.writeFile(pdfPath, pdfBuffer);
-        agent.submissions.bankingPdfPath = pdfPath;
-        console.log('✅ Signed banking PDF saved to:', pdfPath);
-      } catch (e) {
-        console.error('❌ Failed to generate banking PDF:', e);
-        // Don't fail the entire submission if PDF generation fails
-      }
-      
-      try {
+      const agent = await readAgent(agentId);
+      if (agent) {
+        agent.progress.bankingSubmitted = true;
+        agent.submissions.bankingId = id;
+        agent.banking = {
+          bankName: submission.bankName,
+          accountType: submission.accountType,
+          paymentMethod: submission.paymentMethod,
+          lastUpdated: new Date().toISOString()
+        };
         await writeAgent(agent);
-      } catch (e) {
-        console.error('❌ Failed to write agent:', e);
       }
     }
 
@@ -2281,222 +1624,47 @@ app.get('/api/admin/submissions', requireAdmin, async (req, res) => {
   }
 });
 
-// Helper function to generate intake PDF
-async function generateIntakePdf(submission, agent) {
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    const doc = new PDFDocument({ margin: 50, size: 'LETTER' });
-    
-    doc.on('data', (b) => chunks.push(b));
-    doc.on('end', () => resolve(Buffer.concat(chunks)));
-    doc.on('error', reject);
-    
-    doc.fontSize(20).font('Helvetica-Bold').text('SIGNED INTAKE DOCUMENTS', 50, 50, { align: 'center' });
-    doc.fontSize(12).font('Helvetica').text('Life Assurance Solutions LLC & JJN Protection Insurance Agency LLC', 50, 80, { align: 'center' });
-    
-    let y = 120;
-    
-    if (submission.contact) {
-      doc.fontSize(14).font('Helvetica-Bold').text('CONTACT INFORMATION', 50, y);
-      y += 30;
-      doc.fontSize(12).font('Helvetica').text(`Name: ${submission.contact.firstName || ''} ${submission.contact.lastName || ''}`, 50, y);
-      y += 20;
-      doc.text(`Email: ${submission.contact.email || ''}`, 50, y);
-      y += 20;
-      doc.text(`Phone: ${submission.contact.phone || ''}`, 50, y);
-      y += 30;
-    }
-    
-    if (submission.business) {
-      doc.fontSize(14).font('Helvetica-Bold').text('BUSINESS INFORMATION', 50, y);
-      y += 30;
-      doc.fontSize(12).font('Helvetica').text(`Agency: ${submission.business.agencyName || ''}`, 50, y);
-      y += 20;
-      doc.text(`Address: ${submission.business.address1 || ''}`, 50, y);
-      y += 20;
-      doc.text(`${submission.business.city || ''}, ${submission.business.state || ''} ${submission.business.zip || ''}`, 50, y);
-      y += 30;
-    }
-    
-    doc.fontSize(12).font('Helvetica').text(`NPN: ${submission.npn || ''}`, 50, y);
-    y += 20;
-    doc.text(`States Licensed: ${Array.isArray(submission.statesLicensed) ? submission.statesLicensed.join(', ') : submission.statesLicensed || ''}`, 50, y);
-    y += 30;
-    
-    if (submission.acknowledgments) {
-      doc.fontSize(14).font('Helvetica-Bold').text('SIGNATURE', 50, y);
-      y += 30;
-      doc.fontSize(12).font('Helvetica').text(`Signature: ${submission.acknowledgments.signature || ''}`, 50, y);
-      y += 20;
-      doc.text(`Date: ${submission.acknowledgments.signatureDate || ''}`, 50, y);
-    }
-    
-    doc.fontSize(10).text(`Generated: ${new Date().toISOString()}`, 50, y + 30);
-    doc.text(`Submission ID: ${submission.id}`, 50, y + 45);
-    
-    doc.end();
-  });
-}
-
-// Helper function to generate W9 PDF
-async function generateW9Pdf(submission) {
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    const doc = new PDFDocument({ margin: 50, size: 'LETTER' });
-    
-    doc.on('data', (b) => chunks.push(b));
-    doc.on('end', () => resolve(Buffer.concat(chunks)));
-    doc.on('error', reject);
-    
-    doc.fontSize(20).font('Helvetica-Bold').text('SIGNED W-9 FORM', 50, 50, { align: 'center' });
-    
-    let y = 100;
-    
-    doc.fontSize(14).font('Helvetica-Bold').text('TAXPAYER INFORMATION', 50, y);
-    y += 30;
-    doc.fontSize(12).font('Helvetica').text(`Name: ${submission.name || ''}`, 50, y);
-    y += 20;
-    doc.text(`Business Name: ${submission.businessName || ''}`, 50, y);
-    y += 20;
-    doc.text(`Address: ${submission.address || ''}`, 50, y);
-    y += 20;
-    doc.text(`City, State ZIP: ${submission.city || ''}, ${submission.state || ''} ${submission.zip || ''}`, 50, y);
-    y += 30;
-    
-    doc.fontSize(14).font('Helvetica-Bold').text('TAX INFORMATION', 50, y);
-    y += 30;
-    doc.fontSize(12).font('Helvetica').text(`SSN: ${submission.ssn || ''}`, 50, y);
-    y += 20;
-    doc.text(`EIN: ${submission.ein || ''}`, 50, y);
-    y += 30;
-    
-    doc.fontSize(14).font('Helvetica-Bold').text('SIGNATURE', 50, y);
-    y += 30;
-    doc.fontSize(12).font('Helvetica').text(`Signature: ${submission.signature || ''}`, 50, y);
-    y += 20;
-    doc.text(`Date: ${submission.signatureDate || ''}`, 50, y);
-    
-    doc.fontSize(10).text(`Generated: ${new Date().toISOString()}`, 50, y + 30);
-    doc.text(`Submission ID: ${submission.id}`, 50, y + 45);
-    
-    doc.end();
-  });
-}
-
-// Helper function to generate banking PDF
-async function generateBankingPdf(submission) {
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    const doc = new PDFDocument({ margin: 50, size: 'LETTER' });
-    
-    doc.on('data', (b) => chunks.push(b));
-    doc.on('end', () => resolve(Buffer.concat(chunks)));
-    doc.on('error', reject);
-    
-    doc.fontSize(20).font('Helvetica-Bold').text('SIGNED BANKING FORM', 50, 50, { align: 'center' });
-    
-    let y = 100;
-    
-    doc.fontSize(14).font('Helvetica-Bold').text('PERSONAL INFORMATION', 50, y);
-    y += 30;
-    doc.fontSize(12).font('Helvetica').text(`Name: ${submission.firstName || ''} ${submission.lastName || ''}`, 50, y);
-    y += 20;
-    doc.text(`Address: ${submission.streetAddress || ''}`, 50, y);
-    y += 20;
-    doc.text(`City, State ZIP: ${submission.city || ''}, ${submission.state || ''} ${submission.zipCode || ''}`, 50, y);
-    y += 20;
-    doc.text(`SSN: ${submission.ssn || ''}`, 50, y);
-    y += 30;
-    
-    doc.fontSize(14).font('Helvetica-Bold').text('BANKING INFORMATION', 50, y);
-    y += 30;
-    doc.fontSize(12).font('Helvetica').text(`Bank Name: ${submission.bankName || ''}`, 50, y);
-    y += 20;
-    doc.text(`Routing Number: ${submission.routingNumber || ''}`, 50, y);
-    y += 20;
-    doc.text(`Account Number: ${submission.accountNumber || ''}`, 50, y);
-    y += 20;
-    doc.text(`Account Type: ${submission.accountType || ''}`, 50, y);
-    y += 30;
-    
-    doc.fontSize(14).font('Helvetica-Bold').text('SIGNATURE', 50, y);
-    y += 30;
-    doc.fontSize(12).font('Helvetica').text(`Signature: ${submission.digitalSignature || ''}`, 50, y);
-    y += 20;
-    doc.text(`Date: ${submission.signatureDate || ''}`, 50, y);
-    
-    doc.fontSize(10).text(`Generated: ${new Date().toISOString()}`, 50, y + 30);
-    doc.text(`Submission ID: ${submission.id}`, 50, y + 45);
-    
-    doc.end();
-  });
-}
-
 // Get all PDFs from all agents (admin)
 app.get('/api/admin/all-pdfs', requireAdmin, async (req, res) => {
   try {
     console.log('Admin: Getting all PDFs from all agents');
     
     const allPdfs = [];
-    const agentEntries = await fse.readdir(AGENTS_DIR, { withFileTypes: true });
     
-    for (const ent of agentEntries) {
-      if (!ent.isDirectory()) continue;
-      const agentId = ent.name;
+    // List all agent directories in Spaces
+    const files = await spacesStorage.listFiles('agents/');
+    const agentDirs = new Set();
+    files.forEach(file => {
+      const parts = file.Key.split('/');
+      if (parts.length >= 2 && parts[0] === 'agents') {
+        agentDirs.add(parts[1]);
+      }
+    });
+    
+    for (const agentId of agentDirs) {
       try {
         const agent = await readAgent(agentId);
         if (agent) {
           const agentName = `${agent.profile?.firstName || ''} ${agent.profile?.lastName || ''}`.trim() || 'Unknown';
           
-          // Check for signed intake PDF
-          if (agent.submissions?.intakePdfPath && await fse.pathExists(agent.submissions.intakePdfPath)) {
-            const stats = await fse.stat(agent.submissions.intakePdfPath);
-            allPdfs.push({
-              agentId: agentId,
-              agentName: agentName,
-              type: 'Signed Intake Documents',
-              pdfPath: agent.submissions.intakePdfPath,
-              fileName: path.basename(agent.submissions.intakePdfPath),
-              date: stats.mtime.toISOString(),
-              size: stats.size
-            });
-          }
+          // Get all files for this agent
+          const agentFiles = await spacesStorage.listFiles(`agents/${agentId}/`);
           
-          // Check for signed W9 PDF
-          if (agent.submissions?.w9PdfPath && await fse.pathExists(agent.submissions.w9PdfPath)) {
-            const stats = await fse.stat(agent.submissions.w9PdfPath);
-            allPdfs.push({
-              agentId: agentId,
-              agentName: agentName,
-              type: 'Signed W9 Form',
-              pdfPath: agent.submissions.w9PdfPath,
-              fileName: path.basename(agent.submissions.w9PdfPath),
-              date: stats.mtime.toISOString(),
-              size: stats.size
-            });
-          }
-          
-          // Check for other PDFs in agent directory
-          try {
-            const agentDir = path.join(AGENTS_DIR, agentId);
-            const files = await fse.readdir(agentDir);
-            for (const file of files) {
-              if (file.toLowerCase().endsWith('.pdf')) {
-                const filePath = path.join(agentDir, file);
-                const stats = await fse.stat(filePath);
-                allPdfs.push({
-                  agentId: agentId,
-                  agentName: agentName,
-                  type: 'Other PDF',
-                  pdfPath: filePath,
-                  fileName: file,
-                  date: stats.mtime.toISOString(),
-                  size: stats.size
-                });
-              }
+          for (const file of agentFiles) {
+            const fileName = file.Key.split('/').pop();
+            if (fileName.toLowerCase().endsWith('.pdf')) {
+              allPdfs.push({
+                agentId: agentId,
+                agentName: agentName,
+                type: fileName.includes('SIGNED_INTAKE') ? 'Signed Intake Documents' : 
+                      fileName.includes('SIGNED_W9') ? 'Signed W9 Form' :
+                      fileName.includes('SIGNED_BANKING') ? 'Signed Banking Form' : 'Other PDF',
+                pdfPath: file.Key,
+                fileName: fileName,
+                date: file.LastModified.toISOString(),
+                size: file.Size
+              });
             }
-          } catch (e) {
-            console.error(`Error checking agent directory for PDFs:`, e);
           }
         }
       } catch (e) {
@@ -2523,26 +1691,18 @@ app.get('/api/admin/pdf/:agentId/:fileName', requireAdmin, async (req, res) => {
     const agent = await readAgent(agentId);
     if (!agent) return res.status(404).send('Agent not found');
     
-    // Check if it's a known PDF path
-    let pdfPath = null;
-    if (fileName.includes('SIGNED_INTAKE_DOCUMENTS') && agent.submissions?.intakePdfPath) {
-      pdfPath = agent.submissions.intakePdfPath;
-    } else if (fileName.includes('SIGNED_W9_FORM') && agent.submissions?.w9PdfPath) {
-      pdfPath = agent.submissions.w9PdfPath;
-    } else {
-      // Look for the file in agent directory
-      const agentDir = path.join(AGENTS_DIR, agentId);
-      const fullPath = path.join(agentDir, fileName);
-      if (await fse.pathExists(fullPath)) {
-        pdfPath = fullPath;
-      }
-    }
+    // Look for the file in Spaces
+    const key = `agents/${agentId}/${fileName}`;
     
-    if (!pdfPath || !await fse.pathExists(pdfPath)) {
+    if (!await spacesStorage.fileExists(key)) {
       return res.status(404).send('PDF not found');
     }
     
-    return res.download(pdfPath, fileName);
+    // Get file from Spaces and stream it
+    const buffer = await spacesStorage.getFileBuffer(key);
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.send(buffer);
     
   } catch (e) {
     console.error('Error downloading PDF:', e);
@@ -2683,9 +1843,9 @@ app.get('/api/admin/submissions/:id', requireAdmin, async (req, res) => {
   }
 });
 
-// Fallback to serving portal.html for any unhandled routes
+// Fallback to index.html
 app.get('*', (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, 'portal.html'));
+  res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });
 
 app.listen(PORT, () => {
