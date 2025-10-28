@@ -1771,7 +1771,11 @@ app.post('/api/w9', async (req, res) => {
           // Don't fail the entire submission if PDF generation fails
         }
         
-        await writeAgent(agent);
+        try {
+          await writeAgent(agent);
+        } catch (e) {
+          console.error('❌ Failed to write agent:', e);
+        }
       }
     }
     
