@@ -8,6 +8,7 @@ const archiver = require('archiver');
 const PDFDocument = require('pdfkit');
 const { PDFDocument: PdfLibDocument, StandardFonts, rgb } = require('pdf-lib');
 const SpacesStorage = require('./spaces-storage');
+const { sendWelcomeEmail } = require(path.join(__dirname, 'send-email.js'));
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -941,6 +942,16 @@ app.post('/api/agents', async (req, res) => {
     console.log('Created agent:', agent.id);
     await writeAgent(agent);
     console.log('Agent saved successfully');
+
+    // Send a welcome email
+    try {
+      await sendWelcomeEmail(agent.profile.email, `${agent.profile.firstName} ${agent.profile.lastName}`);
+      console.log(`Welcome email sent to ${agent.profile.email}`);
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError);
+      // Do not block the response for email failure
+    }
+
     res.json({ ok: true, agent });
   } catch (e) {
     console.error('Error creating agent', e);
