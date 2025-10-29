@@ -1559,6 +1559,103 @@ app.post('/api/banking', async (req, res) => {
   }
 });
 
+// Partners ACA lead submission
+app.post('/api/partners/lead', async (req, res) => {
+  try {
+    const body = req.body || {};
+    
+    // Validate required fields
+    const requiredFields = ['name', 'email', 'company'];
+    for (const field of requiredFields) {
+      if (!body[field] || body[field].trim() === '') {
+        return res.status(400).json({ ok: false, error: `Missing required field: ${field}` });
+      }
+    }
+
+    // Sanitize input data
+    const sanitizedData = {
+      name: (body.name || '').toString().trim(),
+      email: (body.email || '').toString().trim().toLowerCase(),
+      phone: (body.phone || '').toString().trim(),
+      company: (body.company || '').toString().trim(),
+      states: (body.states || '').toString().trim()
+    };
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(sanitizedData.email)) {
+      return res.status(400).json({ ok: false, error: 'Invalid email format' });
+    }
+
+    // Simple rate limiting (in-memory)
+    const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+    const rateLimitKey = `partners_lead_${clientIP}`;
+    const now = Date.now();
+    const windowMs = 60 * 1000; // 1 minute
+    const maxRequests = 20;
+
+    if (!global.rateLimitStore) {
+      global.rateLimitStore = new Map();
+    }
+
+    const requests = global.rateLimitStore.get(rateLimitKey) || [];
+    const recentRequests = requests.filter(time => now - time < windowMs);
+    
+    if (recentRequests.length >= maxRequests) {
+      return res.status(429).json({ ok: false, error: 'Too many requests. Please try again later.' });
+    }
+
+    recentRequests.push(now);
+    global.rateLimitStore.set(rateLimitKey, recentRequests);
+
+    // Create lead payload
+    const leadId = nanoid(10);
+    const leadData = {
+      type: 'partners_aca_lead',
+      id: leadId,
+      name: sanitizedData.name,
+      email: sanitizedData.email,
+      phone: sanitizedData.phone,
+      company: sanitizedData.company,
+      states: sanitizedData.states,
+      ts: new Date().toISOString(),
+      userAgent: req.get('User-Agent') || '',
+      ip: clientIP
+    };
+
+    // Persist to DigitalOcean Spaces
+    const fileName = `${new Date().toISOString().split('T')[0]}_${leadId}.json`;
+    const key = `leads/partners_aca/${fileName}`;
+    
+    try {
+      await spacesStorage.uploadBuffer(
+        Buffer.from(JSON.stringify(leadData, null, 2)),
+        key,
+        'application/json'
+      );
+      
+      console.log(`Partners ACA lead saved: ${leadId} for ${sanitizedData.company}`);
+      
+      res.json({ ok: true, id: leadId });
+    } catch (storageError) {
+      console.error('Failed to save lead to Spaces:', storageError);
+      
+      // Fallback: save locally if Spaces fails
+      const localDir = path.join(ROOT, 'leads', 'partners_aca');
+      await fse.ensureDir(localDir);
+      const localPath = path.join(localDir, fileName);
+      await fse.writeJson(localPath, leadData, { spaces: 2 });
+      
+      console.log(`Partners ACA lead saved locally: ${leadId}`);
+      res.json({ ok: true, id: leadId });
+    }
+
+  } catch (err) {
+    console.error('Error handling /api/partners/lead', err);
+    res.status(500).json({ ok: false, error: 'Failed to save lead information' });
+  }
+});
+
 // Get all submissions (admin)
 app.get('/api/admin/submissions', requireAdmin, async (req, res) => {
   try {
