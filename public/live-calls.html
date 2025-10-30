@@ -475,6 +475,10 @@
                             <li>✓ Perfect for established agents</li>
                         </ul>
                     </div>
+
+						<button class="pricing-cta" onclick="openCpaModal()">
+							Choose Your CPA Option
+						</button>
                 </div>
                 
                 <!-- Pay Per Call Option -->
@@ -702,6 +706,111 @@
         </div>
     </div>
 
+	<!-- CPA Modal -->
+	<div id="cpaModal" class="modal">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h3>Complete Your CPA Setup</h3>
+				<button class="modal-close" onclick="closeCpaModal()">&times;</button>
+			</div>
+			<div class="modal-body">
+				<form id="cpaForm" class="modern-form">
+					<div class="form-group">
+						<label for="cpaFullName">Full Name *</label>
+						<input type="text" id="cpaFullName" name="fullName" required placeholder="Enter your full name">
+					</div>
+
+					<div class="form-group">
+						<label for="cpaEmail">Email Address *</label>
+						<input type="email" id="cpaEmail" name="email" required placeholder="Enter your email address">
+					</div>
+
+					<div class="form-group">
+						<label>Carrier Selection *</label>
+						<div class="dual-listbox" id="carrierListbox">
+							<div class="dual-list-panel">
+								<input type="text" class="dual-search" placeholder="Search carriers..." data-role="search">
+								<ul class="dual-list" data-role="source"></ul>
+							</div>
+							<div class="dual-list-actions">
+								<button type="button" class="dual-clear" data-role="clear-carriers">Clear All</button>
+							</div>
+							<div class="dual-list-panel">
+								<div class="dual-selected-label">Selected</div>
+								<ul class="dual-list" data-role="selected"></ul>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label>States Licensed *</label>
+						<div class="dual-listbox" id="stateListbox">
+							<div class="dual-list-panel">
+								<input type="text" class="dual-search" placeholder="Search states..." data-role="search">
+								<ul class="dual-list" data-role="source"></ul>
+							</div>
+							<div class="dual-list-actions">
+								<button type="button" class="dual-clear" data-role="clear-states">Clear All</button>
+							</div>
+							<div class="dual-list-panel">
+								<div class="dual-selected-label">Selected</div>
+								<ul class="dual-list" data-role="selected"></ul>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label for="cpaPhone">Phone Number *</label>
+						<input type="tel" id="cpaPhone" name="phone" required placeholder="Enter phone number where calls should be sent">
+					</div>
+
+					<div class="form-group">
+						<label>Availability (Days & Hours) *</label>
+						<div class="availability-grid" id="availabilityGrid">
+							<!-- Days Mon-Fri with start/end selects injected by JS -->
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label>Number of Sales to Purchase *</label>
+						<div class="option-cards" id="cpaSalesOptions">
+							<div class="option-card" data-sales="5" data-percent="32.5" data-price-per="260" data-total="1300">
+								<div class="option-card-header">
+									<div>% of Premium: <strong>32.5%</strong></div>
+									<div># of Sales: <strong>5</strong></div>
+								</div>
+								<div class="option-card-body">
+									<div>Per Sale: <strong>$260</strong></div>
+									<div>Total Cost: <strong>$1,300</strong></div>
+								</div>
+							</div>
+							<div class="option-card" data-sales="10" data-percent="30" data-price-per="240" data-total="2400">
+								<div class="option-card-header">
+									<div>% of Premium: <strong>30.0%</strong></div>
+									<div># of Sales: <strong>10</strong></div>
+								</div>
+								<div class="option-card-body">
+									<div>Per Sale: <strong>$240</strong></div>
+									<div>Total Cost: <strong>$2,400</strong></div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-note" style="margin-top: 8px;">
+						<p><strong>Cost Structure Explanation:</strong> We calculate cost per sale based on an average annual premium of $800. This results in either <strong>$260 per sale (32.5%)</strong> or <strong>$240 per sale (30%)</strong>, depending on your selection. After your sales are delivered, we will review the total annual premium performance. If there’s a difference in your favor, the balance will <strong>count toward another sale</strong> — ensuring you only pay for valid, delivered sales.</p>
+					</div>
+
+					<div class="form-submit-container">
+						<button type="submit" class="form-submit">
+							<span>Continue to Secure Payment</span>
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
@@ -862,7 +971,261 @@
             if (event.target === modal) {
                 closePricingModal();
             }
+            const cpaModal = document.getElementById('cpaModal');
+            if (event.target === cpaModal) {
+                closeCpaModal();
+            }
         }
+
+        // CPA Modal Functions
+        function openCpaModal() {
+            document.getElementById('cpaModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCpaModal() {
+            document.getElementById('cpaModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // CPA Setup Data - Stripe links per selection
+        const stripePaymentLinkCPA = {
+            '5': 'https://buy.stripe.com/28EaEW9uvdk2bGT2Gd63K1h',
+            '10': 'https://buy.stripe.com/cNifZg3677ZI12fdkR63K1i'
+        };
+
+        const carriers = [
+            'AAA Life','AARP / New York Life','Aetna / Accendo','Aflac','AIG (American General / Corebridge)','Allstate','American Amicable','American Continental','American Family Insurance','American Fidelity','American Home Life','American Memorial Life (Assurant)','American National (ANICO)','Americo','Assurity','Atlantic Coast Life','Baltimore Life','Bankers Life','Banner Life','Catholic Order of Foresters','Christian Fidelity','Cigna / Loyal American','Citizens Life','Columbian Life / Columbian Financial Group','Colonial Life','Colonial Penn','Continental Life','Equitrust Life','Family Benefit Life','Farm Bureau Life','Farmers Insurance','Federal Life','Fidelity & Guaranty Life','Fidelity Life Association','Foresters Financial','Garden State Life','Gerber Life','Globe Life','Grange Insurance','Great Western (Wellabe)','Greek Catholic Union','Guarantee Trust Life (GTL)','Illinois Mutual','Kemper Life','Lafayette Life','Liberty Bankers Life','Lincoln Heritage Life','Manhattan Life','Medico (Wellabe)','Mutual of Omaha / United of Omaha','National Guardian Life (NGL)','National Life Group','National Western Life','Nationwide','North American Company for Life and Health','Occidental Life','Old American (Kansas City Life Group)','Oxford Life','Pacific Life','Philadelphia American','Physicians Mutual','Pioneer American','Pioneer Security','Policyholders Life','Principal Life','Progressive Life','Protective Life','Prudential','Reliance Standard','Royal Neighbors of America','SBLI (Savings Bank Life)','Security National Life','Sentinel Security Life','Senior Life Insurance Company','Standard Life & Casualty','State Farm','Symetra Life','Transamerica','Trinity Life','TruStage (CUNA Mutual)','United American','United Home Life','United Farm Family Life','United Heritage Life','United Life Insurance Company','United of Omaha','Universal Fidelity Life','Washington National','Western Catholic Union','Western Southern Life','Wilco Life','WoodmenLife','Other'
+        ];
+
+        const usStates = [
+            ['AL','Alabama'],['AK','Alaska'],['AZ','Arizona'],['AR','Arkansas'],['CA','California'],['CO','Colorado'],['CT','Connecticut'],['DE','Delaware'],['DC','District of Columbia'],['FL','Florida'],['GA','Georgia'],['HI','Hawaii'],['ID','Idaho'],['IL','Illinois'],['IN','Indiana'],['IA','Iowa'],['KS','Kansas'],['KY','Kentucky'],['LA','Louisiana'],['ME','Maine'],['MD','Maryland'],['MA','Massachusetts'],['MI','Michigan'],['MN','Minnesota'],['MS','Mississippi'],['MO','Missouri'],['MT','Montana'],['NE','Nebraska'],['NV','Nevada'],['NH','New Hampshire'],['NJ','New Jersey'],['NM','New Mexico'],['NY','New York'],['NC','North Carolina'],['ND','North Dakota'],['OH','Ohio'],['OK','Oklahoma'],['OR','Oregon'],['PA','Pennsylvania'],['RI','Rhode Island'],['SC','South Carolina'],['SD','South Dakota'],['TN','Tennessee'],['TX','Texas'],['UT','Utah'],['VT','Vermont'],['VA','Virginia'],['WA','Washington'],['WV','West Virginia'],['WI','Wisconsin'],['WY','Wyoming']
+        ];
+
+        // Dual Listbox builder
+        function initDualListbox(rootEl, items) {
+            const sourceUl = rootEl.querySelector('ul[data-role="source"]');
+            const selectedUl = rootEl.querySelector('ul[data-role="selected"]');
+            const searchInput = rootEl.querySelector('input[data-role="search"]');
+
+            function renderSource(filter = '') {
+                sourceUl.innerHTML = '';
+                const selectedValues = new Set(Array.from(selectedUl.querySelectorAll('li')).map(li => li.dataset.value));
+                items
+                    .filter(label => label.toLowerCase().includes(filter.toLowerCase()))
+                    .forEach(label => {
+                        if (selectedValues.has(label)) return;
+                        const li = document.createElement('li');
+                        li.textContent = label;
+                        li.dataset.value = label;
+                        li.tabIndex = 0;
+                        li.onclick = () => moveToSelected(label);
+                        sourceUl.appendChild(li);
+                    });
+            }
+
+            function moveToSelected(value) {
+                const li = document.createElement('li');
+                li.textContent = value;
+                li.dataset.value = value;
+                li.tabIndex = 0;
+                li.onclick = () => removeFromSelected(value);
+                selectedUl.appendChild(li);
+                renderSource(searchInput.value || '');
+            }
+
+            function removeFromSelected(value) {
+                const li = selectedUl.querySelector(`li[data-value="${CSS.escape(value)}"]`);
+                if (li) li.remove();
+                renderSource(searchInput.value || '');
+            }
+
+            searchInput.addEventListener('input', () => renderSource(searchInput.value || ''));
+
+            const clearBtn = rootEl.querySelector('.dual-clear');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    selectedUl.innerHTML = '';
+                    renderSource('');
+                    if (searchInput) searchInput.value = '';
+                });
+            }
+
+            renderSource('');
+
+            return {
+                getSelected: () => Array.from(selectedUl.querySelectorAll('li')).map(li => li.dataset.value)
+            };
+        }
+
+        // Availability builder
+        function initAvailability(gridEl) {
+            const days = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+            const times = [];
+            for (let hour = 7; hour <= 21; hour++) {
+                const label = new Date(0,0,0,hour).toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+                times.push({ value: `${hour}:00`, label });
+            }
+
+            days.forEach(day => {
+                const row = document.createElement('div');
+                row.className = 'availability-row';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `day-${day}`;
+
+                const label = document.createElement('label');
+                label.htmlFor = checkbox.id;
+                label.textContent = day;
+
+                const start = document.createElement('select');
+                start.disabled = true;
+                times.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.value;
+                    opt.textContent = t.label;
+                    start.appendChild(opt);
+                });
+
+                const end = document.createElement('select');
+                end.disabled = true;
+                times.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.value;
+                    opt.textContent = t.label;
+                    end.appendChild(opt);
+                });
+
+                checkbox.addEventListener('change', () => {
+                    start.disabled = !checkbox.checked;
+                    end.disabled = !checkbox.checked;
+                });
+
+                row.appendChild(checkbox);
+                row.appendChild(label);
+                row.appendChild(start);
+                row.appendChild(document.createTextNode(' to '));
+                row.appendChild(end);
+                gridEl.appendChild(row);
+            });
+
+            return {
+                getAvailability: () => {
+                    const result = {};
+                    Array.from(gridEl.querySelectorAll('.availability-row')).forEach(row => {
+                        const [checkbox,label, start, , end] = row.childNodes;
+                        if (checkbox.checked) {
+                            result[label.textContent] = { start: start.value, end: end.value };
+                        }
+                    });
+                    return result;
+                }
+            };
+        }
+
+        // CPA Modal init on DOM ready
+        document.addEventListener('DOMContentLoaded', () => {
+            const carrierBox = initDualListbox(document.getElementById('carrierListbox'), carriers);
+            const stateBox = initDualListbox(
+                document.getElementById('stateListbox'),
+                usStates.map(([code, name]) => `${name} (${code})`)
+            );
+            const availability = initAvailability(document.getElementById('availabilityGrid'));
+
+            // Sales option selection
+            const optionCards = Array.from(document.querySelectorAll('#cpaSalesOptions .option-card'));
+            let selectedSalesOption = null;
+            optionCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    optionCards.forEach(c => c.classList.remove('active'));
+                    card.classList.add('active');
+                    selectedSalesOption = {
+                        sales: parseInt(card.dataset.sales, 10),
+                        percent: parseFloat(card.dataset.percent),
+                        pricePer: parseFloat(card.dataset.pricePer),
+                        total: parseFloat(card.dataset.total)
+                    };
+                });
+            });
+
+            // Submit handler
+            const cpaForm = document.getElementById('cpaForm');
+            cpaForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const fullName = document.getElementById('cpaFullName').value.trim();
+                const email = document.getElementById('cpaEmail').value.trim();
+                const phone = document.getElementById('cpaPhone').value.trim();
+                const selectedCarriers = carrierBox.getSelected();
+                const selectedStates = stateBox.getSelected();
+                const dayHours = availability.getAvailability();
+
+                // Basic validation
+                if (!fullName || !email || !phone) {
+                    alert('Please complete your name, email, and phone number.');
+                    return;
+                }
+                if (selectedCarriers.length === 0) {
+                    alert('Please select at least one carrier.');
+                    return;
+                }
+                if (selectedStates.length === 0) {
+                    alert('Please select at least one licensed state.');
+                    return;
+                }
+                const daysChosen = Object.keys(dayHours);
+                if (daysChosen.length === 0) {
+                    alert('Please select at least one day and time range.');
+                    return;
+                }
+                // ensure start < end
+                for (const day of daysChosen) {
+                    const { start, end } = dayHours[day];
+                    const s = parseInt(start.split(':')[0], 10);
+                    const e2 = parseInt(end.split(':')[0], 10);
+                    if (!(s < e2)) {
+                        alert(`Please ensure start time is before end time for ${day}.`);
+                        return;
+                    }
+                }
+                if (!selectedSalesOption) {
+                    alert('Please choose the number of sales to purchase.');
+                    return;
+                }
+
+                const payload = {
+                    model: 'CPA',
+                    fullName,
+                    email,
+                    phone,
+                    carriers: selectedCarriers,
+                    states: selectedStates,
+                    availability: dayHours,
+                    pricingSelection: selectedSalesOption,
+                    createdAt: new Date().toISOString()
+                };
+
+                // Store locally
+                try { localStorage.setItem('cpaLeadPurchaseData', JSON.stringify(payload)); } catch {}
+
+                // Fire-and-forget backend POST
+                try {
+                    await fetch('/api/lead-purchase', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                } catch {}
+
+                // Redirect to the correct Stripe payment link
+                const link = stripePaymentLinkCPA[String(selectedSalesOption.sales)];
+                if (!link) {
+                    alert('Unable to find payment link for the selected option. Please contact support.');
+                    return;
+                }
+                window.location.href = link;
+            });
+        });
     </script>
 </body>
 </html>
