@@ -58,8 +58,8 @@
                     <p>ACA. Medicare. Final Expense. We send you live conversations with real shoppers who asked to speak to a licensed agent. Choose CPA (pay when you close) or Pay Per Call (immediate delivery) pricing.</p>
                     
                     <div class="hero-actions">
-                        <button onclick="openPricingModal()" class="cta-button">Start Getting Calls</button>
-                        <a href="#call-program-steps" class="cta-button cta-button-secondary">See How It Works</a>
+                        <button onclick="openPricingChoiceModal()" class="cta-button">Start Getting Calls</button>
+                        <a href="#call-program-steps" onclick="scrollToSection(event, 'call-program-steps')" class="cta-button cta-button-secondary">See How It Works</a>
                     </div>
                     
                 </div>
@@ -658,6 +658,39 @@
         </div>
     </section>
 
+    <!-- Pricing Choice Modal (CPA vs CPL) -->
+    <div id="pricingChoiceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Choose Your Pricing Model</h3>
+                <button class="modal-close" onclick="closePricingChoiceModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Select the pricing model that works best for your business:</p>
+                
+                <div class="modal-options pricing-choice-options">
+                    <div class="modal-option pricing-choice-option" onclick="choosePricingModel('CPA')">
+                        <div class="option-header">
+                            <h4>CPA Model</h4>
+                            <span class="option-badge">No-Risk</span>
+                        </div>
+                        <p>Cost Per Acquisition - You only pay when you close a sale. Perfect for established agents who want zero upfront cost.</p>
+                        <div class="option-button">Select CPA Model</div>
+                    </div>
+                    
+                    <div class="modal-option pricing-choice-option" onclick="choosePricingModel('CPL')">
+                        <div class="option-header">
+                            <h4>Pay Per Call (CPL)</h4>
+                            <span class="option-badge">Immediate</span>
+                        </div>
+                        <p>Cost Per Lead - Pay upfront and get qualified calls instantly. Perfect for testing markets and immediate call delivery.</p>
+                        <div class="option-button">Select Pay Per Call</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Pricing Modal -->
     <div id="pricingModal" class="modal">
         <div class="modal-content">
@@ -982,13 +1015,26 @@
 
 		.availability-row {
 			display: grid;
-			grid-template-columns: auto 1fr 1fr 1fr;
+			grid-template-columns: auto 1fr auto;
 			gap: 1rem;
 			align-items: center;
 			padding: 0.75rem;
 			background: white;
 			border: 1px solid #E9ECEF;
 			border-radius: 8px;
+		}
+
+		.availability-time-container {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			flex-wrap: nowrap;
+			white-space: nowrap;
+		}
+
+		.availability-time-container select {
+			min-width: 100px;
+			flex-shrink: 0;
 		}
 
 		.availability-row input[type="checkbox"] {
@@ -1172,8 +1218,9 @@
 				gap: 0.75rem;
 			}
 
-			.availability-row select {
+			.availability-time-container {
 				grid-column: 1 / -1;
+				width: 100%;
 			}
 
 			.cpa-sales-options {
@@ -1182,6 +1229,35 @@
 
 			.cpa-modal-content {
 				max-width: 95%;
+			}
+		}
+
+		/* Pricing Choice Modal Styles */
+		.pricing-choice-options {
+			grid-template-columns: 1fr 1fr;
+			gap: 1.5rem;
+		}
+
+		.pricing-choice-option {
+			cursor: pointer;
+		}
+
+		.pricing-choice-option:hover {
+			transform: translateY(-4px);
+		}
+
+		.option-badge {
+			font-size: 0.85rem;
+			font-weight: 600;
+			padding: 0.25rem 0.75rem;
+			border-radius: 20px;
+			background: linear-gradient(135deg, rgba(0, 176, 79, 0.1) 0%, rgba(0, 176, 79, 0.05) 100%);
+			color: var(--brand-primary);
+		}
+
+		@media (max-width: 768px) {
+			.pricing-choice-options {
+				grid-template-columns: 1fr;
 			}
 		}
 	</style>
@@ -1329,6 +1405,26 @@
         // Initialize animations when page loads
         setTimeout(animateStatsSection, 500);
         
+        // Pricing Choice Modal Functions (CPA vs CPL)
+        function openPricingChoiceModal() {
+            document.getElementById('pricingChoiceModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closePricingChoiceModal() {
+            document.getElementById('pricingChoiceModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        function choosePricingModel(model) {
+            closePricingChoiceModal();
+            if (model === 'CPA') {
+                openCpaModal();
+            } else if (model === 'CPL') {
+                openPricingModal();
+            }
+        }
+        
         // Pricing Modal Functions
         function openPricingModal() {
             document.getElementById('pricingModal').style.display = 'block';
@@ -1340,8 +1436,21 @@
             document.body.style.overflow = 'auto';
         }
         
+        // Smooth scroll to section
+        function scrollToSection(event, sectionId) {
+            event.preventDefault();
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        
         // Close modal when clicking outside of it
         window.onclick = function(event) {
+            const pricingChoiceModal = document.getElementById('pricingChoiceModal');
+            if (event.target === pricingChoiceModal) {
+                closePricingChoiceModal();
+            }
             const modal = document.getElementById('pricingModal');
             if (event.target === modal) {
                 closePricingModal();
@@ -1488,11 +1597,16 @@
                     end.disabled = !checkbox.checked;
                 });
 
+                // Create time container
+                const timeContainer = document.createElement('div');
+                timeContainer.className = 'availability-time-container';
+                timeContainer.appendChild(start);
+                timeContainer.appendChild(document.createTextNode(' to '));
+                timeContainer.appendChild(end);
+
                 row.appendChild(checkbox);
                 row.appendChild(label);
-                row.appendChild(start);
-                row.appendChild(document.createTextNode(' to '));
-                row.appendChild(end);
+                row.appendChild(timeContainer);
                 gridEl.appendChild(row);
             });
 
@@ -1500,7 +1614,11 @@
                 getAvailability: () => {
                     const result = {};
                     Array.from(gridEl.querySelectorAll('.availability-row')).forEach(row => {
-                        const [checkbox,label, start, , end] = row.childNodes;
+                        const checkbox = row.querySelector('input[type="checkbox"]');
+                        const label = row.querySelector('label');
+                        const timeContainer = row.querySelector('.availability-time-container');
+                        const start = timeContainer.querySelector('select:first-child');
+                        const end = timeContainer.querySelector('select:last-child');
                         if (checkbox.checked) {
                             result[label.textContent] = { start: start.value, end: end.value };
                         }
