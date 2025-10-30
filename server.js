@@ -204,9 +204,12 @@ app.get('/api/admin/agents/:id/documents/download/:filename', requireAdmin, asyn
       console.log('Admin: File not found:', req.params.filename);
       return res.status(404).send('File not found');
     }
-    console.log('Admin: Sending file from Spaces:', file.path);
-    
-    // Get file from Spaces and stream it
+    // Prefer local file if path exists; otherwise treat as Spaces key
+    try {
+      if (await fse.pathExists(file.path)) {
+        return res.download(file.path, file.name);
+      }
+    } catch {}
     const buffer = await spacesStorage.getFileBuffer(file.path);
     res.setHeader('Content-Disposition', `attachment; filename="${file.name}"`);
     res.setHeader('Content-Type', 'application/octet-stream');
@@ -462,65 +465,70 @@ function requireAdmin(req, res, next) {
 async function gatherAgentDocuments(agent, { includeW9 = true } = {}) {
   const files = [];
   try {
-    // List all files for this agent in Spaces
-    const agentFiles = await spacesStorage.listFiles(`agents/${agent.id}/`);
-    
-    for (const file of agentFiles) {
-      const fileName = file.Key.split('/').pop();
-      if (fileName === 'agent.json') continue; // Skip the agent metadata file
-      
-      files.push({ 
-        path: file.Key, 
-        name: fileName,
-        size: file.Size,
-        lastModified: file.LastModified
-      });
+    // Local filesystem artifacts first
+    if (agent.submissions?.intakePdfPath && await fse.pathExists(agent.submissions.intakePdfPath)) {
+      files.push({ path: agent.submissions.intakePdfPath, name: 'SIGNED_INTAKE.pdf' });
     }
-    
-    // Also check for submission files
+    if (includeW9 && agent.submissions?.w9FilePath && await fse.pathExists(agent.submissions.w9FilePath)) {
+      const ext = path.extname(agent.submissions.w9FilePath) || '';
+      files.push({ path: agent.submissions.w9FilePath, name: `W9_Upload${ext}` });
+    }
+    if (agent.uploads?.certProof && await fse.pathExists(agent.uploads.certProof)) {
+      const ext = path.extname(agent.uploads.certProof) || '';
+      files.push({ path: agent.uploads.certProof, name: `CMS_FFM_CertProof${ext}` });
+    }
+
     if (agent.submissions?.intakeId) {
-      const intakeFiles = await spacesStorage.listFiles(`submissions/${agent.submissions.intakeId}/`);
-      intakeFiles.forEach(file => {
-        const fileName = file.Key.split('/').pop();
-        files.push({ 
-          path: file.Key, 
-          name: `Intake_${fileName}`,
-          size: file.Size,
-          lastModified: file.LastModified
-        });
-      });
+      const dir = path.join(SUBMISSIONS_DIR, agent.submissions.intakeId);
+      try {
+        const entries = await fse.readdir(dir);
+        for (const fname of entries) {
+          if (fname === 'intake.json') continue;
+          const full = path.join(dir, fname);
+          try { const st = await fse.stat(full); if (st.isFile()) files.push({ path: full, name: `Intake_${fname}` }); } catch {}
+        }
+      } catch {}
     }
-    
-    if (agent.submissions?.w9Id && includeW9) {
-      const w9Files = await spacesStorage.listFiles(`submissions/${agent.submissions.w9Id}/`);
-      w9Files.forEach(file => {
-        const fileName = file.Key.split('/').pop();
-        files.push({ 
-          path: file.Key, 
-          name: `W9_${fileName}`,
-          size: file.Size,
-          lastModified: file.LastModified
-        });
-      });
+
+    if (includeW9 && agent.submissions?.w9Id) {
+      const dir = path.join(SUBMISSIONS_DIR, agent.submissions.w9Id);
+      try {
+        const entries = await fse.readdir(dir);
+        for (const fname of entries) {
+          if (fname === 'w9.json' || fname === 'w9_upload.json') continue;
+          const full = path.join(dir, fname);
+          try { const st = await fse.stat(full); if (st.isFile()) files.push({ path: full, name: `W9_${fname}` }); } catch {}
+        }
+      } catch {}
     }
-    
-    if (agent.submissions?.packetId) {
-      const packetFiles = await spacesStorage.listFiles(`submissions/${agent.submissions.packetId}/`);
-      packetFiles.forEach(file => {
+
+    // Also include Spaces keys if they exist (hybrid)
+    try {
+      const agentFiles = await spacesStorage.listFiles(`agents/${agent.id}/`);
+      for (const file of agentFiles) {
         const fileName = file.Key.split('/').pop();
-        files.push({ 
-          path: file.Key, 
-          name: `Packet_${fileName}`,
-          size: file.Size,
-          lastModified: file.LastModified
-        });
-      });
-    }
-    
-      } catch (e) {
-    console.error('Error gathering agent documents:', e);
+        if (fileName === 'agent.json') continue;
+        files.push({ path: file.Key, name: fileName });
       }
-  
+      if (agent.submissions?.intakeId) {
+        const intakeFiles = await spacesStorage.listFiles(`submissions/${agent.submissions.intakeId}/`);
+        intakeFiles.forEach(f => {
+          const fileName = f.Key.split('/').pop();
+          if (fileName !== 'intake.json') files.push({ path: f.Key, name: `Intake_${fileName}` });
+        });
+      }
+      if (includeW9 && agent.submissions?.w9Id) {
+        const w9Files = await spacesStorage.listFiles(`submissions/${agent.submissions.w9Id}/`);
+        w9Files.forEach(f => {
+          const fileName = f.Key.split('/').pop();
+          if (fileName !== 'w9.json' && fileName !== 'w9_upload.json') files.push({ path: f.Key, name: `W9_${fileName}` });
+        });
+      }
+    } catch {}
+  } catch (e) {
+    console.error('Error gathering agent documents:', e);
+  }
+
   return files;
 }
 
@@ -548,7 +556,16 @@ app.get('/api/agents/:id/documents/zip', async (req, res) => {
     const archive = archiver('zip', { zlib: { level: 9 } });
     archive.on('error', () => { try { res.status(500).end('ZIP error'); } catch {} });
     archive.pipe(res);
-    files.forEach(f => archive.file(f.path, { name: f.name }));
+    for (const f of files) {
+      try {
+        if (await fse.pathExists(f.path)) {
+          archive.file(f.path, { name: f.name });
+        } else {
+          const buf = await spacesStorage.getFileBuffer(f.path);
+          archive.append(buf, { name: f.name });
+        }
+      } catch {}
+    }
     await archive.finalize();
   } catch (e) {
     console.error('zip docs error', e);

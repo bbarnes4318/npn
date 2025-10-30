@@ -708,53 +708,66 @@
 
 	<!-- CPA Modal -->
 	<div id="cpaModal" class="modal">
-		<div class="modal-content">
+		<div class="modal-content cpa-modal-content">
 			<div class="modal-header">
 				<h3>Complete Your CPA Setup</h3>
 				<button class="modal-close" onclick="closeCpaModal()">&times;</button>
 			</div>
 			<div class="modal-body">
-				<form id="cpaForm" class="modern-form">
-					<div class="form-group">
-						<label for="cpaFullName">Full Name *</label>
-						<input type="text" id="cpaFullName" name="fullName" required placeholder="Enter your full name">
-					</div>
-
-					<div class="form-group">
-						<label for="cpaEmail">Email Address *</label>
-						<input type="email" id="cpaEmail" name="email" required placeholder="Enter your email address">
+				<form id="cpaForm" class="cpa-form">
+					<div class="form-row">
+						<div class="form-group">
+							<label for="cpaFullName">Full Name *</label>
+							<input type="text" id="cpaFullName" name="fullName" required placeholder="Enter your full name">
+						</div>
+						<div class="form-group">
+							<label for="cpaEmail">Email Address *</label>
+							<input type="email" id="cpaEmail" name="email" required placeholder="Enter your email address">
+						</div>
 					</div>
 
 					<div class="form-group">
 						<label>Carrier Selection *</label>
-						<div class="dual-listbox" id="carrierListbox">
-							<div class="dual-list-panel">
-								<input type="text" class="dual-search" placeholder="Search carriers..." data-role="search">
-								<ul class="dual-list" data-role="source"></ul>
-							</div>
-							<div class="dual-list-actions">
-								<button type="button" class="dual-clear" data-role="clear-carriers">Clear All</button>
-							</div>
-							<div class="dual-list-panel">
-								<div class="dual-selected-label">Selected</div>
-								<ul class="dual-list" data-role="selected"></ul>
+						<div class="dual-listbox-container">
+							<div class="dual-list-transform-container">
+								<div class="dual-list-panel">
+									<input type="text" class="dual-search" placeholder="Search carriers..." data-role="carrier-search">
+									<div class="dual-list-wrapper">
+										<ul class="dual-list" data-role="carrier-source"></ul>
+									</div>
+								</div>
+								<div class="dual-list-actions">
+									<button type="button" class="dual-clear-btn" data-role="clear-carriers">Clear All</button>
+								</div>
+								<div class="dual-list-panel">
+									<div class="dual-selected-label">Selected Carriers (<span id="carrier-count">0</span>)</div>
+									<div class="dual-list-wrapper">
+										<ul class="dual-list" data-role="carrier-selected"></ul>
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
 
 					<div class="form-group">
 						<label>States Licensed *</label>
-						<div class="dual-listbox" id="stateListbox">
-							<div class="dual-list-panel">
-								<input type="text" class="dual-search" placeholder="Search states..." data-role="search">
-								<ul class="dual-list" data-role="source"></ul>
-							</div>
-							<div class="dual-list-actions">
-								<button type="button" class="dual-clear" data-role="clear-states">Clear All</button>
-							</div>
-							<div class="dual-list-panel">
-								<div class="dual-selected-label">Selected</div>
-								<ul class="dual-list" data-role="selected"></ul>
+						<div class="dual-listbox-container">
+							<div class="dual-list-transform-container">
+								<div class="dual-list-panel">
+									<input type="text" class="dual-search" placeholder="Search states..." data-role="state-search">
+									<div class="dual-list-wrapper">
+										<ul class="dual-list" data-role="state-source"></ul>
+									</div>
+								</div>
+								<div class="dual-list-actions">
+									<button type="button" class="dual-clear-btn" data-role="clear-states">Clear All</button>
+								</div>
+								<div class="dual-list-panel">
+									<div class="dual-selected-label">Selected States (<span id="state-count">0</span>)</div>
+									<div class="dual-list-wrapper">
+										<ul class="dual-list" data-role="state-selected"></ul>
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -766,50 +779,412 @@
 
 					<div class="form-group">
 						<label>Availability (Days & Hours) *</label>
-						<div class="availability-grid" id="availabilityGrid">
-							<!-- Days Mon-Fri with start/end selects injected by JS -->
+						<div class="availability-container" id="availabilityContainer">
+							<!-- Injected by JS -->
 						</div>
 					</div>
 
 					<div class="form-group">
 						<label>Number of Sales to Purchase *</label>
-						<div class="option-cards" id="cpaSalesOptions">
-							<div class="option-card" data-sales="5" data-percent="32.5" data-price-per="260" data-total="1300">
-								<div class="option-card-header">
-									<div>% of Premium: <strong>32.5%</strong></div>
-									<div># of Sales: <strong>5</strong></div>
+						<div class="cpa-sales-options" id="cpaSalesOptions">
+							<div class="cpa-sales-card" data-sales="5" data-percent="32.5" data-price-per="260" data-total="1300">
+								<div class="cpa-sales-card-header">
+									<div class="cpa-sales-card-badge">32.5% of Premium</div>
+									<div class="cpa-sales-card-title">5 Sales</div>
 								</div>
-								<div class="option-card-body">
-									<div>Per Sale: <strong>$260</strong></div>
-									<div>Total Cost: <strong>$1,300</strong></div>
+								<div class="cpa-sales-card-body">
+									<div class="cpa-sales-price">
+										<span class="cpa-price-label">Per Sale:</span>
+										<span class="cpa-price-value">$260</span>
+									</div>
+									<div class="cpa-sales-total">
+										<span class="cpa-total-label">Total Cost:</span>
+										<span class="cpa-total-value">$1,300</span>
+									</div>
 								</div>
 							</div>
-							<div class="option-card" data-sales="10" data-percent="30" data-price-per="240" data-total="2400">
-								<div class="option-card-header">
-									<div>% of Premium: <strong>30.0%</strong></div>
-									<div># of Sales: <strong>10</strong></div>
+							<div class="cpa-sales-card" data-sales="10" data-percent="30" data-price-per="240" data-total="2400">
+								<div class="cpa-sales-card-header">
+									<div class="cpa-sales-card-badge">30.0% of Premium</div>
+									<div class="cpa-sales-card-title">10 Sales</div>
 								</div>
-								<div class="option-card-body">
-									<div>Per Sale: <strong>$240</strong></div>
-									<div>Total Cost: <strong>$2,400</strong></div>
+								<div class="cpa-sales-card-body">
+									<div class="cpa-sales-price">
+										<span class="cpa-price-label">Per Sale:</span>
+										<span class="cpa-price-value">$240</span>
+									</div>
+									<div class="cpa-sales-total">
+										<span class="cpa-total-label">Total Cost:</span>
+										<span class="cpa-total-value">$2,400</span>
+									</div>
 								</div>
 							</div>
 						</div>
 					</div>
 
-					<div class="form-note" style="margin-top: 8px;">
-						<p><strong>Cost Structure Explanation:</strong> We calculate cost per sale based on an average annual premium of $800. This results in either <strong>$260 per sale (32.5%)</strong> or <strong>$240 per sale (30%)</strong>, depending on your selection. After your sales are delivered, we will review the total annual premium performance. If there’s a difference in your favor, the balance will <strong>count toward another sale</strong> — ensuring you only pay for valid, delivered sales.</p>
+					<div class="cpa-cost-explanation">
+						<p><strong>Cost Structure Explanation:</strong></p>
+						<p>We calculate cost per sale based on an <strong>average annual premium of $800</strong>. This results in either <strong>$260 per sale (32.5%)</strong> or <strong>$240 per sale (30%)</strong>, depending on your selection.</p>
+						<p>After your sales are delivered, we will review the total annual premium performance. If there's a difference in your favor, the balance will <strong>count toward another sale</strong> — ensuring you only pay for valid, delivered sales.</p>
 					</div>
 
 					<div class="form-submit-container">
-						<button type="submit" class="form-submit">
+						<button type="submit" class="cpa-submit-button">
 							<span>Continue to Secure Payment</span>
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
 						</button>
 					</div>
 				</form>
 			</div>
 		</div>
 	</div>
+
+	<style>
+		/* CPA Modal Specific Styles */
+		.cpa-modal-content {
+			max-width: 900px;
+		}
+
+		.cpa-form {
+			width: 100%;
+		}
+
+		.cpa-form .form-row {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 1.25rem;
+			margin-bottom: 1.5rem;
+		}
+
+		/* Dual Listbox Styles */
+		.dual-listbox-container {
+			margin-top: 0.5rem;
+		}
+
+		.dual-list-transform-container {
+			display: grid;
+			grid-template-columns: 1fr auto 1fr;
+			gap: 1rem;
+			align-items: start;
+		}
+
+		.dual-list-panel {
+			display: flex;
+			flex-direction: column;
+			border: 2px solid #E9ECEF;
+			border-radius: 12px;
+			background: white;
+			overflow: hidden;
+		}
+
+		.dual-search {
+			padding: 0.75rem 1rem;
+			border: none;
+			border-bottom: 2px solid #E9ECEF;
+			font-size: 0.95rem;
+			outline: none;
+		}
+
+		.dual-search:focus {
+			border-bottom-color: var(--brand-primary);
+		}
+
+		.dual-list-wrapper {
+			height: 200px;
+			overflow-y: auto;
+			background: #FAFBFC;
+		}
+
+		.dual-list {
+			list-style: none;
+			padding: 0.5rem;
+			margin: 0;
+		}
+
+		.dual-list li {
+			padding: 0.75rem 1rem;
+			margin: 0.25rem 0;
+			background: white;
+			border: 1px solid #E9ECEF;
+			border-radius: 8px;
+			cursor: pointer;
+			transition: all 0.2s ease;
+			font-size: 0.9rem;
+			color: var(--brand-text);
+		}
+
+		.dual-list li:hover {
+			background: var(--brand-primary);
+			color: white;
+			border-color: var(--brand-primary);
+			transform: translateX(4px);
+		}
+
+		.dual-list[data-role*="selected"] li {
+			background: linear-gradient(135deg, rgba(0, 176, 79, 0.1) 0%, rgba(0, 176, 79, 0.05) 100%);
+			border-color: var(--brand-primary);
+			color: var(--brand-primary);
+			font-weight: 500;
+		}
+
+		.dual-list[data-role*="selected"] li:hover {
+			background: #ff4444;
+			border-color: #ff4444;
+			color: white;
+		}
+
+		.dual-selected-label {
+			padding: 0.75rem 1rem;
+			background: linear-gradient(135deg, rgba(0, 176, 79, 0.1) 0%, rgba(0, 176, 79, 0.05) 100%);
+			border-bottom: 2px solid var(--brand-primary);
+			font-weight: 600;
+			font-size: 0.9rem;
+			color: var(--brand-primary);
+		}
+
+		.dual-list-actions {
+			display: flex;
+			align-items: center;
+			padding-top: 2.5rem;
+		}
+
+		.dual-clear-btn {
+			padding: 0.5rem 1rem;
+			background: #F8F9FA;
+			border: 1px solid #DEE2E6;
+			border-radius: 8px;
+			font-size: 0.85rem;
+			font-weight: 500;
+			color: var(--brand-text);
+			cursor: pointer;
+			transition: all 0.2s ease;
+			white-space: nowrap;
+		}
+
+		.dual-clear-btn:hover {
+			background: #ff4444;
+			color: white;
+			border-color: #ff4444;
+		}
+
+		/* Availability Styles */
+		.availability-container {
+			display: flex;
+			flex-direction: column;
+			gap: 0.75rem;
+			padding: 1rem;
+			background: #FAFBFC;
+			border: 2px solid #E9ECEF;
+			border-radius: 12px;
+		}
+
+		.availability-row {
+			display: grid;
+			grid-template-columns: auto 1fr 1fr 1fr;
+			gap: 1rem;
+			align-items: center;
+			padding: 0.75rem;
+			background: white;
+			border: 1px solid #E9ECEF;
+			border-radius: 8px;
+		}
+
+		.availability-row input[type="checkbox"] {
+			width: 20px;
+			height: 20px;
+			accent-color: var(--brand-primary);
+			cursor: pointer;
+		}
+
+		.availability-row label {
+			font-weight: 500;
+			color: var(--brand-text);
+			cursor: pointer;
+			margin: 0;
+		}
+
+		.availability-row select {
+			padding: 0.5rem 0.75rem;
+			border: 1px solid #E9ECEF;
+			border-radius: 6px;
+			font-size: 0.9rem;
+			background: white;
+			cursor: pointer;
+		}
+
+		.availability-row select:disabled {
+			background: #F8F9FA;
+			cursor: not-allowed;
+			opacity: 0.6;
+		}
+
+		/* Sales Options Styles */
+		.cpa-sales-options {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 1rem;
+			margin-top: 0.5rem;
+		}
+
+		.cpa-sales-card {
+			border: 2px solid #E9ECEF;
+			border-radius: 12px;
+			padding: 1.5rem;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			background: #FAFBFC;
+		}
+
+		.cpa-sales-card:hover {
+			border-color: var(--brand-primary);
+			box-shadow: 0 8px 25px rgba(0, 176, 79, 0.15);
+			background: white;
+			transform: translateY(-2px);
+		}
+
+		.cpa-sales-card.active {
+			border-color: var(--brand-primary);
+			background: linear-gradient(135deg, rgba(0, 176, 79, 0.05) 0%, rgba(0, 176, 79, 0.02) 100%);
+			box-shadow: 0 8px 25px rgba(0, 176, 79, 0.2);
+		}
+
+		.cpa-sales-card-header {
+			margin-bottom: 1rem;
+		}
+
+		.cpa-sales-card-badge {
+			font-size: 0.85rem;
+			font-weight: 600;
+			color: var(--brand-primary);
+			margin-bottom: 0.5rem;
+		}
+
+		.cpa-sales-card-title {
+			font-size: 1.5rem;
+			font-weight: 700;
+			color: var(--brand-text);
+		}
+
+		.cpa-sales-card-body {
+			display: flex;
+			flex-direction: column;
+			gap: 0.75rem;
+		}
+
+		.cpa-sales-price,
+		.cpa-sales-total {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+
+		.cpa-price-label,
+		.cpa-total-label {
+			font-size: 0.9rem;
+			color: var(--brand-text-light);
+		}
+
+		.cpa-price-value {
+			font-size: 1.1rem;
+			font-weight: 600;
+			color: var(--brand-text);
+		}
+
+		.cpa-total-value {
+			font-size: 1.3rem;
+			font-weight: 700;
+			color: var(--brand-primary);
+		}
+
+		/* Cost Explanation */
+		.cpa-cost-explanation {
+			background: linear-gradient(135deg, rgba(0, 176, 79, 0.05) 0%, rgba(0, 176, 79, 0.02) 100%);
+			border-left: 4px solid var(--brand-primary);
+			padding: 1.25rem;
+			border-radius: 8px;
+			margin: 1.5rem 0;
+		}
+
+		.cpa-cost-explanation p {
+			margin: 0.5rem 0;
+			color: var(--brand-text);
+			font-size: 0.95rem;
+			line-height: 1.6;
+		}
+
+		.cpa-cost-explanation p:first-child {
+			margin-top: 0;
+		}
+
+		.cpa-cost-explanation p:last-child {
+			margin-bottom: 0;
+		}
+
+		/* Submit Button */
+		.cpa-submit-button {
+			width: 100%;
+			background: linear-gradient(135deg, var(--brand-primary) 0%, #00D966 100%);
+			color: white;
+			border: none;
+			padding: 1rem 2rem;
+			border-radius: 12px;
+			font-size: 1.1rem;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 0.75rem;
+			box-shadow: 0 4px 15px rgba(0, 176, 79, 0.3);
+		}
+
+		.cpa-submit-button:hover {
+			background: linear-gradient(135deg, #008a3f 0%, #00C55A 100%);
+			transform: translateY(-2px);
+			box-shadow: 0 6px 20px rgba(0, 176, 79, 0.4);
+		}
+
+		.cpa-submit-button:active {
+			transform: translateY(0);
+		}
+
+		/* Responsive */
+		@media (max-width: 768px) {
+			.cpa-form .form-row {
+				grid-template-columns: 1fr;
+			}
+
+			.dual-list-transform-container {
+				grid-template-columns: 1fr;
+				gap: 1rem;
+			}
+
+			.dual-list-actions {
+				padding-top: 0;
+				justify-content: center;
+			}
+
+			.availability-row {
+				grid-template-columns: auto 1fr;
+				gap: 0.75rem;
+			}
+
+			.availability-row select {
+				grid-column: 1 / -1;
+			}
+
+			.cpa-sales-options {
+				grid-template-columns: 1fr;
+			}
+
+			.cpa-modal-content {
+				max-width: 95%;
+			}
+		}
+	</style>
 
     <!-- Footer -->
     <footer class="footer">
@@ -1003,10 +1378,10 @@
         ];
 
         // Dual Listbox builder
-        function initDualListbox(rootEl, items) {
-            const sourceUl = rootEl.querySelector('ul[data-role="source"]');
-            const selectedUl = rootEl.querySelector('ul[data-role="selected"]');
-            const searchInput = rootEl.querySelector('input[data-role="search"]');
+        function initDualListbox(rootEl, items, countElId) {
+            const sourceUl = rootEl.querySelector('ul[data-role$="-source"]');
+            const selectedUl = rootEl.querySelector('ul[data-role$="-selected"]');
+            const searchInput = rootEl.querySelector('input[data-role$="-search"]');
 
             function renderSource(filter = '') {
                 sourceUl.innerHTML = '';
@@ -1032,22 +1407,33 @@
                 li.onclick = () => removeFromSelected(value);
                 selectedUl.appendChild(li);
                 renderSource(searchInput.value || '');
+                if (countElId) {
+                    const count = selectedUl.querySelectorAll('li').length;
+                    document.getElementById(countElId).textContent = count;
+                }
             }
 
             function removeFromSelected(value) {
                 const li = selectedUl.querySelector(`li[data-value="${CSS.escape(value)}"]`);
                 if (li) li.remove();
                 renderSource(searchInput.value || '');
+                if (countElId) {
+                    const count = selectedUl.querySelectorAll('li').length;
+                    document.getElementById(countElId).textContent = count;
+                }
             }
 
             searchInput.addEventListener('input', () => renderSource(searchInput.value || ''));
 
-            const clearBtn = rootEl.querySelector('.dual-clear');
+            const clearBtn = rootEl.querySelector('.dual-clear-btn');
             if (clearBtn) {
                 clearBtn.addEventListener('click', () => {
                     selectedUl.innerHTML = '';
                     renderSource('');
                     if (searchInput) searchInput.value = '';
+                    if (countElId) {
+                        document.getElementById(countElId).textContent = '0';
+                    }
                 });
             }
 
@@ -1126,15 +1512,16 @@
 
         // CPA Modal init on DOM ready
         document.addEventListener('DOMContentLoaded', () => {
-            const carrierBox = initDualListbox(document.getElementById('carrierListbox'), carriers);
+            const carrierBox = initDualListbox(document.querySelector('[data-role="carrier-search"]').closest('.dual-listbox-container'), carriers, 'carrier-count');
             const stateBox = initDualListbox(
-                document.getElementById('stateListbox'),
-                usStates.map(([code, name]) => `${name} (${code})`)
+                document.querySelector('[data-role="state-search"]').closest('.dual-listbox-container'),
+                usStates.map(([code, name]) => `${name} (${code})`),
+                'state-count'
             );
-            const availability = initAvailability(document.getElementById('availabilityGrid'));
+            const availability = initAvailability(document.getElementById('availabilityContainer'));
 
             // Sales option selection
-            const optionCards = Array.from(document.querySelectorAll('#cpaSalesOptions .option-card'));
+            const optionCards = Array.from(document.querySelectorAll('#cpaSalesOptions .cpa-sales-card'));
             let selectedSalesOption = null;
             optionCards.forEach(card => {
                 card.addEventListener('click', () => {
