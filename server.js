@@ -398,17 +398,104 @@ app.get('/api/admin/agents/:id/documents/w9.pdf', requireAdmin, async (req, res)
   }
 });
 
-// Cert proof (admin)
+// Cert proof (admin) - checks Spaces first, then local
 app.get('/api/admin/agents/:id/documents/cert', requireAdmin, async (req, res) => {
   try {
     const agent = await readAgent(req.params.id);
     if (!agent) return res.status(404).send('Not found');
+    
+    // Try Spaces first
+    if (agent.uploads?.certProofSpacesKey) {
+      try {
+        const fileBuffer = await spacesStorage.getFileBuffer(agent.uploads.certProofSpacesKey);
+        const ext = path.extname(agent.uploads.certProof || '') || '.pdf';
+        const filename = `CMS_FFM_CertProof_${agent.id}${ext}`;
+        res.setHeader('Content-Type', 'application/octet-stream');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        return res.send(fileBuffer);
+      } catch (spacesErr) {
+        console.error('Failed to get cert from Spaces, trying local:', spacesErr.message);
+      }
+    }
+    
+    // Fallback to local
     const p = agent.uploads?.certProof;
-    if (!p || !(await fse.pathExists(p))) return res.status(404).send('Not found');
-    const filename = `CMS_FFM_CertProof_${agent.id}${path.extname(p)}`;
-    return res.download(p, filename);
+    if (p && await fse.pathExists(p)) {
+      const filename = `CMS_FFM_CertProof_${agent.id}${path.extname(p)}`;
+      return res.download(p, filename);
+    }
+    
+    return res.status(404).send('Not found');
   } catch (e) {
     console.error('admin cert download error', e);
+    return res.status(500).send('Failed to download');
+  }
+});
+
+// License Front (admin) - checks Spaces first, then local
+app.get('/api/admin/agents/:id/documents/license-front', requireAdmin, async (req, res) => {
+  try {
+    const agent = await readAgent(req.params.id);
+    if (!agent) return res.status(404).send('Not found');
+    
+    // Try Spaces first
+    if (agent.uploads?.licenseFrontSpacesKey) {
+      try {
+        const fileBuffer = await spacesStorage.getFileBuffer(agent.uploads.licenseFrontSpacesKey);
+        const ext = path.extname(agent.uploads.licenseFront || '') || '.jpg';
+        const filename = `License_Front_${agent.id}${ext}`;
+        res.setHeader('Content-Type', 'image/jpeg');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        return res.send(fileBuffer);
+      } catch (spacesErr) {
+        console.error('Failed to get license front from Spaces, trying local:', spacesErr.message);
+      }
+    }
+    
+    // Fallback to local
+    const p = agent.uploads?.licenseFront;
+    if (p && await fse.pathExists(p)) {
+      const filename = `License_Front_${agent.id}${path.extname(p)}`;
+      return res.download(p, filename);
+    }
+    
+    return res.status(404).send('Not found');
+  } catch (e) {
+    console.error('admin license front download error', e);
+    return res.status(500).send('Failed to download');
+  }
+});
+
+// License Back (admin) - checks Spaces first, then local
+app.get('/api/admin/agents/:id/documents/license-back', requireAdmin, async (req, res) => {
+  try {
+    const agent = await readAgent(req.params.id);
+    if (!agent) return res.status(404).send('Not found');
+    
+    // Try Spaces first
+    if (agent.uploads?.licenseBackSpacesKey) {
+      try {
+        const fileBuffer = await spacesStorage.getFileBuffer(agent.uploads.licenseBackSpacesKey);
+        const ext = path.extname(agent.uploads.licenseBack || '') || '.jpg';
+        const filename = `License_Back_${agent.id}${ext}`;
+        res.setHeader('Content-Type', 'image/jpeg');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        return res.send(fileBuffer);
+      } catch (spacesErr) {
+        console.error('Failed to get license back from Spaces, trying local:', spacesErr.message);
+      }
+    }
+    
+    // Fallback to local
+    const p = agent.uploads?.licenseBack;
+    if (p && await fse.pathExists(p)) {
+      const filename = `License_Back_${agent.id}${path.extname(p)}`;
+      return res.download(p, filename);
+    }
+    
+    return res.status(404).send('Not found');
+  } catch (e) {
+    console.error('admin license back download error', e);
     return res.status(500).send('Failed to download');
   }
 });
@@ -626,6 +713,20 @@ app.post('/api/agents/:id/w9', upload.single('w9'), async (req, res) => {
     const safeName = req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
     const destPath = path.join(dir, `w9_${Date.now()}_${safeName}`);
     await fse.move(req.file.path, destPath);
+    
+    // Upload to Spaces
+    try {
+      const fileName = path.basename(destPath);
+      const spacesKey = spacesStorage.generateAgentKey(agent.id, fileName);
+      await spacesStorage.uploadFile(destPath, spacesKey, req.file.mimetype || 'application/octet-stream');
+      const spacesUrl = await spacesStorage.getSignedUrl(spacesKey, 86400 * 365);
+      agent.submissions.w9FilePathSpacesKey = spacesKey;
+      agent.submissions.w9FilePathUrl = spacesUrl;
+      console.log(`✅ Uploaded W-9 to Spaces: ${spacesKey}`);
+    } catch (spacesErr) {
+      console.error(`⚠️  Failed to upload W-9 to Spaces (non-fatal):`, spacesErr.message);
+    }
+    
     agent.submissions = agent.submissions || {};
     agent.submissions.w9FilePath = destPath;
     agent.progress.w9Submitted = true;
@@ -647,6 +748,20 @@ app.post('/api/w9/upload', upload.single('w9'), async (req, res) => {
     const safeName = req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
     const destPath = path.join(destDir, `w9_${Date.now()}_${safeName}`);
     await fse.move(req.file.path, destPath);
+    
+    // Upload to Spaces
+    let spacesKey = null;
+    let spacesUrl = null;
+    try {
+      const fileName = path.basename(destPath);
+      spacesKey = spacesStorage.generateSubmissionKey(id, fileName);
+      await spacesStorage.uploadFile(destPath, spacesKey, req.file.mimetype || 'application/octet-stream');
+      spacesUrl = await spacesStorage.getSignedUrl(spacesKey, 86400 * 365);
+      console.log(`✅ Uploaded anonymous W-9 to Spaces: ${spacesKey}`);
+    } catch (spacesErr) {
+      console.error(`⚠️  Failed to upload W-9 to Spaces (non-fatal):`, spacesErr.message);
+    }
+    
     await fse.writeJson(path.join(destDir, 'w9_upload.json'), {
       id,
       type: 'w9_upload',
@@ -655,7 +770,9 @@ app.post('/api/w9/upload', upload.single('w9'), async (req, res) => {
         originalname: req.file.originalname,
         mimetype: req.file.mimetype,
         size: req.file.size,
-        path: destPath
+        path: destPath,
+        spacesKey: spacesKey,
+        url: spacesUrl
       }
     }, { spaces: 2 });
     res.json({ ok: true, id, path: destPath });
@@ -1034,6 +1151,20 @@ app.post('/api/agents/:id/uploadCert', upload.single('certProof'), async (req, r
     const safeName = req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
     const destPath = path.join(dir, `cert_${Date.now()}_${safeName}`);
     await fse.move(req.file.path, destPath);
+    
+    // Upload to Spaces
+    try {
+      const fileName = path.basename(destPath);
+      const spacesKey = spacesStorage.generateAgentKey(agent.id, fileName);
+      await spacesStorage.uploadFile(destPath, spacesKey, req.file.mimetype || 'application/octet-stream');
+      const spacesUrl = await spacesStorage.getSignedUrl(spacesKey, 86400 * 365);
+      agent.uploads.certProofSpacesKey = spacesKey;
+      agent.uploads.certProofUrl = spacesUrl;
+      console.log(`✅ Uploaded cert proof to Spaces: ${spacesKey}`);
+    } catch (spacesErr) {
+      console.error(`⚠️  Failed to upload cert proof to Spaces (non-fatal):`, spacesErr.message);
+    }
+    
     agent.uploads.certProof = destPath;
     await writeAgent(agent);
     res.json({ ok: true, path: destPath });
@@ -1155,6 +1286,35 @@ app.post('/api/intake', uploadMultiple.fields([
     const licenseFront = await processFile(req.files?.licenseFront, 'license_front');
     const licenseBack = await processFile(req.files?.licenseBack, 'license_back');
 
+    // Upload all files to Spaces immediately
+    async function uploadToSpaces(fileObj, submissionId, fileType) {
+      if (!fileObj?.path) return fileObj;
+      try {
+        const fileName = path.basename(fileObj.path);
+        const spacesKey = spacesStorage.generateSubmissionKey(submissionId, fileName);
+        const contentType = fileObj.mimetype || 'application/octet-stream';
+        await spacesStorage.uploadFile(fileObj.path, spacesKey, contentType);
+        fileObj.spacesKey = spacesKey;
+        fileObj.url = await spacesStorage.getSignedUrl(spacesKey, 86400 * 365); // 1 year URL
+        console.log(`✅ Uploaded ${fileType} to Spaces: ${spacesKey}`);
+      } catch (err) {
+        console.error(`⚠️  Failed to upload ${fileType} to Spaces (non-fatal):`, err.message);
+        // Don't fail the request if Spaces upload fails
+      }
+      return fileObj;
+    }
+
+    // Upload all files to Spaces
+    if (certProof) {
+      await uploadToSpaces(certProof, id, 'certProof');
+    }
+    if (licenseFront) {
+      await uploadToSpaces(licenseFront, id, 'licenseFront');
+    }
+    if (licenseBack) {
+      await uploadToSpaces(licenseBack, id, 'licenseBack');
+    }
+
     const submission = {
       id,
       type: 'intake',
@@ -1233,12 +1393,24 @@ app.post('/api/intake', uploadMultiple.fields([
       agent.submissions.intakeId = id;
       if (certProof?.path) {
         agent.uploads.certProof = certProof.path;
+        if (certProof.spacesKey) {
+          agent.uploads.certProofSpacesKey = certProof.spacesKey;
+          agent.uploads.certProofUrl = certProof.url;
+        }
       }
       if (licenseFront?.path) {
         agent.uploads.licenseFront = licenseFront.path;
+        if (licenseFront.spacesKey) {
+          agent.uploads.licenseFrontSpacesKey = licenseFront.spacesKey;
+          agent.uploads.licenseFrontUrl = licenseFront.url;
+        }
       }
       if (licenseBack?.path) {
         agent.uploads.licenseBack = licenseBack.path;
+        if (licenseBack.spacesKey) {
+          agent.uploads.licenseBackSpacesKey = licenseBack.spacesKey;
+          agent.uploads.licenseBackUrl = licenseBack.url;
+        }
       }
       
       // Generate comprehensive signed documents PDF
@@ -2031,37 +2203,83 @@ app.get('/api/admin/download-all-documents', requireAdmin, async (req, res) => {
   }
 });
 
-// Get specific submission details (admin)
+// Get specific submission details (admin) - includes Spaces files
 app.get('/api/admin/submissions/:id', requireAdmin, async (req, res) => {
   try {
     const submissionId = req.params.id;
     const submissionDir = path.join(SUBMISSIONS_DIR, submissionId);
     
-    if (!(await fse.pathExists(submissionDir))) {
-      return res.status(404).json({ ok: false, error: 'Submission not found' });
-    }
-    
-    const files = await fse.readdir(submissionDir);
     let submissionData = null;
     let submissionType = 'unknown';
+    const allFiles = [];
     
-    // Determine submission type and load data
-    if (files.includes('intake.json')) {
-      submissionData = await fse.readJson(path.join(submissionDir, 'intake.json'));
-      submissionType = 'intake';
-    } else if (files.includes('w9.json')) {
-      submissionData = await fse.readJson(path.join(submissionDir, 'w9.json'));
-      submissionType = 'w9';
-    } else if (files.includes('banking.json')) {
-      submissionData = await fse.readJson(path.join(submissionDir, 'banking.json'));
-      submissionType = 'banking';
-    } else if (files.includes('packet.json')) {
-      submissionData = await fse.readJson(path.join(submissionDir, 'packet.json'));
-      submissionType = 'packet';
+    // Check local files
+    if (await fse.pathExists(submissionDir)) {
+      const localFiles = await fse.readdir(submissionDir);
+      
+      // Determine submission type and load data
+      if (localFiles.includes('intake.json')) {
+        submissionData = await fse.readJson(path.join(submissionDir, 'intake.json'));
+        submissionType = 'intake';
+      } else if (localFiles.includes('w9.json')) {
+        submissionData = await fse.readJson(path.join(submissionDir, 'w9.json'));
+        submissionType = 'w9';
+      } else if (localFiles.includes('banking.json')) {
+        submissionData = await fse.readJson(path.join(submissionDir, 'banking.json'));
+        submissionType = 'banking';
+      } else if (localFiles.includes('packet.json')) {
+        submissionData = await fse.readJson(path.join(submissionDir, 'packet.json'));
+        submissionType = 'packet';
+      }
+      
+      // Add local files
+      for (const fileName of localFiles) {
+        if (fileName.endsWith('.json')) continue;
+        const filePath = path.join(submissionDir, fileName);
+        try {
+          const stats = await fse.stat(filePath);
+          if (stats.isFile()) {
+            allFiles.push({
+              name: fileName,
+              path: filePath,
+              size: stats.size,
+              modified: stats.mtime.toISOString(),
+              location: 'local'
+            });
+          }
+        } catch {}
+      }
     }
     
-    if (!submissionData) {
-      return res.status(404).json({ ok: false, error: 'No valid submission data found' });
+    // Check Spaces for files
+    try {
+      const spacesFiles = await spacesStorage.listFiles(`submissions/${submissionId}/`);
+      for (const file of spacesFiles) {
+        const fileName = file.Key.split('/').pop();
+        // Don't duplicate if already listed from local
+        if (!allFiles.find(f => f.name === fileName && f.location === 'local')) {
+          allFiles.push({
+            name: fileName,
+            spacesKey: file.Key,
+            size: file.Size,
+            modified: file.LastModified.toISOString(),
+            location: 'spaces'
+          });
+        } else {
+          // Update local file with Spaces info
+          const localFile = allFiles.find(f => f.name === fileName && f.location === 'local');
+          if (localFile) {
+            localFile.spacesKey = file.Key;
+            localFile.location = 'both';
+          }
+        }
+      }
+    } catch (spacesErr) {
+      console.error('Error listing Spaces files:', spacesErr.message);
+    }
+    
+    if (!submissionData && allFiles.length === 0) {
+      return res.status(404).json({ ok: false, error: 'Submission not found' });
     }
     
     res.json({ 
@@ -2069,9 +2287,9 @@ app.get('/api/admin/submissions/:id', requireAdmin, async (req, res) => {
       submission: {
         id: submissionId,
         type: submissionType,
-        receivedAt: submissionData.receivedAt || submissionData.id,
+        receivedAt: submissionData?.receivedAt || submissionData?.id,
         data: submissionData,
-        files: files
+        files: allFiles
       }
     });
   } catch (e) {
