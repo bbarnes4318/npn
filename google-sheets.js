@@ -49,11 +49,15 @@ class GoogleSheets {
    */
   async appendIntakeData(data) {
     if (!this.sheets || !this.spreadsheetId) {
-      console.log('Google Sheets not initialized, skipping data export');
+      console.error('❌ Google Sheets not initialized, skipping data export');
+      console.error('   sheets exists:', !!this.sheets);
+      console.error('   spreadsheetId:', this.spreadsheetId || 'NOT SET');
       return false;
     }
 
     try {
+      console.log('📝 Attempting to append intake data to Google Sheet:', this.spreadsheetId);
+      console.log('   Sheet name:', this.sheetName);
       // Map all intake form fields to sheet columns
       // Column order matches the exact form field order
       const row = [
@@ -117,10 +121,15 @@ class GoogleSheets {
         }
       });
 
-      console.log('✅ Intake data appended to Google Sheet');
+      console.log('✅ Intake data appended to Google Sheet successfully');
       return true;
     } catch (err) {
       console.error('❌ Failed to append intake data to Google Sheet:', err.message);
+      console.error('   Error details:', err);
+      if (err.response) {
+        console.error('   Response status:', err.response.status);
+        console.error('   Response data:', err.response.data);
+      }
       return false;
     }
   }

@@ -18,9 +18,15 @@ const spacesStorage = new SpacesStorage();
 
 // Initialize Google Sheets
 const googleSheets = new GoogleSheets();
-googleSheets.initialize().catch(err => {
-  console.error('Failed to initialize Google Sheets:', err);
-});
+(async () => {
+  const initialized = await googleSheets.initialize();
+  if (!initialized) {
+    console.error('⚠️  Google Sheets failed to initialize. Check your environment variables:');
+    console.error('   GOOGLE_SHEET_ID:', process.env.GOOGLE_SHEET_ID ? 'SET' : 'NOT SET');
+    console.error('   GOOGLE_SERVICE_ACCOUNT_KEY:', process.env.GOOGLE_SERVICE_ACCOUNT_KEY ? 'SET' : 'NOT SET');
+    console.error('   GOOGLE_SHEET_NAME:', process.env.GOOGLE_SHEET_NAME || 'Agent Onboarding (default)');
+  }
+})();
 
 // Paths
 const ROOT = __dirname;
@@ -1359,10 +1365,15 @@ app.post('/api/intake', uploadMultiple.fields([
     }
 
     // Write to Google Sheets
+    console.log('📊 Writing intake data to Google Sheets for agent:', submission.agentId || 'N/A');
     try {
-      await googleSheets.appendIntakeData(submission);
+      const result = await googleSheets.appendIntakeData(submission);
+      if (!result) {
+        console.error('⚠️  Google Sheets write returned false - check logs above');
+      }
     } catch (sheetsErr) {
-      console.error('Error writing to Google Sheets (non-fatal):', sheetsErr);
+      console.error('❌ EXCEPTION writing to Google Sheets (non-fatal):', sheetsErr);
+      console.error('   Stack:', sheetsErr.stack);
       // Don't fail the request if Google Sheets write fails
     }
 
