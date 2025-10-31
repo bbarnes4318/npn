@@ -238,7 +238,7 @@ class GoogleSheets {
 
       await this.sheets.spreadsheets.values.append({
         spreadsheetId: this.spreadsheetId,
-        range: `'${this.sheetName}'!A1`,
+        range: `${this.sheetName}!A1`,
         valueInputOption: 'USER_ENTERED',
         insertDataOption: 'INSERT_ROWS',
         resource: {
