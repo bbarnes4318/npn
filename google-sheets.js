@@ -122,7 +122,7 @@ class GoogleSheets {
       
       const result = await this.sheets.spreadsheets.values.append({
         spreadsheetId: this.spreadsheetId,
-        range: `'${this.sheetName}'!A1`,
+        range: `'${this.sheetName}'!A:A`,
         valueInputOption: 'USER_ENTERED',
         insertDataOption: 'INSERT_ROWS',
         resource: {
@@ -181,7 +181,7 @@ class GoogleSheets {
 
       await this.sheets.spreadsheets.values.append({
         spreadsheetId: this.spreadsheetId,
-        range: `'${this.sheetName}'!A1`,
+        range: `'${this.sheetName}'!A:A`,
         valueInputOption: 'USER_ENTERED',
         insertDataOption: 'INSERT_ROWS',
         resource: {
@@ -238,7 +238,7 @@ class GoogleSheets {
 
       await this.sheets.spreadsheets.values.append({
         spreadsheetId: this.spreadsheetId,
-        range: `${this.sheetName}!A1`,
+        range: `'${this.sheetName}'!A:A`,
         valueInputOption: 'USER_ENTERED',
         insertDataOption: 'INSERT_ROWS',
         resource: {
