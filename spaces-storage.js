@@ -15,10 +15,24 @@ const BUCKET_NAME = process.env.SPACES_BUCKET_NAME || 'aca-npn';
 class SpacesStorage {
   constructor() {
     this.bucketName = BUCKET_NAME;
-    this.ensureBucketExists();
+    // Check bucket asynchronously without blocking server startup
+    this.ensureBucketExists().catch(err => {
+      // Silently handle credential errors during development
+      if (err.code === 'CredentialsError') {
+        console.log('⚠️  Spaces credentials not configured - bucket check skipped');
+      } else {
+        console.error('Error checking bucket:', err.message || err);
+      }
+    });
   }
 
   async ensureBucketExists() {
+    // Skip check if credentials are not configured
+    if (!process.env.SPACES_ACCESS_KEY_ID || !process.env.SPACES_SECRET_ACCESS_KEY) {
+      console.log('⚠️  Spaces credentials not set - skipping bucket check');
+      return;
+    }
+    
     try {
       await s3.headBucket({ Bucket: this.bucketName }).promise();
       console.log(`✅ Spaces bucket ${this.bucketName} exists`);
@@ -27,8 +41,11 @@ class SpacesStorage {
         console.log(`Creating Spaces bucket ${this.bucketName}...`);
         await s3.createBucket({ Bucket: this.bucketName }).promise();
         console.log(`✅ Created Spaces bucket ${this.bucketName}`);
+      } else if (error.code === 'CredentialsError') {
+        // Don't throw - just log
+        throw error;
       } else {
-        console.error('Error checking bucket:', error);
+        console.error('Error checking bucket:', error.message || error);
       }
     }
   }

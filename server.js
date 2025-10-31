@@ -8,12 +8,19 @@ const archiver = require('archiver');
 const PDFDocument = require('pdfkit');
 const { PDFDocument: PdfLibDocument, StandardFonts, rgb } = require('pdf-lib');
 const SpacesStorage = require('./spaces-storage');
+const GoogleSheets = require('./google-sheets');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Initialize Spaces storage
 const spacesStorage = new SpacesStorage();
+
+// Initialize Google Sheets
+const googleSheets = new GoogleSheets();
+googleSheets.initialize().catch(err => {
+  console.error('Failed to initialize Google Sheets:', err);
+});
 
 // Paths
 const ROOT = __dirname;
@@ -65,6 +72,15 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Multer for file uploads
 const upload = multer({ dest: UPLOADS_TMP, limits: { fileSize: 10 * 1024 * 1024 } });
+const uploadMultiple = multer({ 
+  dest: UPLOADS_TMP, 
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fields: [
+    { name: 'certProof', maxCount: 1 },
+    { name: 'licenseFront', maxCount: 1 },
+    { name: 'licenseBack', maxCount: 1 }
+  ]
+});
 
 // Download packet JSON (admin)
 app.get('/api/admin/agents/:id/documents/packet', requireAdmin, async (req, res) => {
@@ -1100,7 +1116,11 @@ app.post('/api/agents/:id/signatures', async (req, res) => {
 });
 
 // Intake form submission (combined form)
-app.post('/api/intake', upload.single('certProof'), async (req, res) => {
+app.post('/api/intake', uploadMultiple.fields([
+  { name: 'certProof', maxCount: 1 },
+  { name: 'licenseFront', maxCount: 1 },
+  { name: 'licenseBack', maxCount: 1 }
+]), async (req, res) => {
   try {
     const id = nanoid(10);
     const destDir = path.join(SUBMISSIONS_DIR, id);
@@ -1108,14 +1128,14 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
 
     const body = req.body || {};
 
-    // Move uploaded file if present
-    let certProof = null;
-    if (req.file) {
-      const orig = req.file;
+    // Helper function to process uploaded files
+    async function processFile(file, prefix) {
+      if (!file || !file[0]) return null;
+      const orig = file[0];
       const safeName = orig.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const destPath = path.join(destDir, `cert_${Date.now()}_${safeName}`);
+      const destPath = path.join(destDir, `${prefix}_${Date.now()}_${safeName}`);
       await fse.move(orig.path, destPath);
-      certProof = {
+      return {
         fieldname: orig.fieldname,
         originalname: orig.originalname,
         mimetype: orig.mimetype,
@@ -1123,6 +1143,11 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
         path: destPath
       };
     }
+
+    // Process all uploaded files
+    const certProof = await processFile(req.files?.certProof, 'cert');
+    const licenseFront = await processFile(req.files?.licenseFront, 'license_front');
+    const licenseBack = await processFile(req.files?.licenseBack, 'license_back');
 
     const submission = {
       id,
@@ -1146,12 +1171,26 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
       npn: body.npn || '',
       statesLicensed: Array.isArray(body.statesLicensed) ? body.statesLicensed : (body.statesLicensed ? [body.statesLicensed] : []),
       background: {
-        priorTerminations: body.priorTerminations === 'yes',
-        priorTerminationsExplain: body.priorTerminationsExplain || '',
-        felonies: body.felonies === 'yes',
-        feloniesExplain: body.feloniesExplain || '',
-        bankruptcies: body.bankruptcies === 'yes',
-        bankruptciesExplain: body.bankruptciesExplain || ''
+        crimeConvicted: body.crimeConvicted || 'no',
+        crimeConvictedExplain: body.crimeConvictedExplain || '',
+        crimeCharged: body.crimeCharged || 'no',
+        crimeChargedExplain: body.crimeChargedExplain || '',
+        lawsuitParty: body.lawsuitParty || 'no',
+        lawsuitPartyExplain: body.lawsuitPartyExplain || '',
+        judgmentLien: body.judgmentLien || 'no',
+        judgmentLienExplain: body.judgmentLienExplain || '',
+        debtLawsuit: body.debtLawsuit || 'no',
+        debtLawsuitExplain: body.debtLawsuitExplain || '',
+        delinquentTax: body.delinquentTax || 'no',
+        delinquentTaxExplain: body.delinquentTaxExplain || '',
+        terminatedForCause: body.terminatedForCause || 'no',
+        terminatedForCauseExplain: body.terminatedForCauseExplain || '',
+        licenseRevoked: body.licenseRevoked || 'no',
+        licenseRevokedExplain: body.licenseRevokedExplain || '',
+        indebted: body.indebted || 'no',
+        indebtedExplain: body.indebtedExplain || '',
+        childSupport: body.childSupport || 'no',
+        childSupportExplain: body.childSupportExplain || ''
       },
       acknowledgments: {
         producerAgreementAccepted: body.producerAgreementAccepted === 'on' || body.producerAgreementAccepted === 'true',
@@ -1160,7 +1199,9 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
         signatureDate: body.signatureDate || ''
       },
       attachments: {
-        certProof
+        certProof,
+        licenseFront,
+        licenseBack
       }
     };
 
@@ -1181,10 +1222,17 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
       }
     }
     if (agent) {
+      submission.agentId = agent.id;
       agent.progress.intakeSubmitted = true;
       agent.submissions.intakeId = id;
       if (certProof?.path) {
         agent.uploads.certProof = certProof.path;
+      }
+      if (licenseFront?.path) {
+        agent.uploads.licenseFront = licenseFront.path;
+      }
+      if (licenseBack?.path) {
+        agent.uploads.licenseBack = licenseBack.path;
       }
       
       // Generate comprehensive signed documents PDF
@@ -1241,17 +1289,46 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
           // Background Information
           doc.fontSize(14).text('BACKGROUND INFORMATION');
           doc.moveDown(0.5);
-          doc.fontSize(12).text(`Prior Terminations: ${submission.background?.priorTerminations ? 'YES' : 'NO'}`);
-          if (submission.background?.priorTerminationsExplain) {
-            doc.text(`Termination Explanation: ${submission.background.priorTerminationsExplain}`);
+          doc.fontSize(12);
+          doc.text(`Crime Convicted: ${submission.background?.crimeConvicted === 'yes' ? 'YES' : 'NO'}`);
+          if (submission.background?.crimeConvictedExplain) {
+            doc.text(`Explanation: ${submission.background.crimeConvictedExplain}`);
           }
-          doc.text(`Felonies: ${submission.background?.felonies ? 'YES' : 'NO'}`);
-          if (submission.background?.feloniesExplain) {
-            doc.text(`Felony Explanation: ${submission.background.feloniesExplain}`);
+          doc.text(`Crime Charged: ${submission.background?.crimeCharged === 'yes' ? 'YES' : 'NO'}`);
+          if (submission.background?.crimeChargedExplain) {
+            doc.text(`Explanation: ${submission.background.crimeChargedExplain}`);
           }
-          doc.text(`Bankruptcies: ${submission.background?.bankruptcies ? 'YES' : 'NO'}`);
-          if (submission.background?.bankruptciesExplain) {
-            doc.text(`Bankruptcy Explanation: ${submission.background.bankruptciesExplain}`);
+          doc.text(`Lawsuit Party: ${submission.background?.lawsuitParty === 'yes' ? 'YES' : 'NO'}`);
+          if (submission.background?.lawsuitPartyExplain) {
+            doc.text(`Explanation: ${submission.background.lawsuitPartyExplain}`);
+          }
+          doc.text(`Judgment Lien: ${submission.background?.judgmentLien === 'yes' ? 'YES' : 'NO'}`);
+          if (submission.background?.judgmentLienExplain) {
+            doc.text(`Explanation: ${submission.background.judgmentLienExplain}`);
+          }
+          doc.text(`Debt Lawsuit: ${submission.background?.debtLawsuit === 'yes' ? 'YES' : 'NO'}`);
+          if (submission.background?.debtLawsuitExplain) {
+            doc.text(`Explanation: ${submission.background.debtLawsuitExplain}`);
+          }
+          doc.text(`Delinquent Tax: ${submission.background?.delinquentTax === 'yes' ? 'YES' : 'NO'}`);
+          if (submission.background?.delinquentTaxExplain) {
+            doc.text(`Explanation: ${submission.background.delinquentTaxExplain}`);
+          }
+          doc.text(`Terminated For Cause: ${submission.background?.terminatedForCause === 'yes' ? 'YES' : 'NO'}`);
+          if (submission.background?.terminatedForCauseExplain) {
+            doc.text(`Explanation: ${submission.background.terminatedForCauseExplain}`);
+          }
+          doc.text(`License Revoked: ${submission.background?.licenseRevoked === 'yes' ? 'YES' : 'NO'}`);
+          if (submission.background?.licenseRevokedExplain) {
+            doc.text(`Explanation: ${submission.background.licenseRevokedExplain}`);
+          }
+          doc.text(`Indebted: ${submission.background?.indebted === 'yes' ? 'YES' : 'NO'}`);
+          if (submission.background?.indebtedExplain) {
+            doc.text(`Explanation: ${submission.background.indebtedExplain}`);
+          }
+          doc.text(`Child Support: ${submission.background?.childSupport === 'yes' ? 'YES' : 'NO'}`);
+          if (submission.background?.childSupportExplain) {
+            doc.text(`Explanation: ${submission.background.childSupportExplain}`);
           }
           doc.moveDown(1);
           
@@ -1278,9 +1355,18 @@ app.post('/api/intake', upload.single('certProof'), async (req, res) => {
         console.error('Failed to generate intake PDF:', e);
       }
       
-      await writeAgent(agent);
+        await writeAgent(agent);
     }
-    res.json({ ok: true, id });
+
+    // Write to Google Sheets
+    try {
+      await googleSheets.appendIntakeData(submission);
+    } catch (sheetsErr) {
+      console.error('Error writing to Google Sheets (non-fatal):', sheetsErr);
+      // Don't fail the request if Google Sheets write fails
+    }
+
+    res.json({ ok: true, id, agent: agent ? { id: agent.id } : null });
   } catch (err) {
     console.error('Error handling /api/intake', err);
     res.status(500).json({ ok: false, error: 'Failed to save intake submission' });
@@ -1325,9 +1411,11 @@ app.post('/api/w9', async (req, res) => {
     await fse.writeJson(path.join(destDir, 'w9.json'), submission, { spaces: 2 });
     
     // Link to agent if provided
+    let agent = null;
     if (body.agentId) {
-      const agent = await readAgent(body.agentId);
+      agent = await readAgent(body.agentId);
     if (agent) {
+      submission.agentId = agent.id;
       agent.progress.w9Submitted = true;
       agent.submissions.w9Id = id;
       
@@ -1471,6 +1559,14 @@ app.post('/api/w9', async (req, res) => {
         await writeAgent(agent);
       }
     }
+
+    // Write to Google Sheets
+    try {
+      await googleSheets.appendW9Data(submission);
+    } catch (sheetsErr) {
+      console.error('Error writing to Google Sheets (non-fatal):', sheetsErr);
+      // Don't fail the request if Google Sheets write fails
+    }
     
     res.json({ ok: true, id });
   } catch (err) {
@@ -1554,9 +1650,11 @@ app.post('/api/banking', async (req, res) => {
     await fse.writeJson(path.join(destDir, 'banking.json'), submission, { spaces: 2 });
 
     // Link to agent if provided
+    let agent = null;
     if (agentId) {
-      const agent = await readAgent(agentId);
+      agent = await readAgent(agentId);
     if (agent) {
+      submission.agentId = agent.id;
       agent.progress.bankingSubmitted = true;
       agent.submissions.bankingId = id;
       agent.banking = {
@@ -1567,6 +1665,14 @@ app.post('/api/banking', async (req, res) => {
       };
         await writeAgent(agent);
       }
+    }
+
+    // Write to Google Sheets
+    try {
+      await googleSheets.appendBankingData(submission);
+    } catch (sheetsErr) {
+      console.error('Error writing to Google Sheets (non-fatal):', sheetsErr);
+      // Don't fail the request if Google Sheets write fails
     }
 
     res.json({ ok: true, id });

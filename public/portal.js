@@ -650,10 +650,48 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('W9 signature pad setup complete');
   }
 
+  // Setup conditional textareas for background questions
+  function setupBackgroundQuestionConditionals() {
+    const backgroundQuestionFields = [
+      'crimeConvicted',
+      'crimeCharged',
+      'lawsuitParty',
+      'judgmentLien',
+      'debtLawsuit',
+      'delinquentTax',
+      'terminatedForCause',
+      'licenseRevoked',
+      'indebted',
+      'childSupport'
+    ];
+
+    backgroundQuestionFields.forEach(fieldName => {
+      const radios = document.querySelectorAll(`input[name="${fieldName}"]`);
+      const textarea = document.querySelector(`textarea[name="${fieldName}Explain"]`);
+      
+      if (radios.length > 0 && textarea) {
+        const update = () => {
+          const val = Array.from(radios).find(r => r.checked)?.value || 'no';
+          if (val === 'yes') {
+            textarea.style.display = 'block';
+            textarea.required = true;
+          } else {
+            textarea.style.display = 'none';
+            textarea.required = false;
+            textarea.value = '';
+          }
+        };
+        radios.forEach(r => r.addEventListener('change', update));
+        update(); // Initialize state
+      }
+    });
+  }
+
   populateStates(document.querySelector('.state-select'), true);
   setupDualListBox();
   setupFileUpload();
   setupW9SignaturePad();
+  setupBackgroundQuestionConditionals();
   prePopulateFromMarketing();
   initializePhoneFormatting();
   initializeSSNFormatting();
