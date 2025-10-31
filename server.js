@@ -2074,6 +2074,40 @@ app.get('/api/admin/submissions/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// Test endpoint to check Google Sheets status
+app.get('/api/test/google-sheets', async (req, res) => {
+  try {
+    const status = {
+      initialized: !!googleSheets.sheets,
+      spreadsheetId: googleSheets.spreadsheetId || 'NOT SET',
+      sheetName: googleSheets.sheetName,
+      hasAuth: !!googleSheets.auth,
+      env: {
+        GOOGLE_SHEET_ID: process.env.GOOGLE_SHEET_ID ? 'SET' : 'NOT SET',
+        GOOGLE_SERVICE_ACCOUNT_KEY: process.env.GOOGLE_SERVICE_ACCOUNT_KEY ? 'SET' : 'NOT SET',
+        GOOGLE_SHEET_NAME: process.env.GOOGLE_SHEET_NAME || 'NOT SET (using default)'
+      }
+    };
+    
+    // Try a simple test to access the sheet
+    if (googleSheets.sheets && googleSheets.spreadsheetId) {
+      try {
+        await googleSheets.sheets.spreadsheets.get({
+          spreadsheetId: googleSheets.spreadsheetId
+        });
+        status.sheetAccess = 'OK';
+      } catch (err) {
+        status.sheetAccess = 'ERROR: ' + err.message;
+        status.error = err.response?.data || err.message;
+      }
+    }
+    
+    res.json({ ok: true, status });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // Fallback to index.html
 app.get('*', (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
@@ -2081,4 +2115,5 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`Google Sheets test endpoint: http://localhost:${PORT}/api/test/google-sheets`);
 });
