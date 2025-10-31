@@ -63,6 +63,7 @@ class GoogleSheets {
       const row = [
         new Date().toISOString(), // Timestamp
         data.agentId || '',
+        'Intake', // Form Type
         // Contact Information
         data.contact?.firstName || '',
         data.contact?.lastName || '',
@@ -111,15 +112,20 @@ class GoogleSheets {
         data.acknowledgments?.signatureDate || ''
       ];
 
-      await this.sheets.spreadsheets.values.append({
+      console.log('   Row length:', row.length);
+      console.log('   First few values:', row.slice(0, 5));
+      
+      const result = await this.sheets.spreadsheets.values.append({
         spreadsheetId: this.spreadsheetId,
-        range: `${this.sheetName}!A:AR`,
+        range: `${this.sheetName}!A1`,
         valueInputOption: 'USER_ENTERED',
         insertDataOption: 'INSERT_ROWS',
         resource: {
           values: [row]
         }
       });
+      
+      console.log('   Append result:', result.data);
 
       console.log('✅ Intake data appended to Google Sheet successfully');
       return true;

@@ -1366,13 +1366,19 @@ app.post('/api/intake', uploadMultiple.fields([
 
     // Write to Google Sheets
     console.log('📊 Writing intake data to Google Sheets for agent:', submission.agentId || 'N/A');
+    console.log('   Submission keys:', Object.keys(submission));
+    console.log('   Contact:', submission.contact);
+    console.log('   Business:', submission.business);
     try {
       const result = await googleSheets.appendIntakeData(submission);
       if (!result) {
         console.error('⚠️  Google Sheets write returned false - check logs above');
+      } else {
+        console.log('✅ Google Sheets write completed successfully');
       }
     } catch (sheetsErr) {
       console.error('❌ EXCEPTION writing to Google Sheets (non-fatal):', sheetsErr);
+      console.error('   Message:', sheetsErr.message);
       console.error('   Stack:', sheetsErr.stack);
       // Don't fail the request if Google Sheets write fails
     }
