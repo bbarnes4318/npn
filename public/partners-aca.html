@@ -11,108 +11,344 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --partners-primary: #00B04F;
+            --partners-dark: #1a2632;
+            --partners-gradient: linear-gradient(135deg, #00B04F 0%, #00D966 100%);
+        }
+        
         .partners-hero {
-            background: linear-gradient(135deg, #2C3E50 0%, #1a2632 100%);
+            background: linear-gradient(135deg, #1a2632 0%, #2C3E50 100%);
             color: white;
-            padding: 10rem 0 6rem;
+            padding: 12rem 0 8rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .partners-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(0, 176, 79, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        
+        .partners-hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
         }
         
         .partners-hero h1 {
             color: white;
-            font-size: 3.5rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .partners-hero p {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 1.25rem;
+            font-size: 4rem;
+            font-weight: 800;
             margin-bottom: 2rem;
+            line-height: 1.1;
         }
         
-        .benefits-grid {
+        .partners-hero .hero-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.5rem;
+            margin-bottom: 3rem;
+            line-height: 1.6;
+        }
+        
+        .hero-stats-inline {
+            display: flex;
+            justify-content: center;
+            gap: 4rem;
+            margin: 3rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .hero-stat {
+            text-align: center;
+        }
+        
+        .hero-stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--partners-primary);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        
+        .hero-stat-label {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .value-props-modern {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 2rem;
-            margin-top: 3rem;
+            margin-top: 4rem;
         }
         
-        .benefit-card {
+        .value-card-modern {
             background: white;
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
             border: 2px solid transparent;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
         
-        .benefit-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 30px rgba(0, 176, 79, 0.15);
-            border-color: var(--brand-primary);
+        .value-card-modern::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--partners-gradient);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
         }
         
-        .benefit-icon-large {
-            width: 64px;
-            height: 64px;
+        .value-card-modern:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 16px 50px rgba(0, 176, 79, 0.2);
+            border-color: var(--partners-primary);
+        }
+        
+        .value-card-modern:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .value-icon-modern {
+            width: 72px;
+            height: 72px;
             background: linear-gradient(135deg, rgba(0, 176, 79, 0.1) 0%, rgba(0, 176, 79, 0.2) 100%);
-            border-radius: 16px;
+            border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 1.5rem;
-            color: var(--brand-primary);
+            margin-bottom: 2rem;
+            color: var(--partners-primary);
+            transition: all 0.4s ease;
         }
         
-        .comparison-cards {
+        .value-card-modern:hover .value-icon-modern {
+            background: var(--partners-gradient);
+            color: white;
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        .value-card-modern h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--brand-dark);
+            margin-bottom: 1rem;
+        }
+        
+        .value-card-modern p {
+            color: var(--brand-text-light);
+            line-height: 1.7;
+            font-size: 1.0625rem;
+        }
+        
+        .comparison-modern {
+            background: linear-gradient(135deg, rgba(0, 176, 79, 0.03) 0%, rgba(0, 176, 79, 0.08) 100%);
+            border-radius: 24px;
+            padding: 4rem;
+            margin-top: 4rem;
+        }
+        
+        .comparison-header-modern {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .comparison-header-modern h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .comparison-grid-modern {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 2rem;
-            margin-top: 3rem;
+            margin-bottom: 2rem;
         }
         
-        .comparison-card-partners {
+        .comparison-card-modern {
             background: white;
-            border-radius: 16px;
+            border-radius: 20px;
             padding: 2.5rem;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
         
-        .comparison-card-partners.typical {
+        .comparison-card-modern.typical {
             border: 2px solid #E9ECEF;
         }
         
-        .comparison-card-partners.perenroll {
-            border: 2px solid var(--brand-primary);
-            background: linear-gradient(135deg, rgba(0, 176, 79, 0.02) 0%, rgba(0, 176, 79, 0.05) 100%);
+        .comparison-card-modern.perenroll {
+            border: 2px solid var(--partners-primary);
+            background: white;
+            position: relative;
         }
         
-        .stat-row-partners {
+        .comparison-card-modern.perenroll::before {
+            content: 'RECOMMENDED';
+            position: absolute;
+            top: -12px;
+            right: 2rem;
+            background: var(--partners-gradient);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .comparison-card-modern h3 {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .comparison-card-modern.perenroll h3 {
+            color: var(--partners-primary);
+        }
+        
+        .stat-item-modern {
             display: flex;
             justify-content: space-between;
-            padding: 1rem 0;
+            align-items: center;
+            padding: 1.25rem 0;
             border-bottom: 1px solid #E9ECEF;
         }
         
-        .stat-row-partners:last-child {
+        .stat-item-modern:last-child {
             border-bottom: none;
             font-weight: 700;
-            font-size: 1.125rem;
+            font-size: 1.25rem;
             padding-top: 1.5rem;
+            margin-top: 0.5rem;
         }
         
-        .savings-badge {
-            background: linear-gradient(135deg, var(--brand-primary) 0%, #00D966 100%);
+        .stat-item-modern .label {
+            color: var(--brand-text-light);
+        }
+        
+        .stat-item-modern .value {
+            font-weight: 700;
+            font-size: 1.125rem;
+        }
+        
+        .stat-item-modern:last-child .value {
+            font-size: 1.5rem;
+        }
+        
+        .comparison-card-modern.typical .stat-item-modern:last-child .value {
+            color: #DC3545;
+        }
+        
+        .comparison-card-modern.perenroll .stat-item-modern:last-child .value {
+            color: var(--partners-primary);
+        }
+        
+        .savings-display {
+            background: var(--partners-gradient);
             color: white;
-            padding: 2rem;
-            border-radius: 16px;
+            border-radius: 20px;
+            padding: 3rem;
             text-align: center;
             margin-top: 2rem;
         }
         
-        .savings-badge .amount {
-            font-size: 3rem;
+        .savings-display .amount {
+            font-size: 4rem;
             font-weight: 800;
             margin-bottom: 0.5rem;
+            line-height: 1;
+        }
+        
+        .savings-display .text {
+            font-size: 1.25rem;
+            opacity: 0.95;
+        }
+        
+        .process-section {
+            background: white;
+            padding: 6rem 0;
+        }
+        
+        .process-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+        
+        .process-step {
+            text-align: center;
+            position: relative;
+        }
+        
+        .process-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 40px;
+            right: -1rem;
+            width: 2rem;
+            height: 2px;
+            background: var(--partners-primary);
+            opacity: 0.3;
+        }
+        
+        .process-number {
+            width: 80px;
+            height: 80px;
+            background: var(--partners-gradient);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 8px 25px rgba(0, 176, 79, 0.3);
+        }
+        
+        .process-step h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .process-step p {
+            color: var(--brand-text-light);
+            font-size: 0.9375rem;
+        }
+        
+        .cta-section-modern {
+            background: linear-gradient(135deg, #1a2632 0%, #2C3E50 100%);
+            color: white;
+            padding: 6rem 0;
+            text-align: center;
+        }
+        
+        .cta-section-modern h2 {
+            color: white;
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .cta-section-modern p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.25rem;
+            margin-bottom: 3rem;
         }
         
         @media (max-width: 768px) {
@@ -120,12 +356,32 @@
                 font-size: 2.5rem;
             }
             
-            .benefits-grid {
+            .partners-hero .hero-subtitle {
+                font-size: 1.25rem;
+            }
+            
+            .hero-stats-inline {
+                gap: 2rem;
+            }
+            
+            .value-props-modern {
                 grid-template-columns: 1fr;
             }
             
-            .comparison-cards {
+            .comparison-grid-modern {
                 grid-template-columns: 1fr;
+            }
+            
+            .process-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .process-step:not(:last-child)::after {
+                display: none;
+            }
+            
+            .savings-display .amount {
+                font-size: 2.5rem;
             }
         }
     </style>
@@ -173,60 +429,73 @@
     <!-- Hero Section -->
     <section class="partners-hero">
         <div class="container">
-            <div class="hero-content" style="grid-template-columns: 1fr; text-align: center; max-width: 800px; margin: 0 auto;">
-                <div class="hero-text">
-                    <h1>Scale Your ACA Agency Without the Hiring Headache</h1>
-                    <p>Get instant access to licensed, experienced agents under your NPN. No upfront hiring costs. Pay only for successful enrollments. Ready to sell in days, not months.</p>
-                    
-                    <div class="hero-actions" style="justify-content: center;">
-                        <a href="#contact-form" class="cta-button">Get Started</a>
-                        <a href="#how-it-works-partners" class="cta-button cta-button-secondary" style="background: rgba(255,255,255,0.1); color: white; border-color: rgba(255,255,255,0.3);">Learn How It Works</a>
+            <div class="partners-hero-content">
+                <h1>Stop Hiring. Start Scaling.</h1>
+                <p class="hero-subtitle">Get instant access to licensed ACA agents under your NPN. Zero upfront costs. Pay only for enrollments. Scale your OEP capacity in days, not months.</p>
+                
+                <div class="hero-actions" style="justify-content: center; margin-top: 2rem;">
+                    <a href="#contact" class="cta-button" style="font-size: 1.125rem; padding: 1rem 2rem;">Get Started Today</a>
+                    <a href="#how-it-works" class="cta-button cta-button-secondary" style="background: rgba(255,255,255,0.1); color: white; border-color: rgba(255,255,255,0.3); font-size: 1.125rem; padding: 1rem 2rem;">See How It Works</a>
+                </div>
+                
+                <div class="hero-stats-inline">
+                    <div class="hero-stat">
+                        <span class="hero-stat-number">$0</span>
+                        <span class="hero-stat-label">Upfront Hiring Costs</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-number">Days</span>
+                        <span class="hero-stat-label">To Start Selling</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-number">Pay</span>
+                        <span class="hero-stat-label">Per Enrollment Only</span>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Key Benefits -->
+    <!-- Value Props -->
     <section class="section">
         <div class="container">
             <div class="section-header">
-                <h2>Why Agencies Choose perEnroll</h2>
-                <p>Three advantages that make scaling your ACA book faster, easier, and more profitable</p>
+                <h2>The perEnroll Advantage</h2>
+                <p>Three reasons why agencies choose us over traditional hiring</p>
             </div>
             
-            <div class="benefits-grid">
-                <div class="benefit-card">
-                    <div class="benefit-icon-large">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <div class="value-props-modern">
+                <div class="value-card-modern">
+                    <div class="value-icon-modern">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
-                    <h3>No Carrier Release Delays</h3>
-                    <p>Our agents have no prior ACA carrier appointments, so they're ready to sell under your NPN immediately. Skip the waiting game and start generating enrollments right away.</p>
+                    <h3>No Carrier Bottlenecks</h3>
+                    <p>Our agents have zero prior ACA carrier appointments. They're ready to sell under your NPN immediately—no waiting for carrier releases or approval delays.</p>
                 </div>
                 
-                <div class="benefit-card">
-                    <div class="benefit-icon-large">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <div class="value-card-modern">
+                    <div class="value-icon-modern">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M12 8V12L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
-                    <h3>Cashflow-Aligned Pricing</h3>
-                    <p>Pay $20 per sale upfront, then $5 per active policy monthly. This matches your as-earned commission structure, so your costs align with your revenue.</p>
+                    <h3>Cashflow That Makes Sense</h3>
+                    <p>$20 per enrollment upfront, then $5 per active policy monthly. Your costs align perfectly with your as-earned commission structure—no surprises.</p>
                 </div>
                 
-                <div class="benefit-card">
-                    <div class="benefit-icon-large">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <div class="value-card-modern">
+                    <div class="value-icon-modern">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
-                    <h3>Zero Upfront Hiring Costs</h3>
-                    <p>No recruiting fees, no training overhead, no salary commitments. Scale your team up or down based on demand without the financial risk of traditional hiring.</p>
+                    <h3>Zero Financial Risk</h3>
+                    <p>No recruiting fees. No training overhead. No salary commitments. Scale up for OEP, scale down after. You only pay for what works.</p>
                 </div>
             </div>
         </div>
@@ -235,146 +504,97 @@
     <!-- Financial Comparison -->
     <section class="section section-alt">
         <div class="container">
-            <div class="section-header">
-                <h2>The Real Cost Difference</h2>
-                <p>See how partnering with perEnroll saves you hundreds of thousands during OEP</p>
-            </div>
-            
-            <div class="comparison-cards">
-                <div class="comparison-card-partners typical">
-                    <h3 style="margin-bottom: 1.5rem; color: var(--brand-dark);">Traditional Hiring</h3>
-                    <div class="stat-row-partners">
-                        <span>50 agents × $5,000 hiring cost</span>
-                        <span style="font-weight: 600;">$250,000</span>
+            <div class="comparison-modern">
+                <div class="comparison-header-modern">
+                    <h2>The Math That Matters</h2>
+                    <p>See exactly how much you save during OEP</p>
+                </div>
+                
+                <div class="comparison-grid-modern">
+                    <div class="comparison-card-modern typical">
+                        <h3>Traditional Hiring</h3>
+                        <div class="stat-item-modern">
+                            <span class="label">50 agents × $5,000 hiring cost</span>
+                            <span class="value">$250,000</span>
+                        </div>
+                        <div class="stat-item-modern">
+                            <span class="label">25,000 enrollments × $30 per sale</span>
+                            <span class="value">$750,000</span>
+                        </div>
+                        <div class="stat-item-modern">
+                            <span class="label">Total upfront cash needed</span>
+                            <span class="value">$1,000,000</span>
+                        </div>
                     </div>
-                    <div class="stat-row-partners">
-                        <span>25,000 enrollments × $30 per sale</span>
-                        <span style="font-weight: 600;">$750,000</span>
-                    </div>
-                    <div class="stat-row-partners">
-                        <span>Total upfront cash required</span>
-                        <span style="color: #DC3545; font-size: 1.25rem;">$1,000,000</span>
+                    
+                    <div class="comparison-card-modern perenroll">
+                        <h3>With perEnroll</h3>
+                        <div class="stat-item-modern">
+                            <span class="label">Upfront hiring costs</span>
+                            <span class="value">$0</span>
+                        </div>
+                        <div class="stat-item-modern">
+                            <span class="label">25,000 enrollments × $20 per sale</span>
+                            <span class="value">$500,000</span>
+                        </div>
+                        <div class="stat-item-modern">
+                            <span class="label">Total upfront cash needed</span>
+                            <span class="value">$500,000</span>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="comparison-card-partners perenroll">
-                    <h3 style="margin-bottom: 1.5rem; color: var(--brand-primary);">With perEnroll</h3>
-                    <div class="stat-row-partners">
-                        <span>Upfront hiring costs</span>
-                        <span style="font-weight: 600; color: var(--brand-primary);">$0</span>
-                    </div>
-                    <div class="stat-row-partners">
-                        <span>25,000 enrollments × $20 per sale</span>
-                        <span style="font-weight: 600;">$500,000</span>
-                    </div>
-                    <div class="stat-row-partners">
-                        <span>Total upfront cash required</span>
-                        <span style="color: var(--brand-primary); font-size: 1.25rem;">$500,000</span>
-                    </div>
+                <div class="savings-display">
+                    <div class="amount">$500,000 Saved</div>
+                    <div class="text">in upfront cash during OEP, with backend costs aligned to your monthly commissions</div>
                 </div>
-            </div>
-            
-            <div class="savings-badge">
-                <div class="amount">Save $500,000</div>
-                <p style="font-size: 1.125rem; margin: 0; opacity: 0.95;">in upfront cash during OEP, with backend costs aligned to your monthly as-earned commissions</p>
             </div>
         </div>
     </section>
 
-    <!-- How It Works -->
-    <section class="section" id="how-it-works-partners">
+    <!-- Process -->
+    <section class="process-section" id="how-it-works">
         <div class="container">
             <div class="section-header">
                 <h2>How Partnership Works</h2>
-                <p>Get your team set up and selling in four simple steps</p>
+                <p>Four steps from conversation to enrollments</p>
             </div>
             
-            <div class="how-it-works-compact">
-                <div class="step-compact">
-                    <div class="step-header-compact">
-                        <div class="step-number-compact">1</div>
-                        <div class="step-icon-compact">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                    </div>
+            <div class="process-grid">
+                <div class="process-step">
+                    <div class="process-number">1</div>
                     <h3>Share Your Goals</h3>
-                    <p>Tell us your OEP targets, target states, and timeline. We'll customize our approach to match your specific needs.</p>
+                    <p>Tell us your OEP targets, states, and timeline. We'll build a custom plan.</p>
                 </div>
                 
-                <div class="step-arrow-compact">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
-                
-                <div class="step-compact">
-                    <div class="step-header-compact">
-                        <div class="step-number-compact">2</div>
-                        <div class="step-icon-compact">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M16 21V19C16 17.9391 15.5786 16.9217 14.8284 16.1716C14.0783 15.4214 13.0609 15 12 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21M12.5 7C12.5 9.48528 10.4853 11.5 8 11.5C5.51472 11.5 3.5 9.48528 3.5 7C3.5 4.51472 5.51472 2.5 8 2.5C10.4853 2.5 12.5 4.51472 12.5 7ZM23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89317 18.7122 8.75608 18.1676 9.45768C17.623 10.1593 16.8604 10.6597 16 10.88" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                    </div>
+                <div class="process-step">
+                    <div class="process-number">2</div>
                     <h3>We Assign Agents</h3>
-                    <p>We place licensed, experienced agents under your NPN hierarchy. They're ready to sell immediately—no carrier release delays.</p>
+                    <p>Licensed agents placed under your NPN, ready to sell immediately.</p>
                 </div>
                 
-                <div class="step-arrow-compact">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                <div class="process-step">
+                    <div class="process-number">3</div>
+                    <h3>Track & Scale</h3>
+                    <p>Real-time dashboard shows performance. Scale up or down instantly.</p>
                 </div>
                 
-                <div class="step-compact">
-                    <div class="step-header-compact">
-                        <div class="step-number-compact">3</div>
-                        <div class="step-icon-compact">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M3 5C3 3.89543 3.89543 3 5 3H8.27924C8.70967 3 9.11165 3.20406 9.35786 3.55279L10.6421 5.44721C10.8884 5.79594 11.2903 6 11.7208 6H19C20.1046 6 21 6.89543 21 8V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M8 10H16M8 14H16M8 18H12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                    </div>
-                    <h3>Track Performance</h3>
-                    <p>Monitor daily submissions, conversion rates, and agent performance through our real-time dashboard. Scale up or down based on results.</p>
-                </div>
-                
-                <div class="step-arrow-compact">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
-                
-                <div class="step-compact">
-                    <div class="step-header-compact">
-                        <div class="step-number-compact">4</div>
-                        <div class="step-icon-compact">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 2V22M17 5H9.5C8.11929 5 7 6.11929 7 7.5S8.11929 10 9.5 10H14.5C15.8807 10 17 11.1193 17 12.5S15.8807 15 14.5 15H7M7 5V3C7 1.89543 7.89543 1 9 1H15C16.1046 1 17 1.89543 17 3V5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                    </div>
+                <div class="process-step">
+                    <div class="process-number">4</div>
                     <h3>Pay As You Earn</h3>
-                    <p>Pay only for successful enrollments. No upfront hiring costs, no salary commitments. Your costs align perfectly with your revenue.</p>
+                    <p>Only pay for enrollments. Costs align with your commission flow.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Contact Form -->
-    <section class="section section-alt" id="contact-form">
+    <!-- CTA Section -->
+    <section class="cta-section-modern" id="contact">
         <div class="container">
-            <div class="section-header">
-                <h2>Ready to Scale Without the Risk?</h2>
-                <p>Let's discuss how perEnroll can help you hit your OEP targets</p>
-            </div>
+            <h2>Ready to Scale Without the Risk?</h2>
+            <p>Let's discuss how perEnroll can help you crush your OEP targets</p>
             
-            <div class="cta-form-container" style="max-width: 700px;">
+            <div class="cta-form-container" style="max-width: 700px; margin: 0 auto;">
                 <div class="cta-form">
                     <form id="partners-form" class="modern-form">
                         <div class="form-row">
@@ -484,10 +704,8 @@
                 const formData = new FormData(this);
                 const data = Object.fromEntries(formData);
                 
-                // Store form data for backend processing
                 console.log('Partners form submitted:', data);
                 
-                // Show success message
                 alert('Thank you! We\'ll be in touch within 24 hours.');
                 this.reset();
             });
