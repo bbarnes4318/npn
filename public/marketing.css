@@ -862,6 +862,136 @@ p {
   }
 }
 
+/* Compact How It Works Section */
+.how-it-works-compact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 3rem;
+  flex-wrap: wrap;
+}
+
+.step-compact {
+  flex: 1;
+  min-width: 240px;
+  max-width: 320px;
+  background: white;
+  border-radius: 16px;
+  padding: 2rem 1.5rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.step-compact:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 176, 79, 0.12);
+  border-color: var(--brand-primary);
+}
+
+.step-header-compact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.step-number-compact {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #00D966 100%);
+  color: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(0, 176, 79, 0.25);
+  flex-shrink: 0;
+}
+
+.step-icon-compact {
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 176, 79, 0.08);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-primary);
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.step-compact:hover .step-icon-compact {
+  background: var(--brand-primary);
+  color: white;
+  transform: scale(1.1);
+}
+
+.step-compact h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--brand-dark);
+  margin-bottom: 0.75rem;
+  transition: color 0.3s ease;
+}
+
+.step-compact:hover h3 {
+  color: var(--brand-primary);
+}
+
+.step-compact p {
+  font-size: 1rem;
+  color: var(--brand-text-light);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.step-arrow-compact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-primary);
+  opacity: 0;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+  padding: 0 0.5rem;
+}
+
+.step-compact:hover + .step-arrow-compact,
+.step-arrow-compact:hover {
+  opacity: 0.8;
+  transform: translateX(4px);
+}
+
+@media (max-width: 768px) {
+  .how-it-works-compact {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .step-compact {
+    max-width: 100%;
+    width: 100%;
+  }
+  
+  .step-arrow-compact {
+    transform: rotate(90deg);
+    padding: 0.5rem 0;
+  }
+  
+  .step-compact:hover + .step-arrow-compact {
+    transform: rotate(90deg) translateY(4px);
+  }
+}
+
 /* Comparison Section */
 .comparison {
   display: grid;
